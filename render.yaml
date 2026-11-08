@@ -1,0 +1,28 @@
+# ==============================================================================
+# RENDER BLUEPRINT SPECIFICATION — REAL ESTATE RADAR BACKEND
+# Automatic Web Service Deployment on Render (https://render.com)
+# ==============================================================================
+
+services:
+  - type: web
+    name: real-estate-radar-server
+    runtime: node
+    plan: free
+    region: singapore
+    branch: main
+    buildCommand: npm install --omit=dev
+    startCommand: npm run start:server
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - key: OPENROUTER_MODEL
+        value: google/gemini-2.5-flash
+      - key: OPENROUTER_API_KEY
+        sync: false # Set securely in Render dashboard
+      - key: CORS_ORIGIN
+        value: "*"
+

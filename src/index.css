@@ -1,0 +1,176 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* MapLibre Container & Canvas Fixes */
+.maplibregl-map {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.maplibregl-canvas-container,
+.maplibregl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Custom attribution style - subtle and fully compliant */
+.maplibregl-ctrl-attrib {
+  background: rgba(255, 255, 255, 0.85) !important;
+  backdrop-filter: blur(4px);
+  padding: 2px 8px !important;
+  font-size: 11px !important;
+  border-radius: 4px !important;
+  color: #475569 !important;
+  margin: 0 8px 8px 0 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.maplibregl-ctrl-attrib a {
+  color: #2563eb !important;
+  text-decoration: none !important;
+}
+.maplibregl-ctrl-attrib a:hover {
+  text-decoration: underline !important;
+}
+
+/* Custom Interactive Price Markers */
+.prop-marker {
+  cursor: pointer;
+  transform: translate(-50%, -100%);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease;
+  will-change: transform;
+}
+
+.prop-marker:hover,
+.prop-marker.hovered {
+  transform: translate(-50%, -108%) scale(1.1);
+  z-index: 120 !important;
+}
+
+.prop-marker.selected {
+  transform: translate(-50%, -112%) scale(1.16);
+  z-index: 140 !important;
+}
+
+/* Custom marker pill */
+.marker-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  background-color: #ffffff;
+  color: #0f172a;
+  font-weight: 750;
+  font-size: 12.5px;
+  letter-spacing: -0.015em;
+  box-shadow: 0 4px 14px -1px rgba(0, 0, 0, 0.2), 0 2px 5px -1px rgba(0, 0, 0, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  white-space: nowrap;
+  user-select: none;
+  transition: all 0.2s ease;
+}
+
+.prop-marker:hover .marker-pill,
+.prop-marker.hovered .marker-pill {
+  box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.25), 0 4px 8px -2px rgba(0, 0, 0, 0.15);
+}
+
+.prop-marker.selected .marker-pill {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-color: #3b82f6;
+  box-shadow: 0 10px 28px -3px rgba(37, 99, 235, 0.45), 0 4px 10px -2px rgba(15, 23, 42, 0.3);
+}
+
+.prop-marker.highlighted .marker-pill {
+  background-color: #0f172a;
+  color: #ffffff;
+  border-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 10px 28px -3px rgba(16, 185, 129, 0.5);
+  animation: marker-glow 1.6s infinite alternate;
+}
+
+@keyframes marker-glow {
+  0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4)); }
+  100% { transform: scale(1.08); filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.8)); }
+}
+
+/* Marker bottom tip triangle */
+.marker-tip {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #ffffff;
+  margin: -1px auto 0 auto;
+  transition: border-top-color 0.2s ease;
+}
+
+.prop-marker.selected .marker-tip {
+  border-top-color: #0f172a;
+}
+
+/* Pulse animation for current location dot */
+@keyframes user-pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.6);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 14px rgba(37, 99, 235, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(37, 99, 235, 0);
+  }
+}
+
+.user-location-pulse {
+  animation: user-pulse 2s infinite;
+}
+
+/* Hide default MapLibre logo if not needed */
+.maplibregl-ctrl-logo {
+  display: none !important;
+}
+
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.7);
+}
+
