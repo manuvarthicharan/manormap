@@ -231,7 +231,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               title="Menu"
             >
               <div className="sm:hidden">
-                <Logo size="sm" />
+                <Logo size="xs" />
               </div>
               <div className="hidden sm:block">
                 <Logo size="md" />
@@ -253,8 +253,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleExecuteAISearch();
               }}
-              placeholder="Search locality or e.g. 3 BHK in Gachibowli..."
-              className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none pr-6 sm:pr-7 py-1.5 font-medium truncate"
+              placeholder="Search locality, e.g. Gachibowli..."
+              className="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 focus:outline-none pr-6 sm:pr-7 py-1.5 font-medium truncate"
             />
             {query && (
               <button

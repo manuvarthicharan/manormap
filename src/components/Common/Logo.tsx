@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 interface LogoProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   variant?: 'full' | 'icon';
   theme?: 'dark' | 'light' | 'auto';
   className?: string;
@@ -15,6 +15,7 @@ export const Logo: React.FC<LogoProps> = ({
 
   // Generous height dimensions preserving 3:1 aspect ratio of logo.png (2172 x 724)
   const sizeClasses = {
+    xs: 'h-6 sm:h-7 max-w-[85px]',
     sm: 'h-9 sm:h-10 max-w-[150px]',
     md: 'h-11 sm:h-14 max-w-[210px]',
     lg: 'h-16 sm:h-20 max-w-[280px]',

@@ -612,7 +612,7 @@ export const App: React.FC = () => {
   ]);
 
   return (
-    <main className="relative w-screen h-[100dvh] overflow-hidden bg-slate-900 select-none">
+    <main className="relative w-screen h-[100dvh] overflow-hidden bg-slate-900">
       {/* 
         1. THE FIRST SCREEN MUST BE THE MAP (GOOGLE MAPS POWERED)
         Occupies 100% of the available viewport.
