@@ -136,7 +136,12 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col justify-between border-l border-slate-200 animate-in slide-in-from-right duration-200 select-none">
+    <>
+      <div
+        className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-50 transition-opacity"
+        onClick={onClose}
+      />
+      <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col justify-between border-l border-slate-200 animate-in slide-in-from-right duration-200 select-none">
       {/* Header Bar */}
       <div className="p-4 border-b border-slate-100 flex items-center justify-between bg-gradient-to-r from-slate-900 to-blue-950 text-white flex-shrink-0">
         <div className="flex items-center gap-3">
@@ -325,6 +330,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
         </button>
       </div>
     </div>
+    </>
   );
 };
 

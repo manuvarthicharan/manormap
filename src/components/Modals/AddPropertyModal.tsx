@@ -237,10 +237,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-center justify-center p-3 sm:p-6 text-center">
-        <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100">
+      <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-6 text-center">
+        <div className="relative w-full max-w-3xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100 max-h-[94dvh] sm:max-h-[90vh] flex flex-col">
           {/* Header with ManorMap Logo */}
-          <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20">
+          <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between sticky top-0 bg-white/95 backdrop-blur-md z-20 flex-shrink-0">
             <div className="flex items-center gap-3">
               <Logo size="sm" variant="icon" />
               <div>
@@ -261,7 +261,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 max-h-[calc(88vh-80px)] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-6 flex-1 overflow-y-auto">
             {/* 1. LOCATION & PIN PLACEMENT */}
             <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/90 to-indigo-50/70 border border-blue-200/80">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">

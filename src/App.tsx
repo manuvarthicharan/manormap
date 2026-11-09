@@ -37,6 +37,7 @@ import { AdvancedFilterModal } from './components/Navigation/AdvancedFilterModal
 import { PropertyComparisonModal } from './components/Modals/PropertyComparisonModal';
 import { InvestmentCalculatorModal } from './components/Modals/InvestmentCalculatorModal';
 import { AIAssistantDrawer } from './components/AI/AIAssistantDrawer';
+import { Map as MapIcon, Building2, Sparkles, Plus, Scale } from 'lucide-react';
 
 export const App: React.FC = () => {
   // All properties & custom additions
@@ -136,6 +137,16 @@ export const App: React.FC = () => {
 
   // AI Advisor Drawer state
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
+
+  // Check if any geospatial drawing tool or surveyor is active
+  const isAnyGeospatialToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active || isDrawingLandForProperty;
+
+  // Automatically stow/hide property tray when drawing or surveying to prevent clutter
+  useEffect(() => {
+    if (isAnyGeospatialToolActive && isTrayOpen) {
+      setIsTrayOpen(false);
+    }
+  }, [isAnyGeospatialToolActive, isTrayOpen]);
 
   // Favorites list in localStorage (clean zero fake entries)
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -601,7 +612,7 @@ export const App: React.FC = () => {
   ]);
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden bg-slate-900 select-none">
+    <main className="relative w-screen h-[100dvh] overflow-hidden bg-slate-900 select-none">
       {/* 
         1. THE FIRST SCREEN MUST BE THE MAP (GOOGLE MAPS POWERED)
         Occupies 100% of the available viewport.
@@ -650,16 +661,16 @@ export const App: React.FC = () => {
         Interactive Land Parcel Drawing Mode (Active while mapping Agricultural Land borders)
       */}
       {isDrawingLandForProperty && (
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center gap-3 animate-in slide-in-from-top max-w-lg w-full justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
-            <div>
-              <div className="text-xs font-bold text-white">Click map to mark agricultural land corners</div>
-              <div className="text-[10px] text-slate-300">Drop 3 or more vertices to map boundary perimeter</div>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white p-3 sm:px-5 sm:py-3 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center gap-2 sm:gap-3 animate-in slide-in-from-top sm:max-w-lg justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-white truncate">Tap map to mark parcel corners</div>
+              <div className="text-[10px] text-slate-300 hidden sm:block">Drop 3 or more vertices to map boundary perimeter</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {landSurvey.points.length > 0 && (
               <div className="text-xs font-extrabold text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
                 {landSurvey.areaAcres.toFixed(2)} Ac ({landSurvey.points.length} nodes)
@@ -729,6 +740,72 @@ export const App: React.FC = () => {
       )}
 
       {/* 
+        MOBILE FLOATING BOTTOM NAVIGATION BAR (Thumb-friendly, sleek, uncluttered)
+      */}
+      {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && !isTrayOpen && (
+        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-800 p-1.5 animate-in slide-in-from-bottom duration-200">
+          {/* Map / Recenter */}
+          <button
+            onClick={() => {
+              if (mapInstance && typeof window !== 'undefined' && window.google?.maps) {
+                mapInstance.panTo(new google.maps.LatLng(currentMapCenter[1], currentMapCenter[0]));
+              }
+            }}
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+          >
+            <MapIcon className="w-5 h-5 text-blue-400" />
+            <span className="text-[10px] font-bold mt-0.5">Explore</span>
+          </button>
+
+          {/* Browse Properties Tray */}
+          <button
+            onClick={() => setIsTrayOpen(true)}
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95 relative"
+          >
+            <Building2 className="w-5 h-5 text-indigo-400" />
+            <span className="text-[10px] font-bold mt-0.5">Properties</span>
+            {visibleProperties.length > 0 && (
+              <span className="absolute -top-1 right-2 bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full shadow-xs">
+                {visibleProperties.length}
+              </span>
+            )}
+          </button>
+
+          {/* AI Advisor */}
+          <button
+            onClick={() => handleOpenAIAdvisor()}
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+          >
+            <Sparkles className="w-5 h-5 text-emerald-400" />
+            <span className="text-[10px] font-bold mt-0.5">AI Advisor</span>
+          </button>
+
+          {/* Compare (if any active) */}
+          {comparedPropertyIds.length > 0 ? (
+            <button
+              onClick={() => setIsComparisonModalOpen(true)}
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-300 hover:text-white transition-colors active:scale-95 relative"
+            >
+              <Scale className="w-5 h-5 text-indigo-400" />
+              <span className="text-[10px] font-bold mt-0.5">Compare</span>
+              <span className="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full shadow-xs">
+                {comparedPropertyIds.length}
+              </span>
+            </button>
+          ) : (
+            /* List Property */
+            <button
+              onClick={() => setIsAddPropertyOpen(true)}
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            >
+              <Plus className="w-5 h-5 text-amber-400" />
+              <span className="text-[10px] font-bold mt-0.5">List Prop</span>
+            </button>
+          )}
+        </nav>
+      )}
+
+      {/* 
         4. SIDE MENU DRAWER (Hidden Initially, Messages Cleanly Removed)
       */}
       <SlideMenuDrawer
@@ -751,6 +828,8 @@ export const App: React.FC = () => {
           ).length
         }
         favoritesCount={favorites.length}
+        theme={theme}
+        onToggleTheme={toggleTheme}
       />
 
       {/* 

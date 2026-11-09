@@ -247,11 +247,11 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
       />
 
       {/* Modal Dialog */}
-      <div className="min-h-full flex items-center justify-center p-2 sm:p-4 text-center">
-        <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-200">
+      <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center">
+        <div className="relative w-full max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-200 max-h-[94dvh] sm:max-h-[90vh] flex flex-col">
           
           {/* Header Bar */}
-          <div className="h-16 px-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20">
+          <div className="h-16 px-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20 flex-shrink-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span
                 className={`text-xs font-bold px-2.5 py-1 rounded-md uppercase tracking-wider text-white ${
@@ -331,7 +331,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 space-y-6 max-h-[calc(88vh-70px)] overflow-y-auto">
+          <div className="p-4 sm:p-6 space-y-6 flex-1 overflow-y-auto">
             
             {/* Photo Gallery Showcase with Lightbox Trigger */}
             {property.images && property.images.length > 0 && (

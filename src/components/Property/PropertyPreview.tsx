@@ -40,11 +40,11 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
   return (
     <div className="z-30 pointer-events-auto">
       {/* Mobile: Bottom Sheet | Desktop: Floating Card near bottom left */}
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md w-full animate-in slide-in-from-bottom duration-200 ease-out">
-        <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
+      <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md w-full animate-in slide-in-from-bottom duration-200 ease-out z-30">
+        <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto">
           
           {/* Mobile Drag Indicator */}
-          <div className="sm:hidden w-10 h-1 bg-slate-300 rounded-full mx-auto my-2" />
+          <div className="sm:hidden w-12 h-1.5 bg-slate-300 rounded-full mx-auto my-2.5" />
 
           {/* Card Layout */}
           <div className="p-4 flex flex-col sm:flex-row gap-3.5 items-stretch">

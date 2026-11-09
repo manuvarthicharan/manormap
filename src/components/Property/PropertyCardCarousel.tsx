@@ -7,7 +7,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Calculator,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 
 interface PropertyCardCarouselProps {
@@ -52,20 +53,22 @@ export const PropertyCardCarousel: React.FC<PropertyCardCarouselProps> = ({
   }
 
   return (
-    <div className="fixed bottom-20 sm:bottom-6 left-0 right-0 z-20 pointer-events-none flex flex-col items-center">
-      {/* Floating Toggle Button */}
-      <div className="pointer-events-auto mb-2 transition-all">
-        <button
-          onClick={onToggleOpen}
-          className="h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg border border-slate-800 text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-2"
-        >
-          <Building2 className="w-4 h-4 text-blue-400" />
-          <span>
-            {isOpen ? 'Hide Property Tray' : `Browse (${properties.length}) Properties in Area`}
-          </span>
-          <span className="w-2 h-2 rounded-full bg-emerald-400" />
-        </button>
-      </div>
+    <div className="fixed bottom-3 sm:bottom-6 left-0 right-0 z-20 pointer-events-none flex flex-col items-center">
+      {/* Floating Toggle Button (Desktop & when collapsed) */}
+      {!isOpen && (
+        <div className="pointer-events-auto mb-2 transition-all">
+          <button
+            onClick={onToggleOpen}
+            className="h-10 px-4 bg-slate-900 hover:bg-slate-800 text-white rounded-xl shadow-lg border border-slate-800 text-xs font-bold transition-all active:scale-[0.98] flex items-center gap-2"
+          >
+            <Building2 className="w-4 h-4 text-blue-400" />
+            <span>
+              {`Browse (${properties.length}) Properties in Area`}
+            </span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          </button>
+        </div>
+      )}
 
       {/* Expandable Horizontal Cards Tray */}
       {isOpen && (
@@ -73,8 +76,8 @@ export const PropertyCardCarousel: React.FC<PropertyCardCarouselProps> = ({
           <div className="bg-white rounded-2xl p-3 sm:p-4 shadow-2xl border border-slate-200 relative">
             {/* Tray Header Bar */}
             <div className="flex items-center justify-between px-1 mb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-900">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-bold text-slate-900 truncate">
                   {properties.length} Verified Properties in Visible Area
                 </span>
                 <span className="text-[10px] bg-blue-50 text-blue-700 font-bold px-2 py-0.5 rounded hidden sm:inline-block">
@@ -82,21 +85,31 @@ export const PropertyCardCarousel: React.FC<PropertyCardCarouselProps> = ({
                 </span>
               </div>
 
-              {/* Scroll Arrows */}
-              <div className="hidden sm:flex items-center gap-1">
+              {/* Scroll Arrows & Close */}
+              <div className="flex items-center gap-1.5">
+                <div className="hidden sm:flex items-center gap-1">
+                  <button
+                    onClick={scrollLeft}
+                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors"
+                    aria-label="Scroll left"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={scrollRight}
+                    className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors"
+                    aria-label="Scroll right"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
                 <button
-                  onClick={scrollLeft}
-                  className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors"
-                  aria-label="Scroll left"
+                  onClick={onToggleOpen}
+                  className="w-8 h-8 rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-500 hover:text-slate-800 flex items-center justify-center transition-colors"
+                  title="Close Property Tray"
                 >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={scrollRight}
-                  className="w-8 h-8 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 flex items-center justify-center transition-colors"
-                  aria-label="Scroll right"
-                >
-                  <ChevronRight className="w-4 h-4" />
+                  <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -117,7 +130,7 @@ export const PropertyCardCarousel: React.FC<PropertyCardCarouselProps> = ({
                     onMouseEnter={() => onHoverProperty(prop.id)}
                     onMouseLeave={() => onHoverProperty(null)}
                     onClick={() => onSelectProperty(prop)}
-                    className={`flex-shrink-0 w-80 bg-white rounded-xl p-3 border transition-all cursor-pointer snap-start ${
+                    className={`flex-shrink-0 w-[82vw] sm:w-80 bg-white rounded-xl p-3 border transition-all cursor-pointer snap-start ${
                       isSelected
                         ? 'border-blue-600 shadow-md ring-2 ring-blue-500/20'
                         : 'border-slate-200 hover:border-slate-300 hover:shadow-md'

@@ -210,9 +210,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
       {/* Top Floating SaaS Command Bar */}
       <div 
         ref={searchContainerRef}
-        className="fixed top-4 left-4 right-4 sm:left-6 sm:w-auto sm:max-w-2xl z-30 pointer-events-auto"
+        className="fixed top-3 left-3 right-3 sm:top-4 sm:left-6 sm:w-auto sm:max-w-2xl z-30 pointer-events-auto"
       >
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white rounded-2xl shadow-lg border border-slate-200/90 p-1.5 transition-all focus-within:border-blue-500">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white rounded-2xl shadow-lg border border-slate-200/90 p-1 sm:p-1.5 transition-all focus-within:border-blue-500">
           {/* Logo & Menu Button */}
           <div className="flex items-center gap-1">
             <button
@@ -227,16 +227,21 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* Brand Logo Pic */}
             <div 
               onClick={onOpenMenu}
-              className="flex items-center pr-2.5 border-r border-slate-200 cursor-pointer select-none group flex-shrink-0"
+              className="flex items-center pr-1.5 sm:pr-2.5 border-r border-slate-200 cursor-pointer select-none group flex-shrink-0"
               title="Menu"
             >
-              <Logo size="md" />
+              <div className="sm:hidden">
+                <Logo size="sm" />
+              </div>
+              <div className="hidden sm:block">
+                <Logo size="md" />
+              </div>
             </div>
           </div>
 
           {/* Omnisearch Input Field with AI natural language search */}
           <div className="relative flex-1 flex items-center min-w-0">
-            <Search className="w-4 h-4 text-slate-400 ml-1.5 mr-2 pointer-events-none flex-shrink-0" />
+            <Search className="w-4 h-4 text-slate-400 ml-1 sm:ml-1.5 mr-1.5 sm:mr-2 pointer-events-none flex-shrink-0" />
             <input
               type="text"
               value={query}
@@ -248,8 +253,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               onKeyDown={(e) => {
                 if (e.key === 'Enter') handleExecuteAISearch();
               }}
-              placeholder="Search locality or e.g. '3 bhk in gachibowli under 2 cr'..."
-              className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none pr-7 py-1.5 font-medium truncate"
+              placeholder="Search locality or e.g. 3 BHK in Gachibowli..."
+              className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none pr-6 sm:pr-7 py-1.5 font-medium truncate"
             />
             {query && (
               <button
@@ -321,7 +326,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenCompare}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all hover:bg-indigo-100 shadow-xs flex-shrink-0"
+              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all hover:bg-indigo-100 shadow-xs flex-shrink-0"
               title="Open Property Comparison"
             >
               <Scale className="w-3.5 h-3.5 text-indigo-600" />
@@ -335,7 +340,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               type="button"
               onClick={onOpenAIAdvisor}
               title="Open AI Real Estate Advisor"
-              className="w-9 h-9 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex-shrink-0"
+              className="hidden sm:flex w-9 h-9 items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex-shrink-0"
             >
               <Sparkles className="w-4 h-4 text-emerald-500" />
             </button>
@@ -364,7 +369,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               type="button"
               onClick={onToggleTheme}
               title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-              className="w-9 h-9 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl transition-colors flex-shrink-0"
+              className="hidden sm:flex w-9 h-9 items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl transition-colors flex-shrink-0"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? (
@@ -375,14 +380,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             </button>
           )}
 
-          <div className="w-[1px] h-5 bg-slate-200 flex-shrink-0" />
+          <div className="hidden sm:block w-[1px] h-5 bg-slate-200 flex-shrink-0" />
 
           {/* User Profile Avatar with Online Status */}
           <button
             type="button"
             onClick={onOpenProfile}
             title="Account & Settings"
-            className="relative w-9 h-9 rounded-xl overflow-hidden border border-slate-200 hover:ring-2 hover:ring-blue-500/30 transition-all flex items-center justify-center text-xs font-bold text-slate-700 active:scale-95 flex-shrink-0"
+            className="hidden sm:flex relative w-9 h-9 rounded-xl overflow-hidden border border-slate-200 hover:ring-2 hover:ring-blue-500/30 transition-all items-center justify-center text-xs font-bold text-slate-700 active:scale-95 flex-shrink-0"
             aria-label="Profile"
           >
             <img
@@ -412,7 +417,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
         {/* Omnisearch Dropdown with Trending Indian Hubs */}
         {showDropdown && (
-          <div className="mt-2 bg-white/98 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-floating-lg border border-slate-100 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150 max-h-88 overflow-y-auto">
+          <div className="mt-2 bg-white/98 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-floating-lg border border-slate-100 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150 max-h-[60dvh] sm:max-h-88 overflow-y-auto">
             {isSearching && (
               <div className="p-3 text-xs text-slate-400 flex items-center gap-2">
                 <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />

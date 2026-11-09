@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Calculator,
   LogOut,
-  Database
+  Database,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
@@ -27,6 +29,8 @@ interface SlideMenuDrawerProps {
   activeOption: string;
   myPropertiesCount: number;
   favoritesCount: number;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
@@ -35,7 +39,9 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
   onSelectOption,
   activeOption,
   myPropertiesCount,
-  favoritesCount
+  favoritesCount,
+  theme = 'light',
+  onToggleTheme
 }) => {
   // Close on Escape key
   useEffect(() => {
@@ -307,6 +313,26 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                     <HelpCircle className="w-4 h-4 text-slate-500" />
                     <span>Help & Support</span>
                   </button>
+
+                  {/* Theme Mode Toggle (Light / Dark) */}
+                  {onToggleTheme && (
+                    <button
+                      onClick={onToggleTheme}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        {theme === 'dark' ? (
+                          <Sun className="w-4 h-4 text-amber-500" />
+                        ) : (
+                          <Moon className="w-4 h-4 text-slate-500" />
+                        )}
+                        <span>Theme Appearance</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-lg capitalize">
+                        {theme === 'dark' ? 'Dark' : 'Light'}
+                      </span>
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

@@ -25,7 +25,9 @@ import {
   Trash2,
   Copy,
   Check,
-  Sparkles
+  Sparkles,
+  Wrench,
+  BarChart2
 } from 'lucide-react';
 
 const GOOGLE_MAPS_DARK_STYLE: google.maps.MapTypeStyle[] = [
@@ -179,6 +181,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [showTransitLayer, setShowTransitLayer] = useState(false);
   const [copiedSurvey, setCopiedSurvey] = useState(false);
+  const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
+  const [isMobileSurveyorMetricsOpen, setIsMobileSurveyorMetricsOpen] = useState(false);
+
+  const isAnyToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active;
 
   // Keep live refs for callbacks to prevent stale closures
   const isDroppingPinRef = useRef(isDroppingPin);
@@ -802,15 +808,17 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* AI POLYGON OVERLAY BANNER */}
       {aiPolygon && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-blue-900/90 text-white backdrop-blur-md rounded-2xl shadow-xl border border-blue-600 p-2.5 flex items-center gap-2 animate-in fade-in">
-          <Sparkles className="w-4 h-4 text-emerald-400" />
-          <span className="text-xs font-bold">
-            AI Highlighted Zone: {aiPolygon.label || 'Selected Locality'}
-          </span>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-blue-900/90 text-white backdrop-blur-md rounded-2xl shadow-xl border border-blue-600 p-2.5 flex items-center justify-between sm:justify-start gap-2 animate-in fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="text-xs font-bold truncate">
+              AI Highlighted Zone: {aiPolygon.label || 'Selected Locality'}
+            </span>
+          </div>
           {onClearAIPolygon && (
             <button
               onClick={onClearAIPolygon}
-              className="p-1 hover:bg-blue-800 rounded-lg text-slate-300 hover:text-white"
+              className="p-1 hover:bg-blue-800 rounded-lg text-slate-300 hover:text-white flex-shrink-0"
               title="Clear Highlight"
             >
               <X className="w-3.5 h-3.5" />
@@ -821,29 +829,29 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* RADIUS SEARCH CONTROL OVERLAY */}
       {radiusSearch.active && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2.5 flex items-center gap-2 animate-in fade-in">
-          <div className="flex items-center gap-1.5 px-2 text-xs font-bold text-slate-800">
-            <CircleDot className="w-4 h-4 text-blue-600" />
-            <span>Radius:</span>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2 sm:p-2.5 flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 animate-in fade-in overflow-x-auto">
+          <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 text-xs font-bold text-slate-800 flex-shrink-0">
+            <CircleDot className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <span className="hidden sm:inline">Radius:</span>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-1 sm:flex-initial overflow-x-auto py-0.5">
             {[1, 2, 5, 10, 20].map((km) => (
               <button
                 key={km}
                 onClick={() => onRadiusChange({ ...radiusSearch, radiusKm: km })}
-                className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-colors ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-colors flex-shrink-0 ${
                   radiusSearch.radiusKm === km
                     ? 'bg-blue-600 text-white shadow-xs'
                     : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
-                {km} km
+                {km}k
               </button>
             ))}
           </div>
           <button
             onClick={() => onRadiusChange({ ...radiusSearch, active: false })}
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 ml-1"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 ml-1 flex-shrink-0"
             title="Close Radius Search"
           >
             <X className="w-4 h-4" />
@@ -853,28 +861,28 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* DRAW-TO-SEARCH POLYGON BANNER */}
       {polygonSearch.active && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-3 flex items-center gap-3 animate-in fade-in">
-          <div className="flex items-center gap-2">
-            <PenTool className="w-4 h-4 text-blue-600" />
-            <div className="text-xs">
-              <div className="font-bold text-slate-900">
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2.5 sm:p-3 flex items-center justify-between gap-2.5 animate-in fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <PenTool className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <div className="text-xs min-w-0">
+              <div className="font-bold text-slate-900 truncate">
                 {polygonSearch.isDrawing
-                  ? 'Click on map to draw boundary polygon'
-                  : `Filtered inside boundary (${polygonSearch.coordinates.length} points)`}
+                  ? 'Click map to draw boundary'
+                  : `Filtered in zone (${polygonSearch.coordinates.length} pts)`}
               </div>
-              <div className="text-[10px] text-slate-500">
+              <div className="text-[10px] text-slate-500 hidden sm:block">
                 {polygonSearch.isDrawing ? 'Drop 3 or more points to form shape' : 'Showing listings in custom drawn zone'}
               </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {polygonSearch.coordinates.length >= 3 && polygonSearch.isDrawing && (
               <button
                 onClick={() => onPolygonChange({ ...polygonSearch, isDrawing: false })}
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                className="px-2.5 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
               >
-                Done Drawing
+                Done
               </button>
             )}
 
@@ -889,9 +897,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         </div>
       )}
 
-      {/* LAND SURVEYOR HEADS-UP DISPLAY (HUD) */}
+      {/* LAND SURVEYOR HEADS-UP DISPLAY (HUD) - DESKTOP ONLY */}
       {landSurvey.active && (
-        <div className="absolute top-20 left-4 sm:left-6 z-20 pointer-events-auto bg-slate-950/90 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/80 p-4 max-w-sm w-full animate-in fade-in space-y-3">
+        <div className="hidden sm:block absolute top-20 left-4 sm:left-6 z-20 pointer-events-auto bg-slate-950/90 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/80 p-4 max-w-sm w-full animate-in fade-in space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800 pb-2">
             <div className="flex items-center gap-2">
               <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xs">
@@ -979,8 +987,133 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         </div>
       )}
 
-      {/* Geospatial Toolbar & Minimal Floating Map Controls (Right edge) */}
-      <div className="absolute right-4 bottom-24 sm:bottom-12 z-20 flex flex-col gap-2 pointer-events-auto">
+      {/* MOBILE COMPACT LAND SURVEYOR STRIP */}
+      {landSurvey.active && (
+        <div className="sm:hidden absolute top-16 left-3 right-3 z-20 pointer-events-auto bg-slate-950/95 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700 p-2.5 flex items-center justify-between gap-2 animate-in fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xs flex-shrink-0">
+              <Ruler className="w-4 h-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-amber-400 truncate">
+                {landSurvey.areaAcres.toFixed(2)} Ac &bull; {landSurvey.areaSqYards.toLocaleString('en-IN')} Gaj
+              </div>
+              <div className="text-[10px] text-slate-400 truncate">
+                {landSurvey.points.length} nodes &bull; {landSurvey.perimeterMeters}m perimeter
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <button
+              onClick={() => setIsMobileSurveyorMetricsOpen(true)}
+              className="px-2.5 py-1 bg-amber-500 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95"
+            >
+              <BarChart2 className="w-3.5 h-3.5" />
+              <span>Metrics</span>
+            </button>
+            <button
+              onClick={() =>
+                onLandSurveyChange({
+                  active: false,
+                  isDrawing: false,
+                  points: [],
+                  areaSqYards: 0,
+                  areaGunthas: 0,
+                  areaAcres: 0,
+                  areaSqFt: 0,
+                  areaSqMeters: 0,
+                  perimeterMeters: 0
+                })
+              }
+              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE SURVEYOR METRICS BOTTOM SHEET */}
+      {isMobileSurveyorMetricsOpen && (
+        <>
+          <div
+            className="sm:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 transition-opacity"
+            onClick={() => setIsMobileSurveyorMetricsOpen(false)}
+          />
+          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-slate-950 text-white rounded-t-3xl shadow-2xl border-t border-slate-800 p-5 pb-8 animate-in slide-in-from-bottom duration-200 space-y-4">
+            <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto" />
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black">
+                  <Ruler className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-white">Land Boundary Surveyor</h4>
+                  <p className="text-[11px] text-amber-300 font-medium">Standard Indian Land Metrics</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMobileSurveyorMetricsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Sq. Yards (Gaj)</div>
+                <div className="text-xl font-black text-amber-400">{landSurvey.areaSqYards.toLocaleString('en-IN')}</div>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Gunthas</div>
+                <div className="text-xl font-black text-amber-400">{landSurvey.areaGunthas}</div>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Acres</div>
+                <div className="text-lg font-black text-white">{landSurvey.areaAcres} Ac</div>
+              </div>
+              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                <div className="text-[10px] font-bold uppercase text-slate-400">Perimeter</div>
+                <div className="text-lg font-black text-white">{landSurvey.perimeterMeters} m</div>
+              </div>
+            </div>
+
+            <div className="text-xs text-slate-400 flex items-center justify-between px-1">
+              <span>Pegged Vertices: <strong className="text-white">{landSurvey.points.length}</strong></span>
+              <span>Total: <strong className="text-white">{landSurvey.areaSqFt.toLocaleString('en-IN')} Sq. Ft</strong></span>
+            </div>
+
+            <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+              <button
+                onClick={handleCopySurveyReport}
+                disabled={landSurvey.points.length < 3}
+                className="flex-1 h-10 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md active:scale-95"
+              >
+                {copiedSurvey ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedSurvey ? 'Copied to Clipboard' : 'Copy Survey Report'}</span>
+              </button>
+              <button
+                onClick={() => {
+                  const cleared = calculateLandParcelMetrics([]);
+                  onLandSurveyChange({
+                    ...landSurvey,
+                    ...cleared,
+                    points: []
+                  });
+                }}
+                className="h-10 px-4 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-bold active:scale-95"
+              >
+                Reset
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* DESKTOP GEOSPATIAL TOOLBAR (Hidden on Mobile) */}
+      <div className="hidden sm:flex absolute right-4 bottom-12 z-20 flex-col gap-2 pointer-events-auto">
         {/* Radius Search Toggle */}
         <button
           onClick={() => {
@@ -1152,6 +1285,235 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           </button>
         </div>
       </div>
+
+      {/* MOBILE FLOATING ACTION DOCK (Clean, Compact, Non-Congested) */}
+      <div className="sm:hidden absolute right-3 bottom-24 z-20 flex flex-col items-center gap-2 pointer-events-auto">
+        {/* Tools Menu FAB */}
+        <button
+          onClick={() => setIsMobileToolsOpen(true)}
+          title="Map Tools & Layers"
+          className={`w-11 h-11 rounded-2xl shadow-lg border flex items-center justify-center transition-all active:scale-95 relative ${
+            isAnyToolActive
+              ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/25 ring-2 ring-blue-400/50'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+          }`}
+          aria-label="Map tools and layers"
+        >
+          <Wrench className="w-5 h-5" />
+          {isAnyToolActive && (
+            <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
+          )}
+        </button>
+
+        {/* Current Location button */}
+        <button
+          onClick={handleLocateMe}
+          title="Locate Me"
+          className="w-11 h-11 bg-white text-slate-700 rounded-2xl shadow-lg border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
+          aria-label="Locate me"
+        >
+          <Locate className="w-5 h-5" />
+        </button>
+
+        {/* Zoom Controls */}
+        <div className="w-11 bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden flex flex-col">
+          <button
+            onClick={handleZoomIn}
+            title="Zoom in"
+            className="w-11 h-10 flex items-center justify-center text-slate-700 active:bg-slate-100 transition-colors border-b border-slate-100"
+            aria-label="Zoom in"
+          >
+            <ZoomIn className="w-4 h-4" />
+          </button>
+          <button
+            onClick={handleZoomOut}
+            title="Zoom out"
+            className="w-11 h-10 flex items-center justify-center text-slate-700 active:bg-slate-100 transition-colors"
+            aria-label="Zoom out"
+          >
+            <ZoomOut className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* MOBILE TOOLS & LAYERS BOTTOM SHEET */}
+      {isMobileToolsOpen && (
+        <>
+          <div
+            className="sm:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 transition-opacity"
+            onClick={() => setIsMobileToolsOpen(false)}
+          />
+          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 p-5 pb-8 animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85dvh] overflow-y-auto">
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto" />
+            
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                  <Wrench className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-extrabold text-slate-900">Map Tools & View Modes</h4>
+                  <p className="text-[11px] text-slate-500">Geospatial radius, boundary drawing, and layers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsMobileToolsOpen(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Section 1: Geospatial Discovery Tools */}
+            <div>
+              <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
+                Geospatial Search Tools
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {/* Radius Search */}
+                <button
+                  onClick={() => {
+                    setIsMobileToolsOpen(false);
+                    const center = mapRef.current?.getCenter();
+                    const coords: [number, number] = center ? [center.lng(), center.lat()] : [78.382, 17.447];
+                    onRadiusChange({
+                      active: !radiusSearch.active,
+                      center: coords,
+                      radiusKm: 5
+                    });
+                  }}
+                  className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 text-center transition-all ${
+                    radiusSearch.active
+                      ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <CircleDot className="w-5 h-5 text-blue-600" />
+                  <span className="text-xs font-bold leading-tight">Radius</span>
+                  <span className="text-[9px] text-slate-400 font-medium">1–20 km</span>
+                </button>
+
+                {/* Draw-to-Search Lasso */}
+                <button
+                  onClick={() => {
+                    setIsMobileToolsOpen(false);
+                    onPolygonChange({
+                      active: !polygonSearch.active,
+                      isDrawing: !polygonSearch.active,
+                      coordinates: []
+                    });
+                  }}
+                  className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 text-center transition-all ${
+                    polygonSearch.active
+                      ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <PenTool className="w-5 h-5 text-indigo-600" />
+                  <span className="text-xs font-bold leading-tight">Lasso</span>
+                  <span className="text-[9px] text-slate-400 font-medium">Draw Area</span>
+                </button>
+
+                {/* Land Boundary Surveyor */}
+                <button
+                  onClick={() => {
+                    setIsMobileToolsOpen(false);
+                    onLandSurveyChange({
+                      active: !landSurvey.active,
+                      isDrawing: !landSurvey.active,
+                      points: [],
+                      areaSqYards: 0,
+                      areaGunthas: 0,
+                      areaAcres: 0,
+                      areaSqFt: 0,
+                      areaSqMeters: 0,
+                      perimeterMeters: 0
+                    });
+                  }}
+                  className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 text-center transition-all ${
+                    landSurvey.active
+                      ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-sm'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
+                  }`}
+                >
+                  <Ruler className="w-5 h-5 text-amber-600" />
+                  <span className="text-xs font-bold leading-tight">Surveyor</span>
+                  <span className="text-[9px] text-slate-400 font-medium">Gaj & Acres</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Section 2: Map Base Layers */}
+            <div>
+              <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
+                Map Base Layers
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { id: 'roadmap', name: 'Road Map', desc: 'Standard street view' },
+                  { id: 'satellite', name: 'Satellite', desc: 'Aerial photography' },
+                  { id: 'hybrid', name: 'Hybrid', desc: 'Satellite with labels' },
+                  { id: 'terrain', name: 'Terrain', desc: 'Topographic contour' }
+                ].map((layer) => (
+                  <button
+                    key={layer.id}
+                    onClick={() => {
+                      handleSetMapType(layer.id);
+                      setIsMobileToolsOpen(false);
+                    }}
+                    className={`p-2.5 rounded-xl border text-left transition-colors flex flex-col ${
+                      activeMapTypeId === layer.id
+                        ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700 font-medium'
+                    }`}
+                  >
+                    <span className="text-xs font-bold">{layer.name}</span>
+                    <span className="text-[10px] text-slate-400">{layer.desc}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 3: Extra Toggles */}
+            <div className="pt-2 border-t border-slate-100 space-y-2">
+              <button
+                onClick={() => {
+                  setShowTransitLayer(!showTransitLayer);
+                }}
+                className={`w-full p-3 rounded-xl border text-xs font-bold flex items-center justify-between transition-colors ${
+                  showTransitLayer
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <span className="flex items-center gap-2">
+                  <Navigation className="w-4 h-4 text-blue-600" />
+                  <span>Metro & Transit Lines</span>
+                </span>
+                <span className={`text-[10px] px-2 py-0.5 rounded font-extrabold ${
+                  showTransitLayer ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {showTransitLayer ? 'ON' : 'OFF'}
+                </span>
+              </button>
+
+              <button
+                onClick={() => {
+                  handleResetOrientation();
+                  setIsMobileToolsOpen(false);
+                }}
+                className="w-full p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 flex items-center justify-between transition-colors"
+              >
+                <span className="flex items-center gap-2">
+                  <Navigation className="w-4 h-4 text-slate-600" />
+                  <span>Reset Compass / North Orientation</span>
+                </span>
+                <span className="text-[10px] text-slate-400">0° Tilt</span>
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

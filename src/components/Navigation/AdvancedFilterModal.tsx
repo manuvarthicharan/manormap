@@ -94,8 +94,8 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-center justify-center p-3 sm:p-4 text-center">
-        <div className="relative w-full max-w-xl bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-100 flex flex-col max-h-[90vh]">
+      <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center">
+        <div className="relative w-full max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-100 flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0">
             <div className="flex items-center gap-2.5">
