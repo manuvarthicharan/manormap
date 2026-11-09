@@ -1,6 +1,0 @@
-# Cloudflare Pages SPA Routing & API Proxy Rules
-# Transparently forward API calls to the live Render backend
-/api/*  https://manormap.onrender.com/api/:splat  200
-
-# Client-side SPA route fallback
-/*  /index.html  200
