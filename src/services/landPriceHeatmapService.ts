@@ -114,15 +114,17 @@ export const BENCHMARK_PRICE_NODES: MicroMarketPriceNode[] = [
 /**
  * Gradient array used for Google Maps HeatmapLayer
  * Green -> Lime -> Yellow -> Orange -> Red
+ * Note: Index 0 MUST be fully transparent (alpha 0).
+ * All subsequent indices MUST have alpha = 1.0 per Google Maps API specification.
  */
 export const PRICE_HEATMAP_GRADIENT = [
-  'rgba(0, 0, 0, 0)',            // 0% transparent origin
-  'rgba(34, 197, 94, 0.70)',     // 🟢 Green - Affordable / Entry-level Land Cost
-  'rgba(132, 204, 22, 0.82)',    // Lime - Value Growth
-  'rgba(234, 179, 8, 0.90)',     // 🟡 Yellow - Balanced / Mid-tier Living Cost
-  'rgba(249, 115, 22, 0.95)',    // 🟠 Orange - Premium / High Land Value
-  'rgba(239, 68, 68, 1.0)',      // 🔴 Red - Ultra-luxury / Peak Land Cost
-  'rgba(185, 28, 28, 1.0)'       // Deep Crimson Peak
+  'rgba(0, 255, 0, 0)',       // 0: Fully transparent green origin
+  'rgba(34, 197, 94, 1)',     // 🟢 Green - Affordable / Entry-level Land Cost
+  'rgba(132, 204, 22, 1)',    // 🟢 Lime - Value Growth
+  'rgba(234, 179, 8, 1)',     // 🟡 Yellow - Balanced / Mid-tier Living Cost
+  'rgba(249, 115, 22, 1)',    // 🟠 Orange - Premium / High Land Value
+  'rgba(239, 68, 68, 1)',     // 🔴 Red - Ultra-luxury / Peak Land Cost
+  'rgba(220, 38, 38, 1)'      // 🔴 Deep Crimson Peak
 ];
 
 /**
@@ -242,19 +244,21 @@ export function buildHeatmapWeightedPoints(
 /**
  * Returns user-friendly format for price values (e.g. ₹8.5K/sq.ft or ₹1.4 Cr)
  */
-export function formatHeatmapPrice(value: number, metric: HeatmapMetric = 'sqft'): string {
+export function formatHeatmapPrice(value?: number | null, metric: HeatmapMetric = 'sqft'): string {
+  const num = typeof value === 'number' && !isNaN(value) && isFinite(value) ? value : 0;
   if (metric === 'sqft') {
-    if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(1)}L/sq.ft`;
+    if (num >= 100000) {
+      return `₹${(num / 100000).toFixed(1)}L/sq.ft`;
     }
-    return `₹${value.toLocaleString('en-IN')}/sq.ft`;
+    return `₹${Math.round(num).toLocaleString('en-IN')}/sq.ft`;
   } else {
-    if (value >= 10000000) {
-      return `₹${(value / 10000000).toFixed(2)} Cr`;
+    if (num >= 10000000) {
+      return `₹${(num / 10000000).toFixed(2)} Cr`;
     }
-    if (value >= 100000) {
-      return `₹${(value / 100000).toFixed(1)} L`;
+    if (num >= 100000) {
+      return `₹${(num / 100000).toFixed(1)} L`;
     }
-    return `₹${value.toLocaleString('en-IN')}`;
+    return `₹${Math.round(num).toLocaleString('en-IN')}`;
   }
 }
+

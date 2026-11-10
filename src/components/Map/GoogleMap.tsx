@@ -502,39 +502,51 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     const map = mapRef.current;
     if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
 
-    const viz = (window.google.maps as any).visualization;
-    if (!viz || !viz.HeatmapLayer) {
-      console.warn('Google Maps visualization library not loaded');
-      return;
-    }
-
-    if (showHeatmap && heatmapDataPoints.length > 0) {
-      const googleWeightedData = heatmapDataPoints.map((pt) => ({
-        location: new google.maps.LatLng(pt.lat, pt.lng),
-        weight: pt.weight
-      }));
-
-      if (!heatmapLayerRef.current) {
-        heatmapLayerRef.current = new viz.HeatmapLayer({
-          data: googleWeightedData,
-          dissipating: true,
-          radius: getHeatmapRadius(currentZoom),
-          opacity: 0.85,
-          gradient: PRICE_HEATMAP_GRADIENT,
-          map: map
-        });
-      } else {
-        heatmapLayerRef.current.setData(googleWeightedData);
-        heatmapLayerRef.current.setOptions({
-          radius: getHeatmapRadius(currentZoom),
-          gradient: PRICE_HEATMAP_GRADIENT,
-          opacity: 0.85,
-          dissipating: true
-        });
-        heatmapLayerRef.current.setMap(map);
+    try {
+      const maps = window.google.maps;
+      const viz = (maps as any).visualization;
+      if (!viz || !viz.HeatmapLayer) {
+        console.warn('Google Maps visualization library not ready');
+        return;
       }
-    } else if (heatmapLayerRef.current) {
-      heatmapLayerRef.current.setMap(null);
+
+      if (showHeatmap && heatmapDataPoints.length > 0) {
+        // Strictly filter valid numeric coordinates
+        const validPoints = heatmapDataPoints.filter(
+          (pt) => typeof pt.lat === 'number' && typeof pt.lng === 'number' && !isNaN(pt.lat) && !isNaN(pt.lng)
+        );
+
+        const googleWeightedData = validPoints.map((pt) => ({
+          location: new maps.LatLng(pt.lat, pt.lng),
+          weight: Math.max(0.1, Math.min(10, isNaN(pt.weight) ? 1 : pt.weight))
+        }));
+
+        if (!heatmapLayerRef.current) {
+          heatmapLayerRef.current = new viz.HeatmapLayer({
+            data: googleWeightedData,
+            dissipating: true,
+            radius: getHeatmapRadius(currentZoom),
+            opacity: 0.8,
+            maxIntensity: 10,
+            gradient: PRICE_HEATMAP_GRADIENT,
+            map: map
+          });
+        } else {
+          heatmapLayerRef.current.setData(googleWeightedData);
+          heatmapLayerRef.current.setOptions({
+            radius: getHeatmapRadius(currentZoom),
+            gradient: PRICE_HEATMAP_GRADIENT,
+            opacity: 0.8,
+            maxIntensity: 10,
+            dissipating: true
+          });
+          heatmapLayerRef.current.setMap(map);
+        }
+      } else if (heatmapLayerRef.current) {
+        heatmapLayerRef.current.setMap(null);
+      }
+    } catch (err) {
+      console.error('Error handling Google Maps HeatmapLayer:', err);
     }
   }, [showHeatmap, heatmapDataPoints, currentZoom, mapLoaded]);
 

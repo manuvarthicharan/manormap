@@ -120,12 +120,17 @@ export const HeatmapLegendHUD: React.FC<HeatmapLegendHUDProps> = ({
               </div>
 
               {/* The Visual Gradient Bar */}
-              <div className="h-2.5 w-full rounded-full bg-gradient-to-r from-emerald-500 via-lime-400 via-yellow-400 via-orange-500 to-rose-600 shadow-inner relative overflow-hidden" />
+              <div
+                className="h-2.5 w-full rounded-full shadow-inner relative overflow-hidden"
+                style={{
+                  background: 'linear-gradient(to right, #10b981 0%, #a3e635 25%, #facc15 50%, #f97316 75%, #f43f5e 100%)'
+                }}
+              />
 
               <div className="flex items-center justify-between text-[9px] text-slate-400 font-mono">
-                <span>{formatHeatmapPrice(stats.minRate, metric)}</span>
-                <span className="text-slate-300">Avg {formatHeatmapPrice(stats.avgRate, metric)}</span>
-                <span>{formatHeatmapPrice(stats.maxRate, metric)}</span>
+                <span>{formatHeatmapPrice(stats?.minRate ?? 0, metric)}</span>
+                <span className="text-slate-300">Avg {formatHeatmapPrice(stats?.avgRate ?? 0, metric)}</span>
+                <span>{formatHeatmapPrice(stats?.maxRate ?? 0, metric)}</span>
               </div>
             </div>
 
@@ -164,21 +169,21 @@ export const HeatmapLegendHUD: React.FC<HeatmapLegendHUDProps> = ({
               <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
                 <div className="text-[9px] font-bold uppercase text-emerald-400">Entry Value</div>
                 <div className="text-xs font-black text-white mt-0.5 truncate">
-                  {formatHeatmapPrice(stats.minRate, metric)}
+                  {formatHeatmapPrice(stats?.minRate ?? 0, metric)}
                 </div>
               </div>
 
               <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
                 <div className="text-[9px] font-bold uppercase text-amber-400">Mean Rate</div>
                 <div className="text-xs font-black text-white mt-0.5 truncate">
-                  {formatHeatmapPrice(stats.avgRate, metric)}
+                  {formatHeatmapPrice(stats?.avgRate ?? 0, metric)}
                 </div>
               </div>
 
               <div className="p-2 rounded-xl bg-slate-900/90 border border-slate-800/80">
                 <div className="text-[9px] font-bold uppercase text-rose-400">Peak Zone</div>
                 <div className="text-xs font-black text-white mt-0.5 truncate">
-                  {formatHeatmapPrice(stats.maxRate, metric)}
+                  {formatHeatmapPrice(stats?.maxRate ?? 0, metric)}
                 </div>
               </div>
             </div>
@@ -187,7 +192,7 @@ export const HeatmapLegendHUD: React.FC<HeatmapLegendHUDProps> = ({
             <div className="flex items-center gap-1.5 text-[9px] text-slate-400 bg-slate-900/50 rounded-lg px-2 py-1">
               <Info className="w-3 h-3 text-blue-400 flex-shrink-0" />
               <span className="truncate">
-                Interpolating {stats.totalPoints} micro-markets & live catalog listings
+                Interpolating {stats?.totalPoints ?? 0} micro-markets & live catalog listings
               </span>
             </div>
           </>
