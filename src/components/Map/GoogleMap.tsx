@@ -27,8 +27,16 @@ import {
   Check,
   Sparkles,
   Wrench,
-  BarChart2
+  BarChart2,
+  Flame
 } from 'lucide-react';
+import { HeatmapLegendHUD } from './HeatmapLegendHUD';
+import {
+  HeatmapMetric,
+  buildHeatmapWeightedPoints,
+  PRICE_HEATMAP_GRADIENT,
+  getHeatmapRadius
+} from '../../services/landPriceHeatmapService';
 
 const GOOGLE_MAPS_DARK_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
@@ -171,6 +179,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const surveyorPolygonRef = useRef<google.maps.Polygon | null>(null);
   const surveyorPolylineRef = useRef<google.maps.Polyline | null>(null);
   const transitLayerRef = useRef<any>(null);
+  const heatmapLayerRef = useRef<any>(null);
   const aiPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
   const propertyBoundaryPolygonRef = useRef<google.maps.Polygon | null>(null);
 
@@ -180,9 +189,16 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const [activeMapTypeId, setActiveMapTypeId] = useState<string>('roadmap');
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [showTransitLayer, setShowTransitLayer] = useState(false);
+  const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapMetric, setHeatmapMetric] = useState<HeatmapMetric>('sqft');
   const [copiedSurvey, setCopiedSurvey] = useState(false);
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
   const [isMobileSurveyorMetricsOpen, setIsMobileSurveyorMetricsOpen] = useState(false);
+
+  // Dynamic relative pricing calculation across active properties & regional benchmarks
+  const { points: heatmapDataPoints, stats: heatmapStats } = useMemo(() => {
+    return buildHeatmapWeightedPoints(properties, heatmapMetric);
+  }, [properties, heatmapMetric]);
 
   const isAnyToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active;
 
@@ -480,6 +496,57 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       transitLayerRef.current.setMap(null);
     }
   }, [showTransitLayer, mapLoaded]);
+
+  // Land Price & Cost of Living Heatmap Layer (Google Maps visualization.HeatmapLayer)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
+
+    const viz = (window.google.maps as any).visualization;
+    if (!viz || !viz.HeatmapLayer) {
+      console.warn('Google Maps visualization library not loaded');
+      return;
+    }
+
+    if (showHeatmap && heatmapDataPoints.length > 0) {
+      const googleWeightedData = heatmapDataPoints.map((pt) => ({
+        location: new google.maps.LatLng(pt.lat, pt.lng),
+        weight: pt.weight
+      }));
+
+      if (!heatmapLayerRef.current) {
+        heatmapLayerRef.current = new viz.HeatmapLayer({
+          data: googleWeightedData,
+          dissipating: true,
+          radius: getHeatmapRadius(currentZoom),
+          opacity: 0.85,
+          gradient: PRICE_HEATMAP_GRADIENT,
+          map: map
+        });
+      } else {
+        heatmapLayerRef.current.setData(googleWeightedData);
+        heatmapLayerRef.current.setOptions({
+          radius: getHeatmapRadius(currentZoom),
+          gradient: PRICE_HEATMAP_GRADIENT,
+          opacity: 0.85,
+          dissipating: true
+        });
+        heatmapLayerRef.current.setMap(map);
+      }
+    } else if (heatmapLayerRef.current) {
+      heatmapLayerRef.current.setMap(null);
+    }
+  }, [showHeatmap, heatmapDataPoints, currentZoom, mapLoaded]);
+
+  // Unmount cleanup for Heatmap Layer
+  useEffect(() => {
+    return () => {
+      if (heatmapLayerRef.current) {
+        heatmapLayerRef.current.setMap(null);
+        heatmapLayerRef.current = null;
+      }
+    };
+  }, []);
 
   // Radius Search Circle Overlay
   useEffect(() => {
@@ -1182,6 +1249,20 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           <Ruler className="w-5 h-5" />
         </button>
 
+        {/* Land Price & Cost of Living Heatmap Toggle */}
+        <button
+          onClick={() => setShowHeatmap(!showHeatmap)}
+          title="Land Price & Cost of Living Heatmap (Red, Orange, Yellow, Green)"
+          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-all active:scale-95 ${
+            showHeatmap
+              ? 'bg-gradient-to-tr from-amber-500 to-rose-600 text-white border-rose-400 shadow-md shadow-rose-500/25 ring-2 ring-rose-300'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
+          }`}
+          aria-label="Land price heatmap"
+        >
+          <Flame className={`w-5 h-5 ${showHeatmap ? 'fill-white animate-pulse' : 'text-amber-500'}`} />
+        </button>
+
         {/* Layer Switcher (Roadmap / Satellite / Terrain / Hybrid) */}
         <div className="relative">
           <button
@@ -1220,8 +1301,29 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                 ))}
               </div>
 
-              {/* Transit & Metro Lines */}
+              {/* Overlays & Specialized Layers */}
               <div className="pt-2 mt-2 border-t border-slate-100 px-1 space-y-1">
+                {/* Land Price & Cost of Living Heatmap */}
+                <button
+                  onClick={() => setShowHeatmap(!showHeatmap)}
+                  className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
+                    showHeatmap
+                      ? 'bg-rose-50 text-rose-900 font-bold border border-rose-200'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="flex items-center gap-2">
+                    <Flame className={`w-3.5 h-3.5 ${showHeatmap ? 'text-rose-600 fill-rose-600' : 'text-amber-500'}`} />
+                    <span>Land Price Heatmap</span>
+                  </span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded font-extrabold ${
+                    showHeatmap ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {showHeatmap ? 'ON' : 'OFF'}
+                  </span>
+                </button>
+
+                {/* Transit & Metro Lines */}
                 <button
                   onClick={() => setShowTransitLayer(!showTransitLayer)}
                   className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
@@ -1468,6 +1570,43 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
             {/* Section 3: Extra Toggles */}
             <div className="pt-2 border-t border-slate-100 space-y-2">
+              {/* Land Price & Cost of Living Heatmap Card */}
+              <button
+                onClick={() => {
+                  setShowHeatmap(!showHeatmap);
+                }}
+                className={`w-full p-3 rounded-2xl border text-xs font-bold flex items-center justify-between transition-all ${
+                  showHeatmap
+                    ? 'bg-gradient-to-r from-amber-50 to-rose-50 border-rose-300 text-rose-950 shadow-xs'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    showHeatmap
+                      ? 'bg-gradient-to-tr from-amber-500 to-rose-600 text-white shadow-xs'
+                      : 'bg-amber-100 text-amber-700'
+                  }`}>
+                    <Flame className="w-4 h-4 fill-current" />
+                  </div>
+                  <div className="text-left">
+                    <div className="font-extrabold text-slate-900">Land Price Heatmap</div>
+                    <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                      <span>🟢 Affordable</span>
+                      <span>🟡 Balanced</span>
+                      <span>🟠 High</span>
+                      <span>🔴 Peak</span>
+                    </div>
+                  </div>
+                </div>
+
+                <span className={`text-[10px] px-2.5 py-1 rounded-lg font-extrabold ${
+                  showHeatmap ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {showHeatmap ? 'ACTIVE' : 'OFF'}
+                </span>
+              </button>
+
               <button
                 onClick={() => {
                   setShowTransitLayer(!showTransitLayer);
@@ -1506,6 +1645,15 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           </div>
         </>
       )}
+
+      {/* Land Price & Cost of Living Heatmap Floating HUD */}
+      <HeatmapLegendHUD
+        isVisible={showHeatmap}
+        onClose={() => setShowHeatmap(false)}
+        stats={heatmapStats}
+        metric={heatmapMetric}
+        onMetricChange={setHeatmapMetric}
+      />
     </div>
   );
 };
