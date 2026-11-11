@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Property, ListingType, PropertyCategory } from '../../types';
 import { formatIndianCurrency } from '../../services/propertyService';
 import { Logo } from '../Common/Logo';
@@ -14,8 +14,58 @@ import {
   Building,
   Sparkles,
   Ruler,
-  PenTool
+  PenTool,
+  UploadCloud,
+  Loader2
 } from 'lucide-react';
+
+/**
+ * Optimizes an image selected from the user's device and auto-converts it
+ * into a lightweight JPEG Data URI link, avoiding manual links or external file storage.
+ */
+function compressAndConvertImageToLink(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Failed to decode image'));
+      img.onload = () => {
+        const maxWidth = 1280;
+        const maxHeight = 960;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string);
+          return;
+        }
+
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+        resolve(dataUrl);
+      };
+      img.src = e.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -100,7 +150,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
     'Clubhouse & Banquet Hall'
   ]);
 
-  // Genuine Photo URLs state (No childish presets)
+  // Genuine Photo URLs & Device Upload state
   const [photoUrls, setPhotoUrls] = useState<string[]>([
     'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'
@@ -108,6 +158,49 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
   const [currentUrlInput, setCurrentUrlInput] = useState('');
   const [urlInputError, setUrlInputError] = useState('');
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isOptimizingImages, setIsOptimizingImages] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
+
+  const processImageFiles = async (files: FileList | File[]) => {
+    if (!files || files.length === 0) return;
+    setIsOptimizingImages(true);
+    setUploadProgress(`Optimizing ${files.length} photo${files.length > 1 ? 's' : ''}...`);
+
+    const newLinks: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (!file.type.startsWith('image/')) continue;
+      try {
+        setUploadProgress(`Processing photo ${i + 1} of ${files.length}...`);
+        const link = await compressAndConvertImageToLink(file);
+        newLinks.push(link);
+      } catch (err) {
+        console.warn('Failed to convert photo file:', file.name, err);
+      }
+    }
+
+    if (newLinks.length > 0) {
+      setPhotoUrls((prev) => [...prev, ...newLinks]);
+      setUrlInputError('');
+    }
+
+    setIsOptimizingImages(false);
+    setUploadProgress(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleDeviceFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      processImageFiles(e.target.files);
+    }
+  };
+
+  const handleDroppedFiles = (files: FileList) => {
+    processImageFiles(files);
+  };
 
   // Contact
   const [contactName, setContactName] = useState('Rohith Polisetti');
@@ -513,12 +606,16 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <input
                     type="number"
                     required
-                    min={1000}
-                    step={type === 'sale' ? 50000 : 1000}
+                    min={0}
+                    step="any"
                     value={price}
                     onChange={(e) => setPrice(Number(e.target.value))}
+                    placeholder="Enter custom property price"
                     className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Enter any exact custom price without rounding restrictions
+                  </p>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
@@ -528,7 +625,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <input
                     type="number"
                     min={0}
-                    step={500}
+                    step="any"
                     value={maintenanceMonthly}
                     onChange={(e) => setMaintenanceMonthly(Number(e.target.value))}
                     placeholder="e.g. 5500"
@@ -588,8 +685,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <label className="text-xs font-bold text-slate-600 block mb-1">Super Area (sq.ft)</label>
                   <input
                     type="number"
-                    min={100}
-                    step={25}
+                    min={0}
+                    step="any"
                     value={areaSqFt}
                     onChange={(e) => setAreaSqFt(Number(e.target.value))}
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-800 font-medium"
@@ -602,7 +699,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <label className="text-xs font-bold text-slate-600 block mb-1">Carpet Area (sq.ft)</label>
                   <input
                     type="number"
-                    min={50}
+                    min={0}
+                    step="any"
                     value={carpetAreaSqFt}
                     onChange={(e) => setCarpetAreaSqFt(Number(e.target.value))}
                     placeholder="e.g. 1820"
@@ -703,16 +801,16 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
               </div>
             </div>
 
-            {/* 5. GENUINE PROPERTY PHOTOS BY URL (NO PRESET STOCK SAMPLES) */}
+            {/* 5. PROPERTY PHOTOGRAPHS: DEVICE / GALLERY UPLOAD WITH AUTO LINK CONVERSION */}
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <ImageIcon className="w-4 h-4 text-blue-600" />
-                    Property Photographs (URL Links)
+                    Property Photographs (Device Upload & Links)
                   </h4>
                   <p className="text-[11px] text-slate-500">
-                    Add direct links to genuine property photos. Live thumbnail previews are rendered below.
+                    Select photos from your phone gallery or computer. Images are optimized and converted to links in the background with zero storage hassle.
                   </p>
                 </div>
                 <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
@@ -720,8 +818,57 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 </span>
               </div>
 
-              {/* Input row for image URL */}
-              <div>
+              {/* Native Device File Picker (Hidden input with trigger drop zone) */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleDeviceFilesSelect}
+                className="hidden"
+              />
+
+              <div
+                onClick={() => fileInputRef.current?.click()}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  if (e.dataTransfer.files) {
+                    handleDroppedFiles(e.dataTransfer.files);
+                  }
+                }}
+                className="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-2xl p-4 sm:p-6 text-center cursor-pointer bg-white hover:bg-blue-50/40 transition-all group"
+              >
+                <div className="flex flex-col items-center justify-center gap-2">
+                  <div className="w-12 h-12 rounded-2xl bg-blue-100/70 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
+                    <UploadCloud className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <span className="text-xs font-bold text-blue-600 hover:underline">
+                      Click to choose photos from device / gallery
+                    </span>
+                    <span className="text-xs text-slate-500"> or drag & drop</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">
+                    Supports JPG, PNG, WebP &bull; Automatically optimized into standalone links
+                  </p>
+                </div>
+              </div>
+
+              {isOptimizingImages && (
+                <div className="flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 p-2.5 rounded-xl animate-pulse border border-blue-200">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{uploadProgress || 'Processing selected photos...'}</span>
+                </div>
+              )}
+
+              {/* Secondary URL Link Input (for pasting external URLs) */}
+              <div className="pt-2 border-t border-slate-200/80">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-[11px] font-semibold text-slate-500">
+                    Or paste an existing image link:
+                  </span>
+                </div>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
                     <input
@@ -738,16 +885,16 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         }
                       }}
                       placeholder="Paste image URL (e.g. https://images.unsplash.com/... or your CDN link)"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
                   <button
                     type="button"
                     onClick={handleAddPhotoUrl}
-                    className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 flex-shrink-0"
+                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 active:scale-95 flex-shrink-0"
                   >
-                    <Plus className="w-4 h-4 stroke-[3]" />
-                    <span>Add Photo</span>
+                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                    <span>Add Link</span>
                   </button>
                 </div>
 
@@ -818,7 +965,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 </div>
               ) : (
                 <div className="p-6 rounded-xl border border-dashed border-slate-300 text-center text-slate-400 text-xs">
-                  No property photos added yet. Paste image links above to render live previews.
+                  No property photos added yet. Select photos from device or paste links above to preview.
                 </div>
               )}
             </div>

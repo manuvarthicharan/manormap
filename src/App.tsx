@@ -21,7 +21,7 @@ import {
 import { reverseGeocodeLocation, ReverseGeocodeResult } from './services/geocoding';
 import { mapActionBridge } from './services/mapActionBridge';
 import { isSupabaseConfigured, onAuthStateChange } from './services/supabaseClient';
-import { syncProfileFromSupabaseUser } from './services/userService';
+import { syncProfileFromSupabaseUser, getUserProfile, UserProfile } from './services/userService';
 import { fetchSupabaseFavorites, toggleSupabaseFavorite } from './services/supabasePropertyService';
 import { GoogleMap } from './components/Map/GoogleMap';
 import { PinDropOverlay } from './components/Map/PinDropOverlay';
@@ -31,6 +31,7 @@ import { PropertyPreview } from './components/Property/PropertyPreview';
 import { PropertyDetailModal } from './components/Property/PropertyDetailModal';
 import { PropertyCardCarousel } from './components/Property/PropertyCardCarousel';
 import { AddPropertyModal } from './components/Modals/AddPropertyModal';
+import { AuthRequiredModal } from './components/Modals/AuthRequiredModal';
 import { SettingsModal } from './components/Modals/SettingsModal';
 import { ActivityModals } from './components/Modals/ActivityModals';
 import { AdvancedFilterModal } from './components/Navigation/AdvancedFilterModal';
@@ -180,6 +181,17 @@ export const App: React.FC = () => {
     address: string;
   } | null>(null);
 
+  // Active User Profile & Authentication Gate State
+  const [currentUser, setCurrentUser] = useState<UserProfile>(() => getUserProfile());
+  const [authModalConfig, setAuthModalConfig] = useState<{
+    isOpen: boolean;
+    actionTitle?: string;
+    actionDescription?: string;
+    pendingAction?: () => void;
+  }>({
+    isOpen: false
+  });
+
   // Google Maps instance reference
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [currentMapCenter, setCurrentMapCenter] = useState<[number, number]>([78.3820, 17.4474]);
@@ -202,7 +214,8 @@ export const App: React.FC = () => {
     }
 
     const { unsubscribe } = onAuthStateChange((_event, session) => {
-      syncProfileFromSupabaseUser(session?.user || null);
+      const updatedProfile = syncProfileFromSupabaseUser(session?.user || null);
+      setCurrentUser(updatedProfile);
       if (session?.user && isSupabaseConfigured()) {
         syncPropertiesFromCloud().then((cloudProps) => {
           if (cloudProps && cloudProps.length > 0) setAllProps(cloudProps);
@@ -550,11 +563,40 @@ export const App: React.FC = () => {
     setComparedPropertyIds((prev) => prev.filter((id) => id !== propertyId));
   };
 
+  // Auth-gated Add Property handler
+  const handleOpenAddProperty = () => {
+    if (!currentUser?.isAuthenticated) {
+      setAuthModalConfig({
+        isOpen: true,
+        actionTitle: 'Sign In to List Property',
+        actionDescription: 'Sign in with your Google account to list your flat, villa, commercial unit, or agricultural land with precision GPS and cadastral parcel mapping.',
+        pendingAction: () => {
+          setIsAddPropertyOpen(true);
+        }
+      });
+      return;
+    }
+    setIsAddPropertyOpen(true);
+  };
+
   // Open full property details or jump directly to Loan EMI / Locality / AI tab
   const handleOpenDetails = (
     prop: Property,
     tab: 'overview' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby' = 'overview'
   ) => {
+    if (!currentUser?.isAuthenticated) {
+      setAuthModalConfig({
+        isOpen: true,
+        actionTitle: 'Sign In to View Full Details',
+        actionDescription: 'Sign in with your Google account to unlock full property documentation, verified builder contacts, RERA numbers, and institutional pricing audits.',
+        pendingAction: () => {
+          setSelectedProperty(prop);
+          setDetailModalTab(tab);
+          setIsDetailModalOpen(true);
+        }
+      });
+      return;
+    }
     setSelectedProperty(prop);
     setDetailModalTab(tab);
     setIsDetailModalOpen(true);
@@ -700,7 +742,7 @@ export const App: React.FC = () => {
         <FloatingHeader
           onOpenMenu={() => setIsMenuOpen(true)}
           onOpenProfile={() => setActiveModal('profile')}
-          onOpenAddProperty={() => setIsAddPropertyOpen(true)}
+          onOpenAddProperty={handleOpenAddProperty}
           onSelectLocation={handleSelectLocation}
           filterState={filterState}
           onFilterChange={setFilterState}
@@ -795,7 +837,7 @@ export const App: React.FC = () => {
           ) : (
             /* List Property */
             <button
-              onClick={() => setIsAddPropertyOpen(true)}
+              onClick={handleOpenAddProperty}
               className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
             >
               <Plus className="w-5 h-5 text-amber-400" />
@@ -972,8 +1014,22 @@ export const App: React.FC = () => {
       />
 
       {/* 
-        13. AI ASSISTANT DRAWER
+        14. AUTHENTICATION REQUIRED MODAL (Gates Property Details & Property Listing)
       */}
+      <AuthRequiredModal
+        isOpen={authModalConfig.isOpen}
+        onClose={() => setAuthModalConfig((prev) => ({ ...prev, isOpen: false }))}
+        actionTitle={authModalConfig.actionTitle}
+        actionDescription={authModalConfig.actionDescription}
+        onSignInSuccess={() => {
+          const updated = getUserProfile();
+          setCurrentUser(updated);
+          if (authModalConfig.pendingAction) {
+            authModalConfig.pendingAction();
+          }
+          setAuthModalConfig((prev) => ({ ...prev, isOpen: false }));
+        }}
+      />
     </main>
   );
 };

@@ -181,7 +181,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const transitLayerRef = useRef<any>(null);
   const heatmapLayerRef = useRef<any>(null);
   const aiPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
-  const propertyBoundaryPolygonRef = useRef<google.maps.Polygon | null>(null);
+  const allParcelsRef = useRef<Map<string, any>>(new Map());
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -606,10 +606,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           strokeColor: '#2563eb',
           strokeOpacity: 0.9,
           strokeWeight: 2,
+          clickable: false,
           map: map
         });
       } else {
         polygonOverlayRef.current.setPaths(paths);
+        (polygonOverlayRef.current as any).setOptions({ clickable: false });
         polygonOverlayRef.current.setMap(map);
       }
     } else if (polygonOverlayRef.current) {
@@ -654,40 +656,74 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   }, [theme, mapLoaded]);
 
-  // Selected Property Land Parcel Boundary Overlay (Cadastral Boundary)
+  // Permanent Cadastral Land Parcel Boundaries for all listed Agricultural Lands & Plots
+  // Shaded parcel area is ALWAYS displayed on the map, not only when clicked.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoaded || !window.google?.maps) return;
+    if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
 
-    if (selectedProperty?.boundaryPolygon && selectedProperty.boundaryPolygon.length >= 3) {
-      const paths = selectedProperty.boundaryPolygon.map((c) => new google.maps.LatLng(c[1], c[0]));
-      const isAgri = selectedProperty.category === 'Agricultural Land' || selectedProperty.category === 'Plot';
+    const maps = window.google.maps;
+    const currentParcelMap = allParcelsRef.current;
+    const activeBoundaryPropertyIds = new Set<string>();
 
-      if (!propertyBoundaryPolygonRef.current) {
-        propertyBoundaryPolygonRef.current = new google.maps.Polygon({
-          paths,
-          strokeColor: isAgri ? '#059669' : '#2563eb',
-          strokeOpacity: 0.95,
-          strokeWeight: 3,
-          fillColor: isAgri ? '#10b981' : '#3b82f6',
-          fillOpacity: 0.25,
-          map: map,
-          zIndex: 85
-        });
-      } else {
-        propertyBoundaryPolygonRef.current.setPaths(paths);
-        (propertyBoundaryPolygonRef.current as any).setOptions({
-          strokeColor: isAgri ? '#059669' : '#2563eb',
-          fillColor: isAgri ? '#10b981' : '#3b82f6'
-        });
-        propertyBoundaryPolygonRef.current.setMap(map);
+    properties.forEach((prop) => {
+      if (prop.boundaryPolygon && prop.boundaryPolygon.length >= 3) {
+        activeBoundaryPropertyIds.add(prop.id);
+        const paths = prop.boundaryPolygon.map(([lng, lat]) => new maps.LatLng(lat, lng));
+        const isSelected = selectedProperty?.id === prop.id;
+        const isAgri = prop.category === 'Agricultural Land' || prop.category === 'Plot';
+
+        const fillColor = isSelected ? '#047857' : isAgri ? '#10b981' : '#3b82f6';
+        const fillOpacity = isSelected ? 0.45 : 0.28;
+        const strokeColor = isSelected ? '#065f46' : isAgri ? '#059669' : '#1d4ed8';
+        const strokeWeight = isSelected ? 3.5 : 2;
+
+        let polygon = currentParcelMap.get(prop.id);
+        if (!polygon) {
+          polygon = new maps.Polygon({
+            paths,
+            fillColor,
+            fillOpacity,
+            strokeColor,
+            strokeWeight,
+            strokeOpacity: 0.95,
+            zIndex: isSelected ? 85 : 35,
+            clickable: true,
+            map: map
+          });
+
+          // Clicking directly on the permanent shaded land parcel selects it and shows details
+          (polygon as any).addListener('click', (e: any) => {
+            if (e && e.stop) e.stop();
+            onSelectProperty(prop);
+          });
+
+          currentParcelMap.set(prop.id, polygon);
+        } else {
+          polygon.setPaths(paths);
+          (polygon as any).setOptions({
+            fillColor,
+            fillOpacity,
+            strokeColor,
+            strokeWeight,
+            zIndex: isSelected ? 85 : 35
+          });
+          polygon.setMap(map);
+        }
       }
-    } else if (propertyBoundaryPolygonRef.current) {
-      propertyBoundaryPolygonRef.current.setMap(null);
-    }
-  }, [selectedProperty, mapLoaded]);
+    });
+
+    // Clean up polygons for deleted properties
+    currentParcelMap.forEach((poly, id) => {
+      if (!activeBoundaryPropertyIds.has(id)) {
+        poly.setMap(null);
+        currentParcelMap.delete(id);
+      }
+    });
+  }, [properties, selectedProperty, mapLoaded, onSelectProperty]);
 
   // Land Surveyor Tool Polygons & Pegs
+  // clickable: false allows unlimited boundary nodes to be placed without blocking map clicks!
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
@@ -699,15 +735,17 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         if (!surveyorPolygonRef.current) {
           surveyorPolygonRef.current = new google.maps.Polygon({
             paths: paths,
-            fillColor: '#f59e0b',
-            fillOpacity: 0.2,
-            strokeColor: '#d97706',
+            fillColor: '#10b981',
+            fillOpacity: 0.22,
+            strokeColor: '#059669',
             strokeOpacity: 1,
             strokeWeight: 2.5,
+            clickable: false,
             map: map
           });
         } else {
           surveyorPolygonRef.current.setPaths(paths);
+          (surveyorPolygonRef.current as any).setOptions({ clickable: false });
           surveyorPolygonRef.current.setMap(map);
         }
         if (surveyorPolylineRef.current) {
@@ -717,13 +755,15 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         if (!surveyorPolylineRef.current) {
           surveyorPolylineRef.current = new google.maps.Polyline({
             path: paths,
-            strokeColor: '#f59e0b',
+            strokeColor: '#059669',
             strokeOpacity: 1,
             strokeWeight: 3,
+            clickable: false,
             map: map
           });
         } else {
           surveyorPolylineRef.current.setPath(paths);
+          (surveyorPolylineRef.current as any).setOptions({ clickable: false });
           surveyorPolylineRef.current.setMap(map);
         }
         if (surveyorPolygonRef.current) {

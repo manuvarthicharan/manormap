@@ -50,11 +50,11 @@ export const HeatmapLegendHUD: React.FC<HeatmapLegendHUDProps> = ({
             </div>
             <div className="min-w-0">
               <h4 className="text-xs font-black tracking-wide uppercase text-white truncate flex items-center gap-1.5">
-                <span>Land Price & Cost Heatmap</span>
+                <span>Thermal Price & Land Heatmap</span>
                 <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping inline-block" />
               </h4>
               <p className="text-[10px] text-slate-400 truncate">
-                Relative pricing & cost of living spectrum
+                Thermal camera pricing & cost spectrum overlay
               </p>
             </div>
           </div>
@@ -98,12 +98,12 @@ export const HeatmapLegendHUD: React.FC<HeatmapLegendHUDProps> = ({
           </div>
         ) : (
           <>
-            {/* Color Spectrum Gradient Bar */}
+            {/* Thermal Camera Color Spectrum Gradient Bar */}
             <div className="space-y-1.5">
               <div className="flex items-center justify-between text-[10px] font-semibold text-slate-400">
                 <span className="flex items-center gap-1 text-emerald-400">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Affordable
+                  Cool / Low
                 </span>
                 <span className="flex items-center gap-1 text-yellow-300">
                   <span className="w-2 h-2 rounded-full bg-yellow-400" />
@@ -111,19 +111,19 @@ export const HeatmapLegendHUD: React.FC<HeatmapLegendHUDProps> = ({
                 </span>
                 <span className="flex items-center gap-1 text-orange-400">
                   <span className="w-2 h-2 rounded-full bg-orange-500" />
-                  Premium
+                  Hot
                 </span>
                 <span className="flex items-center gap-1 text-rose-400">
                   <span className="w-2 h-2 rounded-full bg-rose-500" />
-                  Peak Land
+                  White-Hot Peak
                 </span>
               </div>
 
-              {/* The Visual Gradient Bar */}
+              {/* The Visual Thermal Gradient Bar */}
               <div
                 className="h-2.5 w-full rounded-full shadow-inner relative overflow-hidden"
                 style={{
-                  background: 'linear-gradient(to right, #10b981 0%, #a3e635 25%, #facc15 50%, #f97316 75%, #f43f5e 100%)'
+                  background: 'linear-gradient(to right, #10b981 0%, #34d399 15%, #a3e635 30%, #facc15 50%, #f97316 70%, #ef4444 85%, #ffffff 100%)'
                 }}
               />
 
