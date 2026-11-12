@@ -30,7 +30,6 @@ import {
   RotateCcw
 } from 'lucide-react';
 import { HeatmapLegendHUD } from './HeatmapLegendHUD';
-import { LandBoundarySurveyorHUD } from './LandBoundarySurveyorHUD';
 import {
   HeatmapMetric,
   buildHeatmapWeightedPoints,
@@ -185,8 +184,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
   const surveyorPolygonRef = useRef<google.maps.Polygon | null>(null);
-  const surveyorPolylineRef = useRef<google.maps.Polyline | null>(null);
-  const surveyorPegMarkersRef = useRef<google.maps.Marker[]>([]);
   const allPropertyBoundariesRef = useRef<Map<string, google.maps.Polygon>>(new Map());
   const transitLayerRef = useRef<any>(null);
   const heatmapLayerRef = useRef<any>(null);
@@ -744,108 +741,34 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   }, [properties, selectedProperty, hoveredPropertyId, isDrawingLandForProperty, landSurvey.active, mapLoaded]);
 
-  // Land Surveyor Tool Polygons & Multi-Node Vertex Pegs
+  // Land Surveyor & Agricultural Boundary Overlay (EXACT SAME logic as polygonSearch!)
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
 
     const isSurveyActive = landSurvey.active || isDrawingLandForProperty;
 
-    const forwardSurveyClick = (e: any) => {
-      if (e && e.latLng) {
-        const newPt: [number, number] = [e.latLng.lng(), e.latLng.lat()];
-        const updatedPts = [...landSurveyRef.current.points, newPt];
-        const metrics = calculateLandParcelMetrics(updatedPts);
-        onLandSurveyChange({
-          ...landSurveyRef.current,
-          ...metrics,
-          active: true,
-          isDrawing: true,
-          points: updatedPts
-        });
-      }
-    };
-
-    if (isSurveyActive && landSurvey.points.length > 0) {
+    if (isSurveyActive && landSurvey.points.length > 1) {
       const paths = landSurvey.points.map((p) => new google.maps.LatLng(p[1], p[0]));
 
-      // 1. Shaded Polygon when >= 3 points (clickable: true with click forwarder so clicks ALWAYS register for 4th, 5th, 6th... unlimited nodes!)
-      if (landSurvey.points.length >= 3) {
-        if (!surveyorPolygonRef.current) {
-          surveyorPolygonRef.current = new google.maps.Polygon({
-            paths: paths,
-            fillColor: '#10b981',
-            fillOpacity: 0.25,
-            strokeColor: '#059669',
-            strokeOpacity: 1,
-            strokeWeight: 3,
-            clickable: true,
-            map: map
-          });
-          surveyorPolygonRef.current.addListener('click', forwardSurveyClick);
-        } else {
-          surveyorPolygonRef.current.setPaths(paths);
-          surveyorPolygonRef.current.setOptions({ clickable: true });
-          surveyorPolygonRef.current.setMap(map);
-        }
-        if (surveyorPolylineRef.current) {
-          surveyorPolylineRef.current.setMap(null);
-        }
-      } else {
-        if (!surveyorPolylineRef.current) {
-          surveyorPolylineRef.current = new google.maps.Polyline({
-            path: paths,
-            strokeColor: '#059669',
-            strokeOpacity: 1,
-            strokeWeight: 3,
-            clickable: true,
-            map: map
-          });
-          surveyorPolylineRef.current.addListener('click', forwardSurveyClick);
-        } else {
-          surveyorPolylineRef.current.setPath(paths);
-          surveyorPolylineRef.current.setOptions({ clickable: true });
-          surveyorPolylineRef.current.setMap(map);
-        }
-        if (surveyorPolygonRef.current) {
-          surveyorPolygonRef.current.setMap(null);
-        }
-      }
-
-      // 2. Render numbered vertex peg markers at each coordinate
-      // Clear previous pegs
-      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
-      surveyorPegMarkersRef.current = [];
-
-      landSurvey.points.forEach((pt, idx) => {
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(pt[1], pt[0]),
-          map: map,
-          label: {
-            text: String(idx + 1),
-            color: '#ffffff',
-            fontSize: '11px',
-            fontWeight: 'bold'
-          },
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#059669',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2
-          },
-          zIndex: 200,
-          clickable: true
+      if (!surveyorPolygonRef.current) {
+        surveyorPolygonRef.current = new google.maps.Polygon({
+          paths: paths,
+          fillColor: '#10b981',
+          fillOpacity: 0.22,
+          strokeColor: '#059669',
+          strokeOpacity: 0.95,
+          strokeWeight: 2.5,
+          clickable: false,
+          map: map
         });
-        marker.addListener('click', forwardSurveyClick);
-        surveyorPegMarkersRef.current.push(marker);
-      });
-    } else {
-      if (surveyorPolygonRef.current) surveyorPolygonRef.current.setMap(null);
-      if (surveyorPolylineRef.current) surveyorPolylineRef.current.setMap(null);
-      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
-      surveyorPegMarkersRef.current = [];
+      } else {
+        surveyorPolygonRef.current.setPaths(paths);
+        surveyorPolygonRef.current.setOptions({ clickable: false });
+        surveyorPolygonRef.current.setMap(map);
+      }
+    } else if (surveyorPolygonRef.current) {
+      surveyorPolygonRef.current.setMap(null);
     }
   }, [landSurvey, isDrawingLandForProperty, mapLoaded]);
 
@@ -1129,20 +1052,101 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       )}
 
       {/* 
-        LAND BOUNDARY SURVEYOR HEADS-UP DISPLAY (Unified Modern SaaS Command Bar)
-        Used for both general map parcel survey and agricultural land listing
+        LAND BOUNDARY / AGRICULTURAL PARCEL BANNER
+        (Uses the EXACT SAME logic as polygonSearch, with live area calculation!)
       */}
       {(landSurvey.active || isDrawingLandForProperty) && (
-        <LandBoundarySurveyorHUD
-          surveyState={landSurvey}
-          onChange={onLandSurveyChange}
-          onUndo={handleSurveyUndo}
-          onClear={handleSurveyClear}
-          onClose={handleSurveyClose}
-          isListingMode={isDrawingLandForProperty}
-          onSaveListingBoundary={onSaveListingBoundary}
-          onListThisLand={onListThisLand}
-        />
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-30 pointer-events-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-2.5 sm:p-3 flex items-center justify-between gap-2.5 animate-in fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <Ruler className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+            <div className="text-xs min-w-0">
+              <div className="font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
+                <span>
+                  {landSurvey.isDrawing
+                    ? (landSurvey.points.length === 0
+                        ? 'Click map to draw land boundary'
+                        : `Drawing boundary (${landSurvey.points.length} vertices)`)
+                    : `Surveyed Parcel (${landSurvey.points.length} vertices)`}
+                </span>
+                {landSurvey.points.length >= 3 && (
+                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-full">
+                    {landSurvey.areaAcres.toFixed(2)} Acres
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:block">
+                {landSurvey.points.length < 3
+                  ? 'Drop 3 or 4 points to form shape (e.g. 4 corners for rectangle plot)'
+                  : `${landSurvey.areaGunthas.toFixed(1)} Gunthas • ${landSurvey.areaSqYards.toLocaleString('en-IN')} Gaj • ${landSurvey.perimeterMeters}m perimeter`}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            {/* Undo last point */}
+            {landSurvey.points.length > 0 && landSurvey.isDrawing && (
+              <button
+                type="button"
+                onClick={handleSurveyUndo}
+                className="h-8 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1 text-xs font-semibold transition-colors"
+                title="Undo last point"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Undo</span>
+              </button>
+            )}
+
+            {/* Save Boundary (listing mode) / Done (survey mode) */}
+            {landSurvey.points.length >= 3 && landSurvey.isDrawing && (
+              <button
+                type="button"
+                onClick={() => {
+                  if (isDrawingLandForProperty && onSaveListingBoundary) {
+                    onSaveListingBoundary();
+                  } else {
+                    onLandSurveyChange({ ...landSurvey, isDrawing: false });
+                  }
+                }}
+                className="px-2.5 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>{isDrawingLandForProperty ? 'Save Boundary' : 'Done'}</span>
+              </button>
+            )}
+
+            {/* List Land button when finished in general survey mode */}
+            {!isDrawingLandForProperty && !landSurvey.isDrawing && landSurvey.points.length >= 3 && onListThisLand && (
+              <button
+                type="button"
+                onClick={() => onListThisLand(landSurvey)}
+                className="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+                title="List this surveyed parcel as Agricultural Land"
+              >
+                <span>List Land</span>
+              </button>
+            )}
+
+            {/* Clear All Points */}
+            <button
+              type="button"
+              onClick={handleSurveyClear}
+              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Clear Points"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+
+            {/* Close */}
+            <button
+              type="button"
+              onClick={handleSurveyClose}
+              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              title="Close"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
       )}
 
       {/* DESKTOP GEOSPATIAL TOOLBAR (Hidden on Mobile) */}
