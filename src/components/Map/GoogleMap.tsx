@@ -26,16 +26,9 @@ import {
   Check,
   Sparkles,
   Wrench,
-  Flame,
   RotateCcw
 } from 'lucide-react';
-import { HeatmapLegendHUD } from './HeatmapLegendHUD';
-import {
-  HeatmapMetric,
-  buildHeatmapWeightedPoints,
-  PRICE_HEATMAP_GRADIENT,
-  getHeatmapRadius
-} from '../../services/landPriceHeatmapService';
+import { LandBoundarySurveyorHUD } from './LandBoundarySurveyorHUD';
 
 const GOOGLE_MAPS_DARK_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
@@ -138,7 +131,8 @@ interface GoogleMapProps {
   landSurvey: LandSurveyState;
   onLandSurveyChange: (state: LandSurveyState) => void;
   isDrawingLandForProperty?: boolean;
-  onSaveListingBoundary?: () => void;
+  drawnLandBorders?: [number, number][];
+  onSaveListingBoundary?: (coords?: [number, number][], metrics?: any) => void;
   onCancelListingBoundary?: () => void;
   onListThisLand?: (survey: LandSurveyState) => void;
   // Theme
@@ -166,6 +160,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   landSurvey,
   onLandSurveyChange,
   isDrawingLandForProperty = false,
+  drawnLandBorders = [],
   onSaveListingBoundary,
   onCancelListingBoundary,
   onListThisLand,
@@ -184,9 +179,13 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
   const surveyorPolygonRef = useRef<google.maps.Polygon | null>(null);
+  const surveyorPolylineRef = useRef<google.maps.Polyline | null>(null);
+  const surveyorPegMarkersRef = useRef<google.maps.Marker[]>([]);
+  const landSurfacePolygonRef = useRef<google.maps.Polygon | null>(null);
+  const landSurfacePolylineRef = useRef<google.maps.Polyline | null>(null);
+  const landSurfacePegMarkersRef = useRef<google.maps.Marker[]>([]);
   const allPropertyBoundariesRef = useRef<Map<string, google.maps.Polygon>>(new Map());
   const transitLayerRef = useRef<any>(null);
-  const heatmapLayerRef = useRef<any>(null);
   const aiPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
 
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -195,14 +194,25 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const [activeMapTypeId, setActiveMapTypeId] = useState<string>('roadmap');
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [showTransitLayer, setShowTransitLayer] = useState(false);
-  const [showHeatmap, setShowHeatmap] = useState(false);
-  const [heatmapMetric, setHeatmapMetric] = useState<HeatmapMetric>('sqft');
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
 
-  // Dynamic relative pricing calculation across active properties & regional benchmarks
-  const { points: heatmapDataPoints, stats: heatmapStats } = useMemo(() => {
-    return buildHeatmapWeightedPoints(properties, heatmapMetric);
-  }, [properties, heatmapMetric]);
+  // Agricultural Land Drawing Coordinates (identical simple logic to polygonSearch)
+  const [landDrawCoordinates, setLandDrawCoordinates] = useState<[number, number][]>(() => drawnLandBorders || []);
+  const landDrawCoordinatesRef = useRef(landDrawCoordinates);
+  landDrawCoordinatesRef.current = landDrawCoordinates;
+
+  useEffect(() => {
+    if (isDrawingLandForProperty) {
+      setLandDrawCoordinates(drawnLandBorders || []);
+    }
+  }, [isDrawingLandForProperty, drawnLandBorders]);
+
+  const liveLandMetrics = useMemo(() => {
+    if (landDrawCoordinates.length < 3) {
+      return { areaAcres: 0, areaGunthas: 0, areaSqYards: 0, perimeterMeters: 0, areaSqFt: 0, areaSqMeters: 0 };
+    }
+    return calculateLandParcelMetrics(landDrawCoordinates);
+  }, [landDrawCoordinates]);
 
   const isAnyToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active || isDrawingLandForProperty;
 
@@ -338,9 +348,15 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             return;
           }
 
-          // Land Surveyor / Agricultural Land Mapping mode click
-          const isSurveying = isDrawingLandForPropertyRef.current || (landSurveyRef.current.active && landSurveyRef.current.isDrawing);
-          if (isSurveying && e.latLng) {
+          // Agricultural Land Surface Boundary Draw (listing mode - identical simple array logic to polygonSearch)
+          if (isDrawingLandForPropertyRef.current && e.latLng) {
+            const newPt: [number, number] = [e.latLng.lng(), e.latLng.lat()];
+            setLandDrawCoordinates((prev) => [...prev, newPt]);
+            return;
+          }
+
+          // Land Surveyor general tool mode click
+          if (landSurveyRef.current.active && landSurveyRef.current.isDrawing && e.latLng) {
             handleAddSurveyPoint(e.latLng);
             return;
           }
@@ -374,6 +390,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       markersRef.current.clear();
       clusterMarkersRef.current.forEach((c) => c.remove());
       clusterMarkersRef.current = [];
+      if (landSurfacePolygonRef.current) landSurfacePolygonRef.current.setMap(null);
+      if (landSurfacePolylineRef.current) landSurfacePolylineRef.current.setMap(null);
+      landSurfacePegMarkersRef.current.forEach((m) => m.setMap(null));
+      landSurfacePegMarkersRef.current = [];
     };
   }, []);
 
@@ -450,10 +470,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       if (!marker) {
         marker = new CustomOverlayMarker(prop, map, isSelected, (clickedProp) => {
-          // If drawing boundary or polygon, don't open property modal
-          if (isDrawingLandForPropertyRef.current || landSurveyRef.current.active || polygonSearchRef.current.active) {
-            return;
-          }
           onSelectProperty(clickedProp);
 
           const [lng, lat] = clickedProp.coordinates;
@@ -486,9 +502,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
     clusters.forEach((cl) => {
       const clusterMarker = new ClusterOverlayMarker(cl, map, (clickedCluster) => {
-        if (isDrawingLandForPropertyRef.current || landSurveyRef.current.active || polygonSearchRef.current.active) {
-          return;
-        }
         const [lng, lat] = clickedCluster.coordinates;
         map.panTo(new google.maps.LatLng(lat, lng));
         map.setZoom(Math.min(18, (map.getZoom() || 12) + 2));
@@ -518,69 +531,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       transitLayerRef.current.setMap(null);
     }
   }, [showTransitLayer, mapLoaded]);
-
-  // Land Price & Cost of Living Heatmap Layer (Google Maps visualization.HeatmapLayer)
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
-
-    try {
-      const maps = window.google.maps;
-      const viz = (maps as any).visualization;
-      if (!viz || !viz.HeatmapLayer) {
-        console.warn('Google Maps visualization library not ready');
-        return;
-      }
-
-      if (showHeatmap && heatmapDataPoints.length > 0) {
-        // Strictly filter valid numeric coordinates
-        const validPoints = heatmapDataPoints.filter(
-          (pt) => typeof pt.lat === 'number' && typeof pt.lng === 'number' && !isNaN(pt.lat) && !isNaN(pt.lng)
-        );
-
-        const googleWeightedData = validPoints.map((pt) => ({
-          location: new maps.LatLng(pt.lat, pt.lng),
-          weight: Math.max(0.1, Math.min(10, isNaN(pt.weight) ? 1 : pt.weight))
-        }));
-
-        if (!heatmapLayerRef.current) {
-          heatmapLayerRef.current = new viz.HeatmapLayer({
-            data: googleWeightedData,
-            dissipating: true,
-            radius: getHeatmapRadius(currentZoom),
-            opacity: 0.8,
-            maxIntensity: 10,
-            gradient: PRICE_HEATMAP_GRADIENT,
-            map: map
-          });
-        } else {
-          heatmapLayerRef.current.setData(googleWeightedData);
-          heatmapLayerRef.current.setOptions({
-            radius: getHeatmapRadius(currentZoom),
-            gradient: PRICE_HEATMAP_GRADIENT,
-            opacity: 0.8,
-            maxIntensity: 10,
-            dissipating: true
-          });
-          heatmapLayerRef.current.setMap(map);
-        }
-      } else if (heatmapLayerRef.current) {
-        heatmapLayerRef.current.setMap(null);
-      }
-    } catch (err) {
-      console.error('Error handling Google Maps HeatmapLayer:', err);
-    }
-  }, [showHeatmap, heatmapDataPoints, currentZoom, mapLoaded]);
-
-  // Unmount cleanup for Heatmap Layer
-  useEffect(() => {
-    return () => {
-      if (heatmapLayerRef.current) {
-        heatmapLayerRef.current.setMap(null);
-        heatmapLayerRef.current = null;
-      }
-    };
-  }, []);
 
   // Radius Search Circle Overlay
   useEffect(() => {
@@ -640,6 +590,92 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       polygonOverlayRef.current.setMap(null);
     }
   }, [polygonSearch, mapLoaded]);
+
+  // Agricultural Land Surface Boundary Overlay (Identical non-blocking polygon logic as polygonSearch)
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !mapLoaded || !window.google?.maps) return;
+
+    if (isDrawingLandForProperty && landDrawCoordinates.length > 0) {
+      const paths = landDrawCoordinates.map((c) => new google.maps.LatLng(c[1], c[0]));
+
+      if (landDrawCoordinates.length >= 3) {
+        if (!landSurfacePolygonRef.current) {
+          landSurfacePolygonRef.current = new google.maps.Polygon({
+            paths: paths,
+            fillColor: '#10b981',
+            fillOpacity: 0.28,
+            strokeColor: '#059669',
+            strokeOpacity: 0.95,
+            strokeWeight: 2.5,
+            clickable: false, // CRITICAL: NEVER intercept clicks! Clicks pass straight to map!
+            map: map
+          });
+        } else {
+          landSurfacePolygonRef.current.setPaths(paths);
+          landSurfacePolygonRef.current.setOptions({ clickable: false });
+          landSurfacePolygonRef.current.setMap(map);
+        }
+        if (landSurfacePolylineRef.current) {
+          landSurfacePolylineRef.current.setMap(null);
+        }
+      } else if (landDrawCoordinates.length >= 2) {
+        if (!landSurfacePolylineRef.current) {
+          landSurfacePolylineRef.current = new google.maps.Polyline({
+            path: paths,
+            strokeColor: '#059669',
+            strokeOpacity: 0.95,
+            strokeWeight: 2.5,
+            clickable: false, // CRITICAL: NEVER intercept clicks!
+            map: map
+          });
+        } else {
+          landSurfacePolylineRef.current.setPath(paths);
+          landSurfacePolylineRef.current.setOptions({ clickable: false });
+          landSurfacePolylineRef.current.setMap(map);
+        }
+        if (landSurfacePolygonRef.current) {
+          landSurfacePolygonRef.current.setMap(null);
+        }
+      } else {
+        if (landSurfacePolygonRef.current) landSurfacePolygonRef.current.setMap(null);
+        if (landSurfacePolylineRef.current) landSurfacePolylineRef.current.setMap(null);
+      }
+
+      // Render numbered vertex peg markers at each coordinate (clickable: false)
+      landSurfacePegMarkersRef.current.forEach((m) => m.setMap(null));
+      landSurfacePegMarkersRef.current = [];
+
+      landDrawCoordinates.forEach((pt, idx) => {
+        const marker = new google.maps.Marker({
+          position: new google.maps.LatLng(pt[1], pt[0]),
+          map: map,
+          label: {
+            text: String(idx + 1),
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: 'bold'
+          },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#059669',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          },
+          zIndex: 200,
+          clickable: false
+        });
+        landSurfacePegMarkersRef.current.push(marker);
+      });
+    } else {
+      if (landSurfacePolygonRef.current) landSurfacePolygonRef.current.setMap(null);
+      if (landSurfacePolylineRef.current) landSurfacePolylineRef.current.setMap(null);
+      landSurfacePegMarkersRef.current.forEach((m) => m.setMap(null));
+      landSurfacePegMarkersRef.current = [];
+    }
+  }, [isDrawingLandForProperty, landDrawCoordinates, mapLoaded]);
 
   // AI Boundary & Polygon Overlay (highlight_area / draw_map_polygon)
   useEffect(() => {
@@ -748,34 +784,89 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   }, [properties, selectedProperty, hoveredPropertyId, isDrawingLandForProperty, landSurvey.active, mapLoaded]);
 
-  // Land Surveyor & Agricultural Boundary Overlay (EXACT SAME logic as polygonSearch!)
+  // Land Surveyor Tool Polygons & Multi-Node Vertex Pegs
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
 
-    const isSurveyActive = landSurvey.active || isDrawingLandForProperty;
+    const isSurveyActive = landSurvey.active && !isDrawingLandForProperty;
 
-    if (isSurveyActive && landSurvey.points.length > 1) {
+    if (isSurveyActive && landSurvey.points.length > 0) {
       const paths = landSurvey.points.map((p) => new google.maps.LatLng(p[1], p[0]));
 
-      if (!surveyorPolygonRef.current) {
-        surveyorPolygonRef.current = new google.maps.Polygon({
-          paths: paths,
-          fillColor: '#10b981',
-          fillOpacity: 0.22,
-          strokeColor: '#059669',
-          strokeOpacity: 0.95,
-          strokeWeight: 2.5,
-          clickable: false,
-          map: map
-        });
+      // 1. Shaded Polygon when >= 3 points (clickable: false so clicks pass through to map for unlimited nodes)
+      if (landSurvey.points.length >= 3) {
+        if (!surveyorPolygonRef.current) {
+          surveyorPolygonRef.current = new google.maps.Polygon({
+            paths: paths,
+            fillColor: '#10b981',
+            fillOpacity: 0.25,
+            strokeColor: '#059669',
+            strokeOpacity: 1,
+            strokeWeight: 3,
+            clickable: false,
+            map: map
+          });
+        } else {
+          surveyorPolygonRef.current.setPaths(paths);
+          surveyorPolygonRef.current.setOptions({ clickable: false });
+          surveyorPolygonRef.current.setMap(map);
+        }
+        if (surveyorPolylineRef.current) {
+          surveyorPolylineRef.current.setMap(null);
+        }
       } else {
-        surveyorPolygonRef.current.setPaths(paths);
-        surveyorPolygonRef.current.setOptions({ clickable: false });
-        surveyorPolygonRef.current.setMap(map);
+        if (!surveyorPolylineRef.current) {
+          surveyorPolylineRef.current = new google.maps.Polyline({
+            path: paths,
+            strokeColor: '#059669',
+            strokeOpacity: 1,
+            strokeWeight: 3,
+            clickable: false,
+            map: map
+          });
+        } else {
+          surveyorPolylineRef.current.setPath(paths);
+          surveyorPolylineRef.current.setOptions({ clickable: false });
+          surveyorPolylineRef.current.setMap(map);
+        }
+        if (surveyorPolygonRef.current) {
+          surveyorPolygonRef.current.setMap(null);
+        }
       }
-    } else if (surveyorPolygonRef.current) {
-      surveyorPolygonRef.current.setMap(null);
+
+      // 2. Render numbered vertex peg markers at each coordinate (clickable: false)
+      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
+      surveyorPegMarkersRef.current = [];
+
+      landSurvey.points.forEach((pt, idx) => {
+        const marker = new google.maps.Marker({
+          position: new google.maps.LatLng(pt[1], pt[0]),
+          map: map,
+          label: {
+            text: String(idx + 1),
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: 'bold'
+          },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#059669',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          },
+          zIndex: 200,
+          clickable: false
+        });
+        surveyorPegMarkersRef.current.push(marker);
+      });
+    } else {
+      if (surveyorPolygonRef.current) surveyorPolygonRef.current.setMap(null);
+      if (surveyorPolylineRef.current) surveyorPolylineRef.current.setMap(null);
+      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
+      surveyorPegMarkersRef.current = [];
     }
   }, [landSurvey, isDrawingLandForProperty, mapLoaded]);
 
@@ -1059,43 +1150,37 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       )}
 
       {/* 
-        LAND BOUNDARY / AGRICULTURAL PARCEL BANNER
-        (Uses the EXACT SAME logic as polygonSearch, with live area calculation!)
+        AGRICULTURAL LAND SURFACE DRAWING BANNER (Identical SaaS UI & logic to polygonSearch)
       */}
-      {(landSurvey.active || isDrawingLandForProperty) && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-30 pointer-events-auto bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 p-2.5 sm:p-3 flex items-center justify-between gap-2.5 animate-in fade-in">
-          <div className="flex items-center gap-2 min-w-0">
-            <Ruler className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+      {isDrawingLandForProperty && (
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-emerald-300 p-2.5 sm:p-3 flex items-center justify-between gap-3 animate-in fade-in">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+              <PenTool className="w-4 h-4" />
+            </div>
             <div className="text-xs min-w-0">
-              <div className="font-bold text-slate-900 dark:text-white truncate flex items-center gap-2">
-                <span>
-                  {landSurvey.isDrawing
-                    ? (landSurvey.points.length === 0
-                        ? 'Click map to draw land boundary'
-                        : `Drawing boundary (${landSurvey.points.length} vertices)`)
-                    : `Surveyed Parcel (${landSurvey.points.length} vertices)`}
-                </span>
-                {landSurvey.points.length >= 3 && (
-                  <span className="text-[10px] font-extrabold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-300 dark:border-emerald-700 px-2 py-0.5 rounded-full">
-                    {landSurvey.areaAcres.toFixed(2)} Acres
+              <div className="font-bold text-slate-900 truncate flex items-center gap-2">
+                <span>{landDrawCoordinates.length === 0 ? 'Click map to draw land boundary' : `Agricultural Land (${landDrawCoordinates.length} nodes)`}</span>
+                {landDrawCoordinates.length >= 3 && (
+                  <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
+                    {liveLandMetrics.areaAcres.toFixed(2)} Ac • {liveLandMetrics.areaGunthas.toFixed(1)} Gu
                   </span>
                 )}
               </div>
-              <div className="text-[10px] text-slate-500 dark:text-slate-400 hidden sm:block">
-                {landSurvey.points.length < 3
-                  ? 'Drop 3 or 4 points to form shape (e.g. 4 corners for rectangle plot)'
-                  : `${landSurvey.areaGunthas.toFixed(1)} Gunthas • ${landSurvey.areaSqYards.toLocaleString('en-IN')} Gaj • ${landSurvey.perimeterMeters}m perimeter`}
+              <div className="text-[10px] text-slate-500 hidden sm:block">
+                {landDrawCoordinates.length < 3
+                  ? 'Click points around the land perimeter (supports 4, 5, 6+ custom corners)'
+                  : `Perimeter: ${liveLandMetrics.perimeterMeters.toFixed(0)}m (${(liveLandMetrics.perimeterMeters * 3.28084).toFixed(0)} ft) • Click more to refine`}
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Undo last point */}
-            {landSurvey.points.length > 0 && landSurvey.isDrawing && (
+            {landDrawCoordinates.length > 0 && (
               <button
                 type="button"
-                onClick={handleSurveyUndo}
-                className="h-8 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center gap-1 text-xs font-semibold transition-colors"
+                onClick={() => setLandDrawCoordinates((prev) => prev.slice(0, -1))}
+                className="h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-semibold transition-colors"
                 title="Undo last point"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
@@ -1103,57 +1188,66 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
               </button>
             )}
 
-            {/* Save Boundary (listing mode) / Done (survey mode) */}
-            {landSurvey.points.length >= 3 && landSurvey.isDrawing && (
+            {landDrawCoordinates.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setLandDrawCoordinates([])}
+                className="h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 flex items-center gap-1 text-xs font-semibold transition-colors"
+                title="Clear all points"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Clear</span>
+              </button>
+            )}
+
+            {landDrawCoordinates.length >= 3 ? (
               <button
                 type="button"
                 onClick={() => {
-                  if (isDrawingLandForProperty && onSaveListingBoundary) {
-                    onSaveListingBoundary();
-                  } else {
-                    onLandSurveyChange({ ...landSurvey, isDrawing: false });
+                  if (onSaveListingBoundary) {
+                    onSaveListingBoundary(landDrawCoordinates, liveLandMetrics);
                   }
                 }}
-                className="px-2.5 sm:px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
+                className="px-3 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
               >
-                <Check className="w-3.5 h-3.5" />
-                <span>{isDrawingLandForProperty ? 'Save Boundary' : 'Done'}</span>
+                <Check className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Save Boundary</span>
               </button>
+            ) : (
+              <span className="text-[11px] font-semibold text-slate-400 px-2 hidden sm:inline">
+                {3 - landDrawCoordinates.length} more {3 - landDrawCoordinates.length === 1 ? 'node' : 'nodes'} needed
+              </span>
             )}
 
-            {/* List Land button when finished in general survey mode */}
-            {!isDrawingLandForProperty && !landSurvey.isDrawing && landSurvey.points.length >= 3 && onListThisLand && (
-              <button
-                type="button"
-                onClick={() => onListThisLand(landSurvey)}
-                className="px-2.5 sm:px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
-                title="List this surveyed parcel as Agricultural Land"
-              >
-                <span>List Land</span>
-              </button>
-            )}
-
-            {/* Clear All Points */}
             <button
               type="button"
-              onClick={handleSurveyClear}
-              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Clear Points"
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
-
-            {/* Close */}
-            <button
-              type="button"
-              onClick={handleSurveyClose}
-              className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Close"
+              onClick={() => {
+                if (onCancelListingBoundary) {
+                  onCancelListingBoundary();
+                }
+              }}
+              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors ml-1"
+              title="Cancel boundary drawing"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
+      )}
+
+      {/* 
+        LAND BOUNDARY SURVEYOR HEADS-UP DISPLAY (When surveyor tool is explicitly active from toolbar)
+      */}
+      {landSurvey.active && !isDrawingLandForProperty && (
+        <LandBoundarySurveyorHUD
+          surveyState={landSurvey}
+          onChange={onLandSurveyChange}
+          onUndo={handleSurveyUndo}
+          onClear={handleSurveyClear}
+          onClose={handleSurveyClose}
+          isListingMode={false}
+          onListThisLand={onListThisLand}
+        />
       )}
 
       {/* DESKTOP GEOSPATIAL TOOLBAR (Hidden on Mobile) */}
@@ -1216,28 +1310,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             });
           }}
           title="Land Parcel Boundary Surveyor (Gaj, Gunthas, Acres)"
-          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-all active:scale-95 ${
-            landSurvey.active || isDrawingLandForProperty
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/40'
+          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-colors active:scale-95 ${
+            landSurvey.active
+              ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md'
               : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Land surveyor"
         >
           <Ruler className="w-5 h-5" />
-        </button>
-
-        {/* Land Price & Cost of Living Heatmap Toggle */}
-        <button
-          onClick={() => setShowHeatmap(!showHeatmap)}
-          title="Land Price & Cost of Living Heatmap (Red, Orange, Yellow, Green)"
-          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-all active:scale-95 ${
-            showHeatmap
-              ? 'bg-gradient-to-tr from-amber-500 to-rose-600 text-white border-rose-400 shadow-md shadow-rose-500/25 ring-2 ring-rose-300'
-              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
-          }`}
-          aria-label="Land price heatmap"
-        >
-          <Flame className={`w-5 h-5 ${showHeatmap ? 'fill-white animate-pulse' : 'text-amber-500'}`} />
         </button>
 
         {/* Layer Switcher (Roadmap / Satellite / Terrain / Hybrid) */}
@@ -1280,26 +1360,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
               {/* Overlays & Specialized Layers */}
               <div className="pt-2 mt-2 border-t border-slate-100 px-1 space-y-1">
-                {/* Land Price & Cost of Living Heatmap */}
-                <button
-                  onClick={() => setShowHeatmap(!showHeatmap)}
-                  className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
-                    showHeatmap
-                      ? 'bg-rose-50 text-rose-900 font-bold border border-rose-200'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Flame className={`w-3.5 h-3.5 ${showHeatmap ? 'text-rose-600 fill-rose-600' : 'text-amber-500'}`} />
-                    <span>Land Price Heatmap</span>
-                  </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-extrabold ${
-                    showHeatmap ? 'bg-rose-600 text-white' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {showHeatmap ? 'ON' : 'OFF'}
-                  </span>
-                </button>
-
                 {/* Transit & Metro Lines */}
                 <button
                   onClick={() => setShowTransitLayer(!showTransitLayer)}
@@ -1502,12 +1562,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     });
                   }}
                   className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 text-center transition-all ${
-                    landSurvey.active || isDrawingLandForProperty
-                      ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm'
+                    landSurvey.active
+                      ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-sm'
                       : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <Ruler className="w-5 h-5 text-emerald-600" />
+                  <Ruler className="w-5 h-5 text-amber-600" />
                   <span className="text-xs font-bold leading-tight">Surveyor</span>
                   <span className="text-[9px] text-slate-400 font-medium">Gaj & Acres</span>
                 </button>
@@ -1547,43 +1607,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
             {/* Section 3: Extra Toggles */}
             <div className="pt-2 border-t border-slate-100 space-y-2">
-              {/* Land Price & Cost of Living Heatmap Card */}
-              <button
-                onClick={() => {
-                  setShowHeatmap(!showHeatmap);
-                }}
-                className={`w-full p-3 rounded-2xl border text-xs font-bold flex items-center justify-between transition-all ${
-                  showHeatmap
-                    ? 'bg-gradient-to-r from-amber-50 to-rose-50 border-rose-300 text-rose-950 shadow-xs'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                    showHeatmap
-                      ? 'bg-gradient-to-tr from-amber-500 to-rose-600 text-white shadow-xs'
-                      : 'bg-amber-100 text-amber-700'
-                  }`}>
-                    <Flame className="w-4 h-4 fill-current" />
-                  </div>
-                  <div className="text-left">
-                    <div className="font-extrabold text-slate-900">Land Price Heatmap</div>
-                    <div className="text-[10px] text-slate-500 font-medium flex items-center gap-1 mt-0.5">
-                      <span>🟢 Affordable</span>
-                      <span>🟡 Balanced</span>
-                      <span>🟠 High</span>
-                      <span>🔴 Peak</span>
-                    </div>
-                  </div>
-                </div>
-
-                <span className={`text-[10px] px-2.5 py-1 rounded-lg font-extrabold ${
-                  showHeatmap ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-600'
-                }`}>
-                  {showHeatmap ? 'ACTIVE' : 'OFF'}
-                </span>
-              </button>
-
               <button
                 onClick={() => {
                   setShowTransitLayer(!showTransitLayer);
@@ -1622,15 +1645,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           </div>
         </>
       )}
-
-      {/* Land Price & Cost of Living Heatmap Floating HUD */}
-      <HeatmapLegendHUD
-        isVisible={showHeatmap}
-        onClose={() => setShowHeatmap(false)}
-        stats={heatmapStats}
-        metric={heatmapMetric}
-        onMetricChange={setHeatmapMetric}
-      />
     </div>
   );
 };

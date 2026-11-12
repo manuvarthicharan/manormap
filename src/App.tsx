@@ -16,7 +16,8 @@ import {
   filterPropertiesByPolygon,
   addCustomProperty,
   deleteCustomProperty,
-  syncPropertiesFromCloud
+  syncPropertiesFromCloud,
+  calculateLandParcelMetrics
 } from './services/propertyService';
 import { reverseGeocodeLocation, ReverseGeocodeResult } from './services/geocoding';
 import { mapActionBridge } from './services/mapActionBridge';
@@ -364,14 +365,33 @@ export const App: React.FC = () => {
   };
 
   // Confirm land boundary from map drawing
-  const handleConfirmLandBoundary = () => {
-    setPropertyDrawnBorders(landSurvey.points);
+  const handleConfirmLandBoundary = (coords?: [number, number][], metrics?: any) => {
+    const finalPoints = coords || landSurvey.points;
+    const finalMetrics = metrics || calculateLandParcelMetrics(finalPoints);
+    setPropertyDrawnBorders(finalPoints);
     setPropertyLandMetrics({
-      areaAcres: landSurvey.areaAcres,
-      areaGunthas: landSurvey.areaGunthas,
-      areaSqYards: landSurvey.areaSqYards,
-      perimeterMeters: landSurvey.perimeterMeters
+      areaAcres: finalMetrics.areaAcres,
+      areaGunthas: finalMetrics.areaGunthas,
+      areaSqYards: finalMetrics.areaSqYards,
+      perimeterMeters: finalMetrics.perimeterMeters
     });
+
+    // Auto-center location pin if not already set
+    if (finalPoints.length >= 3 && (!selectedPinLocation || !selectedPinLocation.coordinates)) {
+      const sumLng = finalPoints.reduce((acc, p) => acc + p[0], 0);
+      const sumLat = finalPoints.reduce((acc, p) => acc + p[1], 0);
+      const centerLng = sumLng / finalPoints.length;
+      const centerLat = sumLat / finalPoints.length;
+      setSelectedPinLocation({
+        coordinates: [centerLng, centerLat],
+        area: currentLocalityName || 'Surveyed Agricultural Zone',
+        city: currentCityName || 'District',
+        state: 'Telangana',
+        pinCode: '500001',
+        address: `${finalMetrics.areaAcres.toFixed(2)} Acres Surveyed Land Parcel, ${currentLocalityName || 'District'}`
+      });
+    }
+
     setIsDrawingLandForProperty(false);
     setLandSurvey({
       active: false,
@@ -722,6 +742,7 @@ export const App: React.FC = () => {
         landSurvey={landSurvey}
         onLandSurveyChange={setLandSurvey}
         isDrawingLandForProperty={isDrawingLandForProperty}
+        drawnLandBorders={propertyDrawnBorders}
         onSaveListingBoundary={handleConfirmLandBoundary}
         onCancelListingBoundary={handleCancelLandBoundary}
         onListThisLand={handleListFromSurvey}
