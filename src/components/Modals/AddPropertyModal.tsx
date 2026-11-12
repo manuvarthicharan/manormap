@@ -490,7 +490,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 </div>
               </div>
 
-              {/* Property Border Plotting & Surface Shading for Agricultural Land and Plots */}
+              {/* Property Border Drawing & Surface Shading for Agricultural Land and Plots */}
               {(category === 'Agricultural Land' || category === 'Plot') && (
                 <div className={`p-4 rounded-2xl border transition-all space-y-3 ${
                   drawnLandBorders && drawnLandBorders.length >= 3
@@ -504,13 +504,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <div>
                         <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-                          <span>Plot Property Borders on Map</span>
+                          <span>Draw Land Borders on Map</span>
                           <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
-                            {category === 'Agricultural Land' ? 'Required for Farmland' : 'Optional Plot Mapping'}
+                            {category === 'Agricultural Land' ? 'Required for Farmland' : 'Optional Plot Drawing'}
                           </span>
                         </h4>
                         <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
-                          Plot the boundary corners of your property on the live map. The surface area between the plotted points will be <strong>automatically calculated and shaded in emerald</strong> on the map.
+                          Draw the border of your land on the live Google Map. The surface area between the drawn borders will be <strong>automatically calculated and shaded in emerald</strong> on the map.
                         </p>
                       </div>
                     </div>
@@ -534,11 +534,11 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       <div className="space-y-1">
                         <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                           <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
-                          <span>Plotted Footprint: <strong className="text-emerald-700">{landMetrics?.areaAcres ? landMetrics.areaAcres.toFixed(2) : '0'} Acres</strong></span>
+                          <span>Drawn Parcel: <strong className="text-emerald-700">{landMetrics?.areaAcres ? landMetrics.areaAcres.toFixed(2) : '0'} Acres</strong></span>
                           <span className="text-slate-500 font-normal">({landMetrics?.areaGunthas ? landMetrics.areaGunthas.toFixed(1) : '0'} Gunthas)</span>
                         </div>
                         <div className="text-[11px] text-slate-500 flex items-center gap-2">
-                          <span>{drawnLandBorders.length} corner vertices</span>
+                          <span className="text-emerald-700 font-semibold">Drawn Land Boundary</span>
                           <span>•</span>
                           <span>Perimeter: {landMetrics?.perimeterMeters ? Math.round(landMetrics.perimeterMeters) : 0}m</span>
                           <span>•</span>
@@ -557,7 +557,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
                           >
                             <PenTool className="w-3.5 h-3.5" />
-                            <span>Re-plot Borders</span>
+                            <span>Redraw on Map</span>
                           </button>
                         )}
                         {onClearLandBorders && (
@@ -575,7 +575,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   ) : (
                     <div className="p-3.5 bg-white rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                       <div className="text-xs text-slate-600">
-                        Tap below to drop corner points on the live Google Map. The enclosed land area will be shaded live.
+                        Tap below to draw the border of your land on the map. The enclosed land area will be automatically shaded.
                       </div>
                       {onStartDrawLandBorders && (
                         <button
@@ -587,7 +587,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                           className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-xs flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
                         >
                           <PenTool className="w-4 h-4 stroke-[2.5]" />
-                          <span>Plot Land Borders on Map</span>
+                          <span>Draw Land Borders on Map</span>
                         </button>
                       )}
                     </div>

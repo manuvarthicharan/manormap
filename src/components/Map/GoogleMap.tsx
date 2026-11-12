@@ -172,7 +172,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
   const landSurfacePolygonRef = useRef<google.maps.Polygon | null>(null);
   const landSurfacePolylineRef = useRef<google.maps.Polyline | null>(null);
-  const landSurfacePegMarkersRef = useRef<google.maps.Marker[]>([]);
+  const isDrawingStrokeRef = useRef<boolean>(false);
+  const projectionOverlayRef = useRef<google.maps.OverlayView | null>(null);
   const allPropertyBoundariesRef = useRef<Map<string, google.maps.Polygon>>(new Map());
   const transitLayerRef = useRef<any>(null);
   const aiPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
@@ -262,6 +263,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         setMapLoaded(true);
         onMapLoaded(map);
 
+        // Overlay View for pixel-to-LatLng coordinate projection (used for smooth freehand drawing)
+        const projectionOverlay = new maps.OverlayView();
+        projectionOverlay.draw = () => {};
+        projectionOverlay.setMap(map);
+        projectionOverlayRef.current = projectionOverlay;
+
         // Initial bounds when map is ready
         maps.event.addListenerOnce(map, 'idle', () => {
           const b = map.getBounds();
@@ -320,10 +327,18 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             return;
           }
 
-          // Agricultural Land Surface Boundary Plot (listing mode - identical simple array logic to polygonSearch)
+          // Agricultural Land Surface Boundary: extend border on click if not dragging
           if (isDrawingLandForPropertyRef.current && e.latLng) {
             const newPt: [number, number] = [e.latLng.lng(), e.latLng.lat()];
-            setLandDrawCoordinates((prev) => [...prev, newPt]);
+            setLandDrawCoordinates((prev) => {
+              if (prev.length > 0) {
+                const last = prev[prev.length - 1];
+                const dx = newPt[0] - last[0];
+                const dy = newPt[1] - last[1];
+                if (dx * dx + dy * dy < 0.00000002) return prev;
+              }
+              return [...prev, newPt];
+            });
             return;
           }
 
@@ -356,10 +371,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       markersRef.current.clear();
       clusterMarkersRef.current.forEach((c) => c.remove());
       clusterMarkersRef.current = [];
+      if (projectionOverlayRef.current) {
+        projectionOverlayRef.current.setMap(null);
+        projectionOverlayRef.current = null;
+      }
       if (landSurfacePolygonRef.current) landSurfacePolygonRef.current.setMap(null);
       if (landSurfacePolylineRef.current) landSurfacePolylineRef.current.setMap(null);
-      landSurfacePegMarkersRef.current.forEach((m) => m.setMap(null));
-      landSurfacePegMarkersRef.current = [];
     };
   }, []);
 
@@ -557,7 +574,92 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   }, [polygonSearch, mapLoaded]);
 
-  // Agricultural Land Surface Boundary Overlay (Identical non-blocking polygon logic as polygonSearch)
+  // Freehand Drag-to-Draw border interaction for Agricultural Land
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    const map = mapRef.current;
+    if (!container || !isDrawingLandForProperty || !map) return;
+
+    let isDrawingStroke = false;
+
+    const getLatLngFromPointer = (e: PointerEvent): [number, number] | null => {
+      const projection = projectionOverlayRef.current?.getProjection();
+      if (!projection) return null;
+      const rect = container.getBoundingClientRect();
+      const pixelX = e.clientX - rect.left;
+      const pixelY = e.clientY - rect.top;
+      if (pixelX < 0 || pixelY < 0 || pixelX > rect.width || pixelY > rect.height) {
+        return null;
+      }
+      const latLng = projection.fromContainerPixelToLatLng(new google.maps.Point(pixelX, pixelY));
+      if (!latLng) return null;
+      return [latLng.lng(), latLng.lat()];
+    };
+
+    const handlePointerDown = (e: PointerEvent) => {
+      // Ignore right clicks or clicks on top banners/buttons
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.closest('.pointer-events-auto')) return;
+
+      const pt = getLatLngFromPointer(e);
+      if (pt) {
+        isDrawingStroke = true;
+        isDrawingStrokeRef.current = true;
+        (map as any).setOptions({ draggable: false, gestureHandling: 'none' });
+        setLandDrawCoordinates([pt]);
+        try {
+          container.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+    };
+
+    const handlePointerMove = (e: PointerEvent) => {
+      if (!isDrawingStroke) return;
+      const pt = getLatLngFromPointer(e);
+      if (!pt) return;
+
+      setLandDrawCoordinates((prev) => {
+        if (prev.length === 0) return [pt];
+        const last = prev[prev.length - 1];
+        const dx = pt[0] - last[0];
+        const dy = pt[1] - last[1];
+        // Distance delta filter (~2-3m) for smooth, efficient perimeter coordinates
+        if (dx * dx + dy * dy > 0.00000003) {
+          return [...prev, pt];
+        }
+        return prev;
+      });
+    };
+
+    const handlePointerUp = (e: PointerEvent) => {
+      if (isDrawingStroke) {
+        isDrawingStroke = false;
+        isDrawingStrokeRef.current = false;
+        (map as any).setOptions({ draggable: true, gestureHandling: 'greedy' });
+        try {
+          if (container.hasPointerCapture(e.pointerId)) {
+            container.releasePointerCapture(e.pointerId);
+          }
+        } catch (_) {}
+      }
+    };
+
+    container.addEventListener('pointerdown', handlePointerDown);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+    window.addEventListener('pointercancel', handlePointerUp);
+
+    return () => {
+      container.removeEventListener('pointerdown', handlePointerDown);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
+      (map as any).setOptions({ draggable: true, gestureHandling: 'greedy' });
+    };
+  }, [isDrawingLandForProperty]);
+
+  // Agricultural Land Surface Boundary Overlay (enclosing shaded emerald area without pegs)
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
@@ -570,22 +672,24 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           landSurfacePolygonRef.current = new google.maps.Polygon({
             paths: paths,
             fillColor: '#10b981',
-            fillOpacity: 0.32,
+            fillOpacity: 0.35,
             strokeColor: '#059669',
             strokeOpacity: 0.95,
             strokeWeight: 2.5,
-            clickable: false, // CRITICAL: NEVER intercept clicks! Clicks pass straight to map!
+            clickable: false,
+            zIndex: 150,
             map: map
           });
         } else {
           landSurfacePolygonRef.current.setPaths(paths);
           landSurfacePolygonRef.current.setOptions({
             fillColor: '#10b981',
-            fillOpacity: 0.32,
+            fillOpacity: 0.35,
             strokeColor: '#059669',
             strokeOpacity: 0.95,
             strokeWeight: 2.5,
-            clickable: false
+            clickable: false,
+            zIndex: 150
           });
           landSurfacePolygonRef.current.setMap(map);
         }
@@ -599,12 +703,19 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             strokeColor: '#059669',
             strokeOpacity: 0.95,
             strokeWeight: 2.5,
-            clickable: false, // CRITICAL: NEVER intercept clicks!
+            clickable: false,
+            zIndex: 150,
             map: map
           });
         } else {
           landSurfacePolylineRef.current.setPath(paths);
-          landSurfacePolylineRef.current.setOptions({ clickable: false });
+          landSurfacePolylineRef.current.setOptions({
+            strokeColor: '#059669',
+            strokeOpacity: 0.95,
+            strokeWeight: 2.5,
+            clickable: false,
+            zIndex: 150
+          });
           landSurfacePolylineRef.current.setMap(map);
         }
         if (landSurfacePolygonRef.current) {
@@ -614,39 +725,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         if (landSurfacePolygonRef.current) landSurfacePolygonRef.current.setMap(null);
         if (landSurfacePolylineRef.current) landSurfacePolylineRef.current.setMap(null);
       }
-
-      // Render numbered vertex peg markers at each coordinate (clickable: false)
-      landSurfacePegMarkersRef.current.forEach((m) => m.setMap(null));
-      landSurfacePegMarkersRef.current = [];
-
-      landDrawCoordinates.forEach((pt, idx) => {
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(pt[1], pt[0]),
-          map: map,
-          label: {
-            text: String(idx + 1),
-            color: '#ffffff',
-            fontSize: '11px',
-            fontWeight: 'bold'
-          },
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#059669',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2
-          },
-          zIndex: 200,
-          clickable: false
-        });
-        landSurfacePegMarkersRef.current.push(marker);
-      });
     } else {
       if (landSurfacePolygonRef.current) landSurfacePolygonRef.current.setMap(null);
       if (landSurfacePolylineRef.current) landSurfacePolylineRef.current.setMap(null);
-      landSurfacePegMarkersRef.current.forEach((m) => m.setMap(null));
-      landSurfacePegMarkersRef.current = [];
     }
   }, [isDrawingLandForProperty, landDrawCoordinates, mapLoaded]);
 
@@ -709,8 +790,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         const strokeWeight = isSelected ? 3.5 : (isHovered ? 2.5 : 2);
         const zIndex = isSelected ? 90 : (isHovered ? 60 : 35);
 
-        const isSurveyingMode = isDrawingLandForProperty || polygonSearch.active;
-        const clickable = !isSurveyingMode;
+        const isDrawingModeActive = isDrawingLandForProperty || polygonSearch.active;
+        const clickable = !isDrawingModeActive;
 
         let poly = currentMap.get(prop.id);
         if (!poly) {
@@ -848,7 +929,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         ref={mapContainerRef}
         className={`w-full h-full absolute inset-0 z-0 ${
           isDroppingPin || polygonSearch.isDrawing || isDrawingLandForProperty
-            ? 'cursor-crosshair'
+            ? 'cursor-crosshair touch-none select-none'
             : ''
         }`}
       />
@@ -879,9 +960,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/95 text-white backdrop-blur-md rounded-2xl shadow-xl border border-emerald-500/80 px-4 py-2 flex items-center gap-2.5 animate-in fade-in">
           <Ruler className="w-4 h-4 text-emerald-400 flex-shrink-0" />
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-white">Cadastral Boundary:</span>
+            <span className="font-bold text-white">Shaded Land Boundary:</span>
             <span className="font-extrabold text-emerald-400">
-              {selectedProperty.landMetrics?.areaAcres ? `${selectedProperty.landMetrics.areaAcres.toFixed(2)} Acres` : 'Surveyed Parcel'}
+              {selectedProperty.landMetrics?.areaAcres ? `${selectedProperty.landMetrics.areaAcres.toFixed(2)} Acres` : 'Shaded Land Parcel'}
             </span>
             {selectedProperty.landMetrics?.areaGunthas ? (
               <span className="text-slate-400">({selectedProperty.landMetrics.areaGunthas.toFixed(1)} Gunthas)</span>
@@ -998,27 +1079,29 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       )}
 
       {/* 
-        AGRICULTURAL LAND SURFACE DRAWING BANNER (Identical SaaS UI & logic to polygonSearch)
+        AGRICULTURAL LAND SURFACE DRAWING BANNER (Pure Freehand & Drag-to-Draw)
       */}
       {isDrawingLandForProperty && (
         <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-emerald-300 p-2.5 sm:p-3 flex items-center justify-between gap-3 animate-in fade-in">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center flex-shrink-0 shadow-xs">
               <PenTool className="w-4 h-4" />
             </div>
             <div className="text-xs min-w-0">
               <div className="font-bold text-slate-900 truncate flex items-center gap-2">
-                <span>{landDrawCoordinates.length === 0 ? 'Click map to plot land borders' : `Plotting Land Borders (${landDrawCoordinates.length} nodes)`}</span>
+                <span>{landDrawCoordinates.length >= 3 ? 'Land Boundary Drawn' : 'Draw Land Border'}</span>
                 {landDrawCoordinates.length >= 3 && (
-                  <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
-                    {liveLandMetrics.areaAcres.toFixed(2)} Ac • {liveLandMetrics.areaGunthas.toFixed(1)} Gu
+                  <span className="text-[11px] font-black text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
+                    <Sparkles className="w-3 h-3 text-emerald-600" />
+                    <span>{liveLandMetrics.areaAcres.toFixed(2)} Acres</span>
+                    <span className="text-emerald-700/80 font-semibold">({liveLandMetrics.areaGunthas.toFixed(1)} Gu)</span>
                   </span>
                 )}
               </div>
               <div className="text-[10px] text-slate-500 hidden sm:block">
                 {landDrawCoordinates.length < 3
-                  ? 'Click corner points around property. The area between points is automatically shaded.'
-                  : `Shaded Parcel: ${liveLandMetrics.perimeterMeters.toFixed(0)}m perimeter • Click more corners or save`}
+                  ? 'Drag your mouse or finger across the map to sketch your land border. The enclosed area is shaded automatically.'
+                  : `Enclosed land surface is shaded in emerald (${liveLandMetrics.perimeterMeters.toFixed(0)}m perimeter). Redraw or save below.`}
               </div>
             </div>
           </div>
@@ -1027,28 +1110,16 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             {landDrawCoordinates.length > 0 && (
               <button
                 type="button"
-                onClick={() => setLandDrawCoordinates((prev) => prev.slice(0, -1))}
-                className="h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-semibold transition-colors"
-                title="Undo last point"
+                onClick={() => setLandDrawCoordinates([])}
+                className="h-8 px-2.5 sm:px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-semibold transition-colors"
+                title="Redraw boundary"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Undo</span>
+                <span>Redraw</span>
               </button>
             )}
 
-            {landDrawCoordinates.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setLandDrawCoordinates([])}
-                className="h-8 px-2 sm:px-2.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 flex items-center gap-1 text-xs font-semibold transition-colors"
-                title="Clear all points"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Clear</span>
-              </button>
-            )}
-
-            {landDrawCoordinates.length >= 3 ? (
+            {landDrawCoordinates.length >= 3 && (
               <button
                 type="button"
                 onClick={() => {
@@ -1056,15 +1127,11 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     onSaveListingBoundary(landDrawCoordinates, liveLandMetrics);
                   }
                 }}
-                className="px-3.5 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                className="h-8 px-3.5 sm:px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Save Plotted Borders</span>
+                <span>Save Drawn Border</span>
               </button>
-            ) : (
-              <span className="text-[11px] font-semibold text-slate-400 px-2 hidden sm:inline">
-                {3 - landDrawCoordinates.length} more {3 - landDrawCoordinates.length === 1 ? 'node' : 'nodes'} needed
-              </span>
             )}
 
             <button
@@ -1075,7 +1142,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                 }
               }}
               className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-colors ml-1"
-              title="Cancel boundary drawing"
+              title="Cancel drawing"
             >
               <X className="w-4 h-4" />
             </button>

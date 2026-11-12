@@ -77,7 +77,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
           <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 space-y-2">
             {isAdding ? (
               <p className="leading-relaxed">
-                To list a residential home, villa, or agricultural land with surveyed parcel borders, please sign in with your Google account.
+                To list a residential home, villa, or agricultural land with shaded land borders, please sign in with your Google account.
               </p>
             ) : (
               <p className="leading-relaxed">

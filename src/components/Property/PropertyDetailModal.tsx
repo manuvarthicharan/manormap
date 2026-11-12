@@ -954,10 +954,10 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                         </div>
                         <div>
                           <div className="text-xs sm:text-sm font-black text-emerald-950 uppercase tracking-wide">
-                            Official Cadastral Land Parcel Surveyed
+                            Official Shaded Land Parcel Boundary
                           </div>
                           <div className="text-[11px] text-emerald-800">
-                            {property.boundaryPolygon.length} pegged corner vertices • Perimeter {property.landMetrics?.perimeterMeters ? `${Math.round(property.landMetrics.perimeterMeters)}m` : 'Mapped'}
+                            Shaded Land Boundary • Perimeter {property.landMetrics?.perimeterMeters ? `${Math.round(property.landMetrics.perimeterMeters)}m` : 'Mapped'}
                           </div>
                         </div>
                       </div>

@@ -200,7 +200,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     </div>
                     {property.boundaryPolygon && property.boundaryPolygon.length >= 3 && (
                       <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        Mapped ({property.boundaryPolygon.length} nodes)
+                        Shaded Land Parcel
                       </span>
                     )}
                   </div>
