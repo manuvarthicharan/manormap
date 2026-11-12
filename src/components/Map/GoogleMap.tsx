@@ -450,6 +450,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       if (!marker) {
         marker = new CustomOverlayMarker(prop, map, isSelected, (clickedProp) => {
+          // If drawing boundary or polygon, don't open property modal
+          if (isDrawingLandForPropertyRef.current || landSurveyRef.current.active || polygonSearchRef.current.active) {
+            return;
+          }
           onSelectProperty(clickedProp);
 
           const [lng, lat] = clickedProp.coordinates;
@@ -482,6 +486,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
     clusters.forEach((cl) => {
       const clusterMarker = new ClusterOverlayMarker(cl, map, (clickedCluster) => {
+        if (isDrawingLandForPropertyRef.current || landSurveyRef.current.active || polygonSearchRef.current.active) {
+          return;
+        }
         const [lng, lat] = clickedCluster.coordinates;
         map.panTo(new google.maps.LatLng(lat, lng));
         map.setZoom(Math.min(18, (map.getZoom() || 12) + 2));
