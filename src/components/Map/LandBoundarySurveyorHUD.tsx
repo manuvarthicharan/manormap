@@ -86,22 +86,22 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
                 {isListingMode ? 'Map Agricultural Parcel Boundary' : 'Land Boundary Surveyor'}
               </span>
               <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                {isDrawing ? (nodeCount >= 3 ? 'Ready to Close' : 'Drawing') : 'Surveyed'}
+                {isDrawing ? (nodeCount >= 3 ? `${nodeCount} Vertices Mapped` : `${nodeCount} Nodes`) : 'Surveyed'}
               </span>
             </div>
 
             <p className="text-[11px] text-slate-300 truncate font-medium">
-              {nodeCount === 0 && 'Click anywhere on map to drop 1st corner peg'}
-              {nodeCount === 1 && 'Click 2nd corner to trace boundary edge'}
-              {nodeCount === 2 && 'Click 3rd corner to form closed parcel polygon'}
+              {nodeCount === 0 && 'Click map to drop 1st corner peg'}
+              {nodeCount === 1 && 'Click map for 2nd corner peg'}
+              {nodeCount === 2 && 'Click map for 3rd corner peg'}
               {nodeCount >= 3 && isDrawing && (
                 <span className="text-emerald-300 font-semibold">
-                  Boundary closed ({nodeCount} nodes) • Click to add more or finish
+                  {nodeCount} corners placed • Click map to add 4th, 5th, 6th... corners, or click Save Boundary
                 </span>
               )}
               {nodeCount >= 3 && !isDrawing && (
                 <span className="text-slate-300">
-                  {areaAcres.toFixed(2)} Acres • {perimeterMeters}m perimeter mapped
+                  {areaAcres.toFixed(2)} Acres • {nodeCount} vertices mapped
                 </span>
               )}
             </p>

@@ -308,7 +308,7 @@ export function computeLandSurveyMetrics(points: [number, number][]): LandSurvey
 
   return {
     active: true,
-    isDrawing: false,
+    isDrawing: true, // Keep drawing active so user can add unlimited vertices (4, 5, 6, 7, 8+ nodes)
     points,
     areaSqYards,
     areaGunthas,

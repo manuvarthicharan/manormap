@@ -225,6 +225,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const polygonSearchRef = useRef(polygonSearch);
   polygonSearchRef.current = polygonSearch;
 
+  const isDrawingLandForPropertyRef = useRef(isDrawingLandForProperty);
+  isDrawingLandForPropertyRef.current = isDrawingLandForProperty;
+
   // Initialize Google Maps instance & register with MapActionBridge
   useEffect(() => {
     if (!mapContainerRef.current) return;
@@ -317,6 +320,20 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           }
         });
 
+        const handleAddSurveyPoint = (latLng: any) => {
+          if (!latLng) return;
+          const newPt: [number, number] = [latLng.lng(), latLng.lat()];
+          const updatedPts = [...landSurveyRef.current.points, newPt];
+          const metrics = calculateLandParcelMetrics(updatedPts);
+          onLandSurveyChange({
+            ...landSurveyRef.current,
+            ...metrics,
+            active: true,
+            isDrawing: true, // EXPLICITLY KEEP isDrawing: true so user can add 4, 5, 6, 7, 8... unlimited nodes!
+            points: updatedPts
+          });
+        };
+
         // Click on map: handle interaction based on active mode
         map.addListener('click', (e: any) => {
           if (isDroppingPinRef.current && e.latLng) {
@@ -324,16 +341,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             return;
           }
 
-          // Land Surveyor mode click
-          if (landSurveyRef.current.active && landSurveyRef.current.isDrawing && e.latLng) {
-            const newPt: [number, number] = [e.latLng.lng(), e.latLng.lat()];
-            const updatedPts = [...landSurveyRef.current.points, newPt];
-            const metrics = calculateLandParcelMetrics(updatedPts);
-            onLandSurveyChange({
-              ...landSurveyRef.current,
-              ...metrics,
-              points: updatedPts
-            });
+          // Land Surveyor / Agricultural Land Mapping mode click
+          const isSurveying = isDrawingLandForPropertyRef.current || (landSurveyRef.current.active && landSurveyRef.current.isDrawing);
+          if (isSurveying && e.latLng) {
+            handleAddSurveyPoint(e.latLng);
             return;
           }
 
@@ -685,6 +696,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         const strokeWeight = isSelected ? 3.5 : (isHovered ? 2.5 : 2);
         const zIndex = isSelected ? 90 : (isHovered ? 60 : 35);
 
+        const isSurveyingMode = isDrawingLandForProperty || landSurvey.active || polygonSearch.active;
+        const clickable = !isSurveyingMode;
+
         let poly = currentMap.get(prop.id);
         if (!poly) {
           poly = new google.maps.Polygon({
@@ -696,11 +710,13 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             strokeOpacity: 0.95,
             zIndex,
             map: map,
-            clickable: true
+            clickable
           });
 
           poly.addListener('click', () => {
-            onSelectProperty(prop);
+            if (!isDrawingLandForPropertyRef.current && !landSurveyRef.current.active) {
+              onSelectProperty(prop);
+            }
           });
 
           currentMap.set(prop.id, poly);
@@ -711,7 +727,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             fillOpacity,
             strokeColor,
             strokeWeight,
-            zIndex
+            zIndex,
+            clickable
           });
           poly.setMap(map);
         }
@@ -725,17 +742,34 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         currentMap.delete(id);
       }
     });
-  }, [properties, selectedProperty, hoveredPropertyId, mapLoaded]);
+  }, [properties, selectedProperty, hoveredPropertyId, isDrawingLandForProperty, landSurvey.active, mapLoaded]);
 
   // Land Surveyor Tool Polygons & Multi-Node Vertex Pegs
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
 
-    if (landSurvey.active && landSurvey.points.length > 0) {
+    const isSurveyActive = landSurvey.active || isDrawingLandForProperty;
+
+    const forwardSurveyClick = (e: any) => {
+      if (e && e.latLng) {
+        const newPt: [number, number] = [e.latLng.lng(), e.latLng.lat()];
+        const updatedPts = [...landSurveyRef.current.points, newPt];
+        const metrics = calculateLandParcelMetrics(updatedPts);
+        onLandSurveyChange({
+          ...landSurveyRef.current,
+          ...metrics,
+          active: true,
+          isDrawing: true,
+          points: updatedPts
+        });
+      }
+    };
+
+    if (isSurveyActive && landSurvey.points.length > 0) {
       const paths = landSurvey.points.map((p) => new google.maps.LatLng(p[1], p[0]));
 
-      // 1. Shaded Polygon when >= 3 points (clickable: false so clicks pass through for 4th, 5th, 6th... unlimited nodes!)
+      // 1. Shaded Polygon when >= 3 points (clickable: true with click forwarder so clicks ALWAYS register for 4th, 5th, 6th... unlimited nodes!)
       if (landSurvey.points.length >= 3) {
         if (!surveyorPolygonRef.current) {
           surveyorPolygonRef.current = new google.maps.Polygon({
@@ -745,12 +779,13 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             strokeColor: '#059669',
             strokeOpacity: 1,
             strokeWeight: 3,
-            clickable: false, // CRITICAL: Allows clicks to pass through to map for unlimited nodes!
+            clickable: true,
             map: map
           });
+          surveyorPolygonRef.current.addListener('click', forwardSurveyClick);
         } else {
           surveyorPolygonRef.current.setPaths(paths);
-          surveyorPolygonRef.current.setOptions({ clickable: false });
+          surveyorPolygonRef.current.setOptions({ clickable: true });
           surveyorPolygonRef.current.setMap(map);
         }
         if (surveyorPolylineRef.current) {
@@ -763,12 +798,13 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             strokeColor: '#059669',
             strokeOpacity: 1,
             strokeWeight: 3,
-            clickable: false, // CRITICAL: Allows clicks to pass through to map!
+            clickable: true,
             map: map
           });
+          surveyorPolylineRef.current.addListener('click', forwardSurveyClick);
         } else {
           surveyorPolylineRef.current.setPath(paths);
-          surveyorPolylineRef.current.setOptions({ clickable: false });
+          surveyorPolylineRef.current.setOptions({ clickable: true });
           surveyorPolylineRef.current.setMap(map);
         }
         if (surveyorPolygonRef.current) {
@@ -800,8 +836,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             strokeWeight: 2
           },
           zIndex: 200,
-          clickable: false
+          clickable: true
         });
+        marker.addListener('click', forwardSurveyClick);
         surveyorPegMarkersRef.current.push(marker);
       });
     } else {
@@ -810,7 +847,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
       surveyorPegMarkersRef.current = [];
     }
-  }, [landSurvey, mapLoaded]);
+  }, [landSurvey, isDrawingLandForProperty, mapLoaded]);
 
   // User location marker
   useEffect(() => {
