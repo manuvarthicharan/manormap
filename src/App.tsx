@@ -6,7 +6,6 @@ import {
   SearchResult,
   RadiusSearchState,
   PolygonSearchState,
-  LandSurveyState,
   MapContextSnapshot
 } from './types';
 import {
@@ -77,19 +76,6 @@ export const App: React.FC = () => {
     coordinates: []
   });
 
-  // Land Boundary Surveyor state
-  const [landSurvey, setLandSurvey] = useState<LandSurveyState>({
-    active: false,
-    isDrawing: false,
-    points: [],
-    areaSqYards: 0,
-    areaGunthas: 0,
-    areaAcres: 0,
-    areaSqFt: 0,
-    areaSqMeters: 0,
-    perimeterMeters: 0
-  });
-
   // Theme state (Dark Mode / Light Mode with localStorage persistence)
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('app_theme') as 'dark' | 'light') || (localStorage.getItem('manormap_theme') as 'dark' | 'light') || 'light';
@@ -141,7 +127,7 @@ export const App: React.FC = () => {
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
 
   // Check if any geospatial drawing tool or surveyor is active
-  const isAnyGeospatialToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active || isDrawingLandForProperty;
+  const isAnyGeospatialToolActive = radiusSearch.active || polygonSearch.active || isDrawingLandForProperty;
 
   // Automatically stow/hide property tray when drawing or surveying to prevent clutter
   useEffect(() => {
@@ -351,22 +337,11 @@ export const App: React.FC = () => {
   const handleStartDrawLandBorders = () => {
     setIsAddPropertyOpen(false);
     setIsDrawingLandForProperty(true);
-    setLandSurvey({
-      active: true,
-      isDrawing: true,
-      points: propertyDrawnBorders,
-      areaSqYards: propertyLandMetrics?.areaSqYards || 0,
-      areaGunthas: propertyLandMetrics?.areaGunthas || 0,
-      areaAcres: propertyLandMetrics?.areaAcres || 0,
-      areaSqFt: propertyLandMetrics?.areaSqFt || 0,
-      areaSqMeters: 0,
-      perimeterMeters: propertyLandMetrics?.perimeterMeters || 0
-    });
   };
 
   // Confirm land boundary from map drawing
   const handleConfirmLandBoundary = (coords?: [number, number][], metrics?: any) => {
-    const finalPoints = coords || landSurvey.points;
+    const finalPoints = coords || propertyDrawnBorders;
     const finalMetrics = metrics || calculateLandParcelMetrics(finalPoints);
     setPropertyDrawnBorders(finalPoints);
     setPropertyLandMetrics({
@@ -384,43 +359,21 @@ export const App: React.FC = () => {
       const centerLat = sumLat / finalPoints.length;
       setSelectedPinLocation({
         coordinates: [centerLng, centerLat],
-        area: currentLocalityName || 'Surveyed Agricultural Zone',
+        area: currentLocalityName || 'Agricultural Land Zone',
         city: currentCityName || 'District',
         state: 'Telangana',
         pinCode: '500001',
-        address: `${finalMetrics.areaAcres.toFixed(2)} Acres Surveyed Land Parcel, ${currentLocalityName || 'District'}`
+        address: `${finalMetrics.areaAcres.toFixed(2)} Acres Plotted Land Parcel, ${currentLocalityName || 'District'}`
       });
     }
 
     setIsDrawingLandForProperty(false);
-    setLandSurvey({
-      active: false,
-      isDrawing: false,
-      points: [],
-      areaSqYards: 0,
-      areaGunthas: 0,
-      areaAcres: 0,
-      areaSqFt: 0,
-      areaSqMeters: 0,
-      perimeterMeters: 0
-    });
     setIsAddPropertyOpen(true);
   };
 
   // Cancel land boundary drawing
   const handleCancelLandBoundary = () => {
     setIsDrawingLandForProperty(false);
-    setLandSurvey({
-      active: false,
-      isDrawing: false,
-      points: [],
-      areaSqYards: 0,
-      areaGunthas: 0,
-      areaAcres: 0,
-      areaSqFt: 0,
-      areaSqMeters: 0,
-      perimeterMeters: 0
-    });
     setIsAddPropertyOpen(true);
   };
 
@@ -428,54 +381,6 @@ export const App: React.FC = () => {
   const handleClearLandBorders = () => {
     setPropertyDrawnBorders([]);
     setPropertyLandMetrics(null);
-  };
-
-  // Convert any active map survey directly into an Agricultural Land listing draft
-  const handleListFromSurvey = (survey: LandSurveyState) => {
-    const profile = getUserProfile();
-    if (!profile.isAuthenticated) {
-      setAuthModalState({
-        isOpen: true,
-        reason: 'add_property'
-      });
-      return;
-    }
-
-    if (survey.points.length >= 3) {
-      const sumLng = survey.points.reduce((acc, p) => acc + p[0], 0);
-      const sumLat = survey.points.reduce((acc, p) => acc + p[1], 0);
-      const centerLng = sumLng / survey.points.length;
-      const centerLat = sumLat / survey.points.length;
-
-      setPropertyDrawnBorders(survey.points);
-      setPropertyLandMetrics({
-        areaAcres: survey.areaAcres,
-        areaGunthas: survey.areaGunthas,
-        areaSqYards: survey.areaSqYards,
-        perimeterMeters: survey.perimeterMeters
-      });
-      setSelectedPinLocation({
-        coordinates: [centerLng, centerLat],
-        area: currentLocalityName || 'Surveyed Agricultural Zone',
-        city: currentCityName || 'District',
-        state: 'Telangana',
-        pinCode: '500001',
-        address: `${survey.areaAcres.toFixed(2)} Acres Surveyed Land Parcel, ${currentLocalityName || 'District'}`
-      });
-    }
-
-    setLandSurvey({
-      active: false,
-      isDrawing: false,
-      points: [],
-      areaSqYards: 0,
-      areaGunthas: 0,
-      areaAcres: 0,
-      areaSqFt: 0,
-      areaSqMeters: 0,
-      perimeterMeters: 0
-    });
-    setIsAddPropertyOpen(true);
   };
 
   // Filter properties in visible area + radius + polygon + advanced filters
@@ -693,7 +598,6 @@ export const App: React.FC = () => {
       activeFilters: filterState,
       radiusSearch,
       polygonSearch,
-      landSurvey,
       comparedPropertyIds
     };
   }, [
@@ -708,7 +612,6 @@ export const App: React.FC = () => {
     filterState,
     radiusSearch,
     polygonSearch,
-    landSurvey,
     comparedPropertyIds
   ]);
 
@@ -739,13 +642,10 @@ export const App: React.FC = () => {
         onRadiusChange={setRadiusSearch}
         polygonSearch={polygonSearch}
         onPolygonChange={setPolygonSearch}
-        landSurvey={landSurvey}
-        onLandSurveyChange={setLandSurvey}
         isDrawingLandForProperty={isDrawingLandForProperty}
         drawnLandBorders={propertyDrawnBorders}
         onSaveListingBoundary={handleConfirmLandBoundary}
         onCancelListingBoundary={handleCancelLandBoundary}
-        onListThisLand={handleListFromSurvey}
         theme={theme}
         highlightedPropertyIds={highlightedPropertyIds}
         aiPolygon={aiPolygon}

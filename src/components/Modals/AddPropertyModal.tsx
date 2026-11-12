@@ -12,7 +12,7 @@ import {
   ShieldCheck,
   Building,
   Sparkles,
-  Ruler,
+  AlertTriangle,
   PenTool,
   UploadCloud,
   Camera,
@@ -112,6 +112,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
   const [currentUrlInput, setCurrentUrlInput] = useState('');
   const [urlInputError, setUrlInputError] = useState('');
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
+  const [plotBorderError, setPlotBorderError] = useState('');
 
   // Handle files selected from user's device (phone gallery or file explorer)
   // Automatically scales and converts to standalone data links in background
@@ -239,6 +240,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+
+    // For Agricultural Land, require plotted borders so area is shaded on map
+    if (category === 'Agricultural Land' && (!drawnLandBorders || drawnLandBorders.length < 3)) {
+      setPlotBorderError('Please plot the borders of your agricultural land on the map first so the property area is shaded and accurately displayed.');
+      return;
+    }
+    setPlotBorderError('');
 
     // Default coordinates if not dropped
     const coords: [number, number] = selectedLocation
@@ -482,41 +490,59 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 </div>
               </div>
 
-              {/* Cadastral Boundary Drawing for Agricultural Land and Plots */}
+              {/* Property Border Plotting & Surface Shading for Agricultural Land and Plots */}
               {(category === 'Agricultural Land' || category === 'Plot') && (
-                <div className="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-2xs">
-                        <Ruler className="w-4 h-4" />
+                <div className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                  drawnLandBorders && drawnLandBorders.length >= 3
+                    ? 'bg-emerald-50/70 border-emerald-300'
+                    : 'bg-gradient-to-br from-emerald-50 via-teal-50/40 to-white border-2 border-emerald-400 shadow-sm'
+                }`}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-start gap-2.5">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold shadow-xs flex-shrink-0">
+                        <PenTool className="w-5 h-5" />
                       </div>
                       <div>
-                        <h4 className="text-xs font-bold text-emerald-950 uppercase tracking-wider">
-                          Land Boundary & Perimeter Mapping
+                        <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
+                          <span>Plot Property Borders on Map</span>
+                          <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
+                            {category === 'Agricultural Land' ? 'Required for Farmland' : 'Optional Plot Mapping'}
+                          </span>
                         </h4>
-                        <p className="text-[11px] text-emerald-800">
-                          Trace the cadastral land borders directly on the map to highlight for prospective buyers.
+                        <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
+                          Plot the boundary corners of your property on the live map. The surface area between the plotted points will be <strong>automatically calculated and shaded in emerald</strong> on the map.
                         </p>
                       </div>
                     </div>
 
                     {drawnLandBorders && drawnLandBorders.length >= 3 && (
-                      <span className="text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow-2xs">
-                        Mapped
+                      <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-1 rounded-full shadow-2xs whitespace-nowrap">
+                        ✓ Shaded & Ready
                       </span>
                     )}
                   </div>
 
+                  {plotBorderError && (
+                    <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-xs font-semibold text-rose-700 flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-600 flex-shrink-0" />
+                      <span>{plotBorderError}</span>
+                    </div>
+                  )}
+
                   {drawnLandBorders && drawnLandBorders.length >= 3 ? (
-                    <div className="p-3 bg-white rounded-xl border border-emerald-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-                      <div className="space-y-0.5">
+                    <div className="p-3.5 bg-white rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                      <div className="space-y-1">
                         <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                          <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                          <span>Surveyed Parcel: <strong>{landMetrics?.areaAcres ? landMetrics.areaAcres.toFixed(2) : '0'} Acres</strong></span>
-                          <span className="text-slate-400">({landMetrics?.areaGunthas ? landMetrics.areaGunthas.toFixed(1) : '0'} Gunthas)</span>
+                          <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
+                          <span>Plotted Footprint: <strong className="text-emerald-700">{landMetrics?.areaAcres ? landMetrics.areaAcres.toFixed(2) : '0'} Acres</strong></span>
+                          <span className="text-slate-500 font-normal">({landMetrics?.areaGunthas ? landMetrics.areaGunthas.toFixed(1) : '0'} Gunthas)</span>
                         </div>
-                        <div className="text-[11px] text-slate-500 font-mono">
-                          {drawnLandBorders.length} corner vertices • Perimeter: {landMetrics?.perimeterMeters ? Math.round(landMetrics.perimeterMeters) : 0}m
+                        <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                          <span>{drawnLandBorders.length} corner vertices</span>
+                          <span>•</span>
+                          <span>Perimeter: {landMetrics?.perimeterMeters ? Math.round(landMetrics.perimeterMeters) : 0}m</span>
+                          <span>•</span>
+                          <span className="text-emerald-600 font-semibold">Area shaded on map</span>
                         </div>
                       </div>
 
@@ -524,36 +550,44 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         {onStartDrawLandBorders && (
                           <button
                             type="button"
-                            onClick={onStartDrawLandBorders}
-                            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition-colors"
+                            onClick={() => {
+                              setPlotBorderError('');
+                              onStartDrawLandBorders();
+                            }}
+                            className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
                           >
-                            Redraw on Map
+                            <PenTool className="w-3.5 h-3.5" />
+                            <span>Re-plot Borders</span>
                           </button>
                         )}
                         {onClearLandBorders && (
                           <button
                             type="button"
                             onClick={onClearLandBorders}
-                            className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-bold transition-colors"
+                            className="px-2.5 py-2 bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 rounded-xl text-xs font-semibold transition-colors flex items-center gap-1"
                           >
-                            Clear
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Clear</span>
                           </button>
                         )}
                       </div>
                     </div>
                   ) : (
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 bg-white rounded-xl border border-emerald-200/80 shadow-2xs">
+                    <div className="p-3.5 bg-white rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                       <div className="text-xs text-slate-600">
-                        Mark land perimeter corners on the live Google Map to calculate exact acreage and perimeter.
+                        Tap below to drop corner points on the live Google Map. The enclosed land area will be shaded live.
                       </div>
                       {onStartDrawLandBorders && (
                         <button
                           type="button"
-                          onClick={onStartDrawLandBorders}
-                          className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 whitespace-nowrap active:scale-95"
+                          onClick={() => {
+                            setPlotBorderError('');
+                            onStartDrawLandBorders();
+                          }}
+                          className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-xs flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
                         >
-                          <PenTool className="w-3.5 h-3.5" />
-                          <span>Draw Land Borders on Map</span>
+                          <PenTool className="w-4 h-4 stroke-[2.5]" />
+                          <span>Plot Land Borders on Map</span>
                         </button>
                       )}
                     </div>

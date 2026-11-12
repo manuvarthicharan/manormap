@@ -3,8 +3,7 @@ import {
   Property,
   MapBounds,
   RadiusSearchState,
-  PolygonSearchState,
-  LandSurveyState
+  PolygonSearchState
 } from '../../types';
 import { loadGoogleMaps } from '../../services/googleMapsLoader';
 import { CustomOverlayMarker } from './CustomOverlayMarker';
@@ -21,14 +20,13 @@ import {
   CircleDot,
   PenTool,
   Ruler,
+  Wrench,
   X,
   Trash2,
   Check,
   Sparkles,
-  Wrench,
   RotateCcw
 } from 'lucide-react';
-import { LandBoundarySurveyorHUD } from './LandBoundarySurveyorHUD';
 
 const GOOGLE_MAPS_DARK_STYLE: google.maps.MapTypeStyle[] = [
   { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
@@ -127,14 +125,11 @@ interface GoogleMapProps {
   // Polygon Search (Draw to search)
   polygonSearch: PolygonSearchState;
   onPolygonChange: (state: PolygonSearchState) => void;
-  // Land Surveyor & Agricultural Land Mapping
-  landSurvey: LandSurveyState;
-  onLandSurveyChange: (state: LandSurveyState) => void;
+  // Agricultural Land Border Plotting
   isDrawingLandForProperty?: boolean;
   drawnLandBorders?: [number, number][];
   onSaveListingBoundary?: (coords?: [number, number][], metrics?: any) => void;
   onCancelListingBoundary?: () => void;
-  onListThisLand?: (survey: LandSurveyState) => void;
   // Theme
   theme?: 'dark' | 'light';
   // AI Bridge Overlays
@@ -157,13 +152,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   onRadiusChange,
   polygonSearch,
   onPolygonChange,
-  landSurvey,
-  onLandSurveyChange,
   isDrawingLandForProperty = false,
   drawnLandBorders = [],
   onSaveListingBoundary,
   onCancelListingBoundary,
-  onListThisLand,
   theme = 'light',
   highlightedPropertyIds = [],
   aiPolygon = null,
@@ -178,9 +170,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   // Overlay Objects
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
-  const surveyorPolygonRef = useRef<google.maps.Polygon | null>(null);
-  const surveyorPolylineRef = useRef<google.maps.Polyline | null>(null);
-  const surveyorPegMarkersRef = useRef<google.maps.Marker[]>([]);
   const landSurfacePolygonRef = useRef<google.maps.Polygon | null>(null);
   const landSurfacePolylineRef = useRef<google.maps.Polyline | null>(null);
   const landSurfacePegMarkersRef = useRef<google.maps.Marker[]>([]);
@@ -214,7 +203,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     return calculateLandParcelMetrics(landDrawCoordinates);
   }, [landDrawCoordinates]);
 
-  const isAnyToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active || isDrawingLandForProperty;
+  const isAnyToolActive = radiusSearch.active || polygonSearch.active || isDrawingLandForProperty;
 
   // Keep live refs for callbacks to prevent stale closures
   const isDroppingPinRef = useRef(isDroppingPin);
@@ -225,9 +214,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
   const onBoundsChangeRef = useRef(onBoundsChange);
   onBoundsChangeRef.current = onBoundsChange;
-
-  const landSurveyRef = useRef(landSurvey);
-  landSurveyRef.current = landSurvey;
 
   const polygonSearchRef = useRef(polygonSearch);
   polygonSearchRef.current = polygonSearch;
@@ -327,20 +313,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           }
         });
 
-        const handleAddSurveyPoint = (latLng: any) => {
-          if (!latLng) return;
-          const newPt: [number, number] = [latLng.lng(), latLng.lat()];
-          const updatedPts = [...landSurveyRef.current.points, newPt];
-          const metrics = calculateLandParcelMetrics(updatedPts);
-          onLandSurveyChange({
-            ...landSurveyRef.current,
-            ...metrics,
-            active: true,
-            isDrawing: true, // EXPLICITLY KEEP isDrawing: true so user can add 4, 5, 6, 7, 8... unlimited nodes!
-            points: updatedPts
-          });
-        };
-
         // Click on map: handle interaction based on active mode
         map.addListener('click', (e: any) => {
           if (isDroppingPinRef.current && e.latLng) {
@@ -348,16 +320,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             return;
           }
 
-          // Agricultural Land Surface Boundary Draw (listing mode - identical simple array logic to polygonSearch)
+          // Agricultural Land Surface Boundary Plot (listing mode - identical simple array logic to polygonSearch)
           if (isDrawingLandForPropertyRef.current && e.latLng) {
             const newPt: [number, number] = [e.latLng.lng(), e.latLng.lat()];
             setLandDrawCoordinates((prev) => [...prev, newPt]);
-            return;
-          }
-
-          // Land Surveyor general tool mode click
-          if (landSurveyRef.current.active && landSurveyRef.current.isDrawing && e.latLng) {
-            handleAddSurveyPoint(e.latLng);
             return;
           }
 
@@ -604,7 +570,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           landSurfacePolygonRef.current = new google.maps.Polygon({
             paths: paths,
             fillColor: '#10b981',
-            fillOpacity: 0.28,
+            fillOpacity: 0.32,
             strokeColor: '#059669',
             strokeOpacity: 0.95,
             strokeWeight: 2.5,
@@ -613,7 +579,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           });
         } else {
           landSurfacePolygonRef.current.setPaths(paths);
-          landSurfacePolygonRef.current.setOptions({ clickable: false });
+          landSurfacePolygonRef.current.setOptions({
+            fillColor: '#10b981',
+            fillOpacity: 0.32,
+            strokeColor: '#059669',
+            strokeOpacity: 0.95,
+            strokeWeight: 2.5,
+            clickable: false
+          });
           landSurfacePolygonRef.current.setMap(map);
         }
         if (landSurfacePolylineRef.current) {
@@ -736,7 +709,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         const strokeWeight = isSelected ? 3.5 : (isHovered ? 2.5 : 2);
         const zIndex = isSelected ? 90 : (isHovered ? 60 : 35);
 
-        const isSurveyingMode = isDrawingLandForProperty || landSurvey.active || polygonSearch.active;
+        const isSurveyingMode = isDrawingLandForProperty || polygonSearch.active;
         const clickable = !isSurveyingMode;
 
         let poly = currentMap.get(prop.id);
@@ -754,7 +727,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           });
 
           poly.addListener('click', () => {
-            if (!isDrawingLandForPropertyRef.current && !landSurveyRef.current.active) {
+            if (!isDrawingLandForPropertyRef.current) {
               onSelectProperty(prop);
             }
           });
@@ -782,93 +755,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         currentMap.delete(id);
       }
     });
-  }, [properties, selectedProperty, hoveredPropertyId, isDrawingLandForProperty, landSurvey.active, mapLoaded]);
-
-  // Land Surveyor Tool Polygons & Multi-Node Vertex Pegs
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !window.google?.maps) return;
-
-    const isSurveyActive = landSurvey.active && !isDrawingLandForProperty;
-
-    if (isSurveyActive && landSurvey.points.length > 0) {
-      const paths = landSurvey.points.map((p) => new google.maps.LatLng(p[1], p[0]));
-
-      // 1. Shaded Polygon when >= 3 points (clickable: false so clicks pass through to map for unlimited nodes)
-      if (landSurvey.points.length >= 3) {
-        if (!surveyorPolygonRef.current) {
-          surveyorPolygonRef.current = new google.maps.Polygon({
-            paths: paths,
-            fillColor: '#10b981',
-            fillOpacity: 0.25,
-            strokeColor: '#059669',
-            strokeOpacity: 1,
-            strokeWeight: 3,
-            clickable: false,
-            map: map
-          });
-        } else {
-          surveyorPolygonRef.current.setPaths(paths);
-          surveyorPolygonRef.current.setOptions({ clickable: false });
-          surveyorPolygonRef.current.setMap(map);
-        }
-        if (surveyorPolylineRef.current) {
-          surveyorPolylineRef.current.setMap(null);
-        }
-      } else {
-        if (!surveyorPolylineRef.current) {
-          surveyorPolylineRef.current = new google.maps.Polyline({
-            path: paths,
-            strokeColor: '#059669',
-            strokeOpacity: 1,
-            strokeWeight: 3,
-            clickable: false,
-            map: map
-          });
-        } else {
-          surveyorPolylineRef.current.setPath(paths);
-          surveyorPolylineRef.current.setOptions({ clickable: false });
-          surveyorPolylineRef.current.setMap(map);
-        }
-        if (surveyorPolygonRef.current) {
-          surveyorPolygonRef.current.setMap(null);
-        }
-      }
-
-      // 2. Render numbered vertex peg markers at each coordinate (clickable: false)
-      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
-      surveyorPegMarkersRef.current = [];
-
-      landSurvey.points.forEach((pt, idx) => {
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(pt[1], pt[0]),
-          map: map,
-          label: {
-            text: String(idx + 1),
-            color: '#ffffff',
-            fontSize: '11px',
-            fontWeight: 'bold'
-          },
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 10,
-            fillColor: '#059669',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 2
-          },
-          zIndex: 200,
-          clickable: false
-        });
-        surveyorPegMarkersRef.current.push(marker);
-      });
-    } else {
-      if (surveyorPolygonRef.current) surveyorPolygonRef.current.setMap(null);
-      if (surveyorPolylineRef.current) surveyorPolylineRef.current.setMap(null);
-      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
-      surveyorPegMarkersRef.current = [];
-    }
-  }, [landSurvey, isDrawingLandForProperty, mapLoaded]);
+  }, [properties, selectedProperty, hoveredPropertyId, isDrawingLandForProperty, mapLoaded]);
 
   // User location marker
   useEffect(() => {
@@ -954,52 +841,13 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   };
 
-  // Land Surveyor handlers
-  const handleSurveyUndo = () => {
-    if (landSurvey.points.length === 0) return;
-    const updated = landSurvey.points.slice(0, -1);
-    const metrics = calculateLandParcelMetrics(updated);
-    onLandSurveyChange({
-      ...landSurvey,
-      ...metrics,
-      points: updated
-    });
-  };
-
-  const handleSurveyClear = () => {
-    const cleared = calculateLandParcelMetrics([]);
-    onLandSurveyChange({
-      ...landSurvey,
-      ...cleared,
-      points: []
-    });
-  };
-
-  const handleSurveyClose = () => {
-    if (isDrawingLandForProperty && onCancelListingBoundary) {
-      onCancelListingBoundary();
-    } else {
-      onLandSurveyChange({
-        active: false,
-        isDrawing: false,
-        points: [],
-        areaSqYards: 0,
-        areaGunthas: 0,
-        areaAcres: 0,
-        areaSqFt: 0,
-        areaSqMeters: 0,
-        perimeterMeters: 0
-      });
-    }
-  };
-
   return (
     <div className="w-full h-full absolute inset-0 overflow-hidden select-none">
       {/* 100% Viewport Google Map Canvas */}
       <div
         ref={mapContainerRef}
         className={`w-full h-full absolute inset-0 z-0 ${
-          isDroppingPin || landSurvey.isDrawing || polygonSearch.isDrawing || isDrawingLandForProperty
+          isDroppingPin || polygonSearch.isDrawing || isDrawingLandForProperty
             ? 'cursor-crosshair'
             : ''
         }`}
@@ -1160,7 +1008,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             </div>
             <div className="text-xs min-w-0">
               <div className="font-bold text-slate-900 truncate flex items-center gap-2">
-                <span>{landDrawCoordinates.length === 0 ? 'Click map to draw land boundary' : `Agricultural Land (${landDrawCoordinates.length} nodes)`}</span>
+                <span>{landDrawCoordinates.length === 0 ? 'Click map to plot land borders' : `Plotting Land Borders (${landDrawCoordinates.length} nodes)`}</span>
                 {landDrawCoordinates.length >= 3 && (
                   <span className="text-[11px] font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg">
                     {liveLandMetrics.areaAcres.toFixed(2)} Ac • {liveLandMetrics.areaGunthas.toFixed(1)} Gu
@@ -1169,8 +1017,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
               </div>
               <div className="text-[10px] text-slate-500 hidden sm:block">
                 {landDrawCoordinates.length < 3
-                  ? 'Click points around the land perimeter (supports 4, 5, 6+ custom corners)'
-                  : `Perimeter: ${liveLandMetrics.perimeterMeters.toFixed(0)}m (${(liveLandMetrics.perimeterMeters * 3.28084).toFixed(0)} ft) • Click more to refine`}
+                  ? 'Click corner points around property. The area between points is automatically shaded.'
+                  : `Shaded Parcel: ${liveLandMetrics.perimeterMeters.toFixed(0)}m perimeter • Click more corners or save`}
               </div>
             </div>
           </div>
@@ -1208,10 +1056,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     onSaveListingBoundary(landDrawCoordinates, liveLandMetrics);
                   }
                 }}
-                className="px-3 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
+                className="px-3.5 sm:px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Save Boundary</span>
+                <span>Save Plotted Borders</span>
               </button>
             ) : (
               <span className="text-[11px] font-semibold text-slate-400 px-2 hidden sm:inline">
@@ -1233,21 +1081,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             </button>
           </div>
         </div>
-      )}
-
-      {/* 
-        LAND BOUNDARY SURVEYOR HEADS-UP DISPLAY (When surveyor tool is explicitly active from toolbar)
-      */}
-      {landSurvey.active && !isDrawingLandForProperty && (
-        <LandBoundarySurveyorHUD
-          surveyState={landSurvey}
-          onChange={onLandSurveyChange}
-          onUndo={handleSurveyUndo}
-          onClear={handleSurveyClear}
-          onClose={handleSurveyClose}
-          isListingMode={false}
-          onListThisLand={onListThisLand}
-        />
       )}
 
       {/* DESKTOP GEOSPATIAL TOOLBAR (Hidden on Mobile) */}
@@ -1292,32 +1125,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           aria-label="Draw to search"
         >
           <PenTool className="w-5 h-5" />
-        </button>
-
-        {/* Land Boundary Surveyor */}
-        <button
-          onClick={() => {
-            onLandSurveyChange({
-              active: !landSurvey.active,
-              isDrawing: !landSurvey.active,
-              points: [],
-              areaSqYards: 0,
-              areaGunthas: 0,
-              areaAcres: 0,
-              areaSqFt: 0,
-              areaSqMeters: 0,
-              perimeterMeters: 0
-            });
-          }}
-          title="Land Parcel Boundary Surveyor (Gaj, Gunthas, Acres)"
-          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-colors active:scale-95 ${
-            landSurvey.active
-              ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md'
-              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
-          }`}
-          aria-label="Land surveyor"
-        >
-          <Ruler className="w-5 h-5" />
         </button>
 
         {/* Layer Switcher (Roadmap / Satellite / Terrain / Hybrid) */}
@@ -1500,7 +1307,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
               <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
                 Geospatial Search Tools
               </div>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {/* Radius Search */}
                 <button
                   onClick={() => {
@@ -1543,33 +1350,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                   <PenTool className="w-5 h-5 text-indigo-600" />
                   <span className="text-xs font-bold leading-tight">Lasso</span>
                   <span className="text-[9px] text-slate-400 font-medium">Draw Area</span>
-                </button>
-
-                {/* Land Boundary Surveyor */}
-                <button
-                  onClick={() => {
-                    setIsMobileToolsOpen(false);
-                    onLandSurveyChange({
-                      active: !landSurvey.active,
-                      isDrawing: !landSurvey.active,
-                      points: [],
-                      areaSqYards: 0,
-                      areaGunthas: 0,
-                      areaAcres: 0,
-                      areaSqFt: 0,
-                      areaSqMeters: 0,
-                      perimeterMeters: 0
-                    });
-                  }}
-                  className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 text-center transition-all ${
-                    landSurvey.active
-                      ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-sm'
-                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
-                  }`}
-                >
-                  <Ruler className="w-5 h-5 text-amber-600" />
-                  <span className="text-xs font-bold leading-tight">Surveyor</span>
-                  <span className="text-[9px] text-slate-400 font-medium">Gaj & Acres</span>
                 </button>
               </div>
             </div>

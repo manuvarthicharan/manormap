@@ -427,7 +427,7 @@ export async function executeServerTool(
         activeOverlays: {
           radius: mapContext.radiusSearch.active ? `${mapContext.radiusSearch.radiusKm} km` : null,
           polygon: mapContext.polygonSearch.active,
-          surveyor: mapContext.landSurvey.active
+          surveyor: false
         }
       };
 

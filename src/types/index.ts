@@ -289,7 +289,7 @@ export interface MapContextSnapshot {
   searchQuery?: string;
   radiusSearch: RadiusSearchState;
   polygonSearch: PolygonSearchState;
-  landSurvey: LandSurveyState;
+  landSurvey?: LandSurveyState;
   comparedPropertyIds: string[];
 }
 
