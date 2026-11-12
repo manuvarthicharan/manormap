@@ -1209,9 +1209,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             });
           }}
           title="Land Parcel Boundary Surveyor (Gaj, Gunthas, Acres)"
-          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-colors active:scale-95 ${
-            landSurvey.active
-              ? 'bg-amber-500 text-slate-950 border-amber-500 shadow-md'
+          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-all active:scale-95 ${
+            landSurvey.active || isDrawingLandForProperty
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/40'
               : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Land surveyor"
@@ -1495,12 +1495,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     });
                   }}
                   className={`p-3 rounded-2xl border flex flex-col items-center gap-1.5 text-center transition-all ${
-                    landSurvey.active
-                      ? 'bg-amber-50 border-amber-500 text-amber-800 shadow-sm'
+                    landSurvey.active || isDrawingLandForProperty
+                      ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm'
                       : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <Ruler className="w-5 h-5 text-amber-600" />
+                  <Ruler className="w-5 h-5 text-emerald-600" />
                   <span className="text-xs font-bold leading-tight">Surveyor</span>
                   <span className="text-[9px] text-slate-400 font-medium">Gaj & Acres</span>
                 </button>
