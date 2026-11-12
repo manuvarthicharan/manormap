@@ -178,21 +178,48 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                   </span>
                 </div>
 
-                {/* Specs */}
-                <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium">
-                  <div className="flex items-center gap-1">
-                    <BedDouble className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{property.bhk} BHK</span>
+                {/* Specs / Agricultural Metrics */}
+                {property.category === 'Agricultural Land' || property.category === 'Plot' ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold flex-wrap">
+                    <div className="flex items-center gap-1 text-emerald-700">
+                      <span className="text-xs">🌾</span>
+                      <span className="font-extrabold">
+                        {property.landMetrics?.areaAcres
+                          ? `${property.landMetrics.areaAcres.toFixed(2)} Acres`
+                          : `${(property.areaSqFt / 43560).toFixed(2)} Acres`}
+                      </span>
+                    </div>
+                    {property.landMetrics?.areaGunthas && (
+                      <span className="text-slate-500 font-medium">
+                        ({property.landMetrics.areaGunthas.toFixed(1)} Gunthas)
+                      </span>
+                    )}
+                    <div className="flex items-center gap-1 text-slate-500">
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.areaSqFt.toLocaleString('en-IN')} sqft</span>
+                    </div>
+                    {property.boundaryPolygon && property.boundaryPolygon.length >= 3 && (
+                      <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                        Mapped ({property.boundaryPolygon.length} nodes)
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Bath className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{property.bathrooms} Baths</span>
+                ) : (
+                  <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium">
+                    <div className="flex items-center gap-1">
+                      <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.bhk} BHK</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Bath className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.bathrooms} Baths</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.areaSqFt} sqft</span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
-                    <span>{property.areaSqFt} sqft</span>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Exact-Fit Action Buttons: View Details & Loan EMI */}

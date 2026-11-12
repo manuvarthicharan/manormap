@@ -137,3 +137,4 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
     </div>
   );
 };
+

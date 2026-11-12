@@ -156,8 +156,15 @@ export const PropertyCardCarousel: React.FC<PropertyCardCarouselProps> = ({
                       {/* Content */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-0.5">
-                          <div className="text-sm font-extrabold text-slate-900 tracking-tight truncate">
-                            {prop.priceDisplay}
+                          <div className="flex items-center gap-1.5 truncate">
+                            <span className="text-sm font-extrabold text-slate-900 tracking-tight truncate">
+                              {prop.priceDisplay}
+                            </span>
+                            {(prop.category === 'Agricultural Land' || prop.category === 'Plot') && (
+                              <span className="text-[10px] font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex-shrink-0">
+                                🌾 {prop.landMetrics?.areaAcres ? `${prop.landMetrics.areaAcres.toFixed(1)} Ac` : `${(prop.areaSqFt / 43560).toFixed(1)} Ac`}
+                              </span>
+                            )}
                           </div>
                           <button
                             type="button"

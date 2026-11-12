@@ -380,7 +380,17 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             </button>
           )}
 
-          <div className="hidden sm:block w-[1px] h-5 bg-slate-200 flex-shrink-0" />
+          {/* List Property Primary SaaS CTA (Desktop Header) */}
+          <button
+            type="button"
+            onClick={onOpenAddProperty}
+            className="hidden sm:flex items-center gap-1.5 h-9 px-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 flex-shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600 stroke-[2.5]" />
+            <span>List Property</span>
+          </button>
+
+          <div className="hidden sm:block w-[1px] h-5 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
 
           {/* User Profile Avatar with Online Status */}
           <button
@@ -499,18 +509,6 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             )}
           </div>
         )}
-      </div>
-
-      {/* Bottom Area: Exact-Fit Enterprise List Property Button */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 sm:left-6 sm:translate-x-0 z-20 pointer-events-auto">
-        <button
-          type="button"
-          onClick={onOpenAddProperty}
-          className="h-11 px-5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-lg border border-slate-800 flex items-center gap-2 transition-all active:scale-[0.98]"
-        >
-          <Plus className="w-4 h-4 text-blue-400 stroke-[2.5]" />
-          <span>List Property</span>
-        </button>
       </div>
     </>
   );

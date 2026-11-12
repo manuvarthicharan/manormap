@@ -944,25 +944,62 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                   </div>
                 </div>
 
-                {/* Cadastral Boundary Display */}
+                {/* Cadastral Land Boundary & Indian Metrics Card */}
                 {property.boundaryPolygon && property.boundaryPolygon.length >= 3 && (
-                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-between gap-3 shadow-2xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold flex-shrink-0">
-                        <Ruler className="w-4 h-4" />
+                  <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50/50 border border-emerald-200/90 shadow-xs space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold flex-shrink-0 shadow-sm">
+                          <Ruler className="w-4 h-4 stroke-[2.2]" />
+                        </div>
+                        <div>
+                          <div className="text-xs sm:text-sm font-black text-emerald-950 uppercase tracking-wide">
+                            Official Cadastral Land Parcel Surveyed
+                          </div>
+                          <div className="text-[11px] text-emerald-800">
+                            {property.boundaryPolygon.length} pegged corner vertices • Perimeter {property.landMetrics?.perimeterMeters ? `${Math.round(property.landMetrics.perimeterMeters)}m` : 'Mapped'}
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <div className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
-                          Cadastral Land Perimeter Mapped
+                      <span className="text-[10px] font-extrabold bg-emerald-600 text-white px-2.5 py-1 rounded-full shadow-2xs flex-shrink-0">
+                        Verified Parcel
+                      </span>
+                    </div>
+
+                    {/* 4-Box Indian Metrics Grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
+                      <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-100 shadow-2xs">
+                        <span className="text-[10px] font-bold uppercase text-slate-500">Acres</span>
+                        <div className="text-base font-black text-emerald-700">
+                          {property.landMetrics?.areaAcres ? property.landMetrics.areaAcres.toFixed(2) : (property.areaSqFt / 43560).toFixed(2)} Ac
                         </div>
-                        <div className="text-[11px] text-emerald-800">
-                          {property.landMetrics?.areaAcres ? `${property.landMetrics.areaAcres.toFixed(2)} Acres` : 'Surveyed Parcel'} ({property.boundaryPolygon.length} corner vertices) highlighted on live Google Map.
+                        <span className="text-[9px] text-slate-400">Standard Indian Acre</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-100 shadow-2xs">
+                        <span className="text-[10px] font-bold uppercase text-slate-500">Gunthas</span>
+                        <div className="text-base font-black text-amber-700">
+                          {property.landMetrics?.areaGunthas ? property.landMetrics.areaGunthas.toFixed(1) : ((property.areaSqFt / 43560) * 40).toFixed(1)}
                         </div>
+                        <span className="text-[9px] text-slate-400">1 Acre = 40 Gunthas</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-100 shadow-2xs">
+                        <span className="text-[10px] font-bold uppercase text-slate-500">Sq. Yards (Gaj)</span>
+                        <div className="text-base font-black text-slate-900">
+                          {property.landMetrics?.areaSqYards ? property.landMetrics.areaSqYards.toLocaleString('en-IN') : Math.round(property.areaSqFt / 9).toLocaleString('en-IN')}
+                        </div>
+                        <span className="text-[9px] text-slate-400">Plot measurement</span>
+                      </div>
+
+                      <div className="p-2.5 rounded-xl bg-white/90 border border-emerald-100 shadow-2xs">
+                        <span className="text-[10px] font-bold uppercase text-slate-500">Outer Perimeter</span>
+                        <div className="text-base font-black text-sky-700">
+                          {property.landMetrics?.perimeterMeters ? `${Math.round(property.landMetrics.perimeterMeters)}m` : 'Mapped'}
+                        </div>
+                        <span className="text-[9px] text-slate-400">Fencing distance</span>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-1 rounded-full shadow-2xs flex-shrink-0">
-                      Surveyed Parcel
-                    </span>
                   </div>
                 )}
               </div>

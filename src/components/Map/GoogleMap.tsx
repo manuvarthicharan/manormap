@@ -23,14 +23,14 @@ import {
   Ruler,
   X,
   Trash2,
-  Copy,
   Check,
   Sparkles,
   Wrench,
-  BarChart2,
-  Flame
+  Flame,
+  RotateCcw
 } from 'lucide-react';
 import { HeatmapLegendHUD } from './HeatmapLegendHUD';
+import { LandBoundarySurveyorHUD } from './LandBoundarySurveyorHUD';
 import {
   HeatmapMetric,
   buildHeatmapWeightedPoints,
@@ -135,9 +135,13 @@ interface GoogleMapProps {
   // Polygon Search (Draw to search)
   polygonSearch: PolygonSearchState;
   onPolygonChange: (state: PolygonSearchState) => void;
-  // Land Surveyor
+  // Land Surveyor & Agricultural Land Mapping
   landSurvey: LandSurveyState;
   onLandSurveyChange: (state: LandSurveyState) => void;
+  isDrawingLandForProperty?: boolean;
+  onSaveListingBoundary?: () => void;
+  onCancelListingBoundary?: () => void;
+  onListThisLand?: (survey: LandSurveyState) => void;
   // Theme
   theme?: 'dark' | 'light';
   // AI Bridge Overlays
@@ -162,6 +166,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   onPolygonChange,
   landSurvey,
   onLandSurveyChange,
+  isDrawingLandForProperty = false,
+  onSaveListingBoundary,
+  onCancelListingBoundary,
+  onListThisLand,
   theme = 'light',
   highlightedPropertyIds = [],
   aiPolygon = null,
@@ -192,16 +200,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const [showTransitLayer, setShowTransitLayer] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapMetric, setHeatmapMetric] = useState<HeatmapMetric>('sqft');
-  const [copiedSurvey, setCopiedSurvey] = useState(false);
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
-  const [isMobileSurveyorMetricsOpen, setIsMobileSurveyorMetricsOpen] = useState(false);
 
   // Dynamic relative pricing calculation across active properties & regional benchmarks
   const { points: heatmapDataPoints, stats: heatmapStats } = useMemo(() => {
     return buildHeatmapWeightedPoints(properties, heatmapMetric);
   }, [properties, heatmapMetric]);
 
-  const isAnyToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active;
+  const isAnyToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active || isDrawingLandForProperty;
 
   // Keep live refs for callbacks to prevent stale closures
   const isDroppingPinRef = useRef(isDroppingPin);
@@ -607,10 +613,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           strokeColor: '#2563eb',
           strokeOpacity: 0.9,
           strokeWeight: 2,
+          clickable: false,
           map: map
         });
       } else {
         polygonOverlayRef.current.setPaths(paths);
+        polygonOverlayRef.current.setOptions({ clickable: false });
         polygonOverlayRef.current.setMap(map);
       }
     } else if (polygonOverlayRef.current) {
@@ -888,20 +896,43 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   };
 
-  // Copy Land Survey Report
-  const handleCopySurveyReport = () => {
-    const report = `Official Land Survey Area Report:
-• Sq. Yards (Gaj): ${landSurvey.areaSqYards}
-• Gunthas: ${landSurvey.areaGunthas}
-• Acres: ${landSurvey.areaAcres}
-• Sq. Feet: ${landSurvey.areaSqFt}
-• Sq. Meters: ${landSurvey.areaSqMeters}
-• Perimeter: ${landSurvey.perimeterMeters} meters
-• Boundary Vertices: ${landSurvey.points.length} pegged coordinates`;
+  // Land Surveyor handlers
+  const handleSurveyUndo = () => {
+    if (landSurvey.points.length === 0) return;
+    const updated = landSurvey.points.slice(0, -1);
+    const metrics = calculateLandParcelMetrics(updated);
+    onLandSurveyChange({
+      ...landSurvey,
+      ...metrics,
+      points: updated
+    });
+  };
 
-    navigator.clipboard.writeText(report);
-    setCopiedSurvey(true);
-    setTimeout(() => setCopiedSurvey(false), 2500);
+  const handleSurveyClear = () => {
+    const cleared = calculateLandParcelMetrics([]);
+    onLandSurveyChange({
+      ...landSurvey,
+      ...cleared,
+      points: []
+    });
+  };
+
+  const handleSurveyClose = () => {
+    if (isDrawingLandForProperty && onCancelListingBoundary) {
+      onCancelListingBoundary();
+    } else {
+      onLandSurveyChange({
+        active: false,
+        isDrawing: false,
+        points: [],
+        areaSqYards: 0,
+        areaGunthas: 0,
+        areaAcres: 0,
+        areaSqFt: 0,
+        areaSqMeters: 0,
+        perimeterMeters: 0
+      });
+    }
   };
 
   return (
@@ -910,7 +941,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       <div
         ref={mapContainerRef}
         className={`w-full h-full absolute inset-0 z-0 ${
-          isDroppingPin || landSurvey.isDrawing || polygonSearch.isDrawing
+          isDroppingPin || landSurvey.isDrawing || polygonSearch.isDrawing || isDrawingLandForProperty
             ? 'cursor-crosshair'
             : ''
         }`}
@@ -1024,18 +1055,34 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           </div>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
+            {polygonSearch.coordinates.length > 0 && polygonSearch.isDrawing && (
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = polygonSearch.coordinates.slice(0, -1);
+                  onPolygonChange({ ...polygonSearch, coordinates: updated });
+                }}
+                className="h-8 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-semibold transition-colors"
+                title="Undo last point"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Undo</span>
+              </button>
+            )}
+
             {polygonSearch.coordinates.length >= 3 && polygonSearch.isDrawing && (
               <button
                 onClick={() => onPolygonChange({ ...polygonSearch, isDrawing: false })}
-                className="px-2.5 sm:px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                className="px-2.5 sm:px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
               >
-                Done
+                <Check className="w-3.5 h-3.5" />
+                <span>Done</span>
               </button>
             )}
 
             <button
               onClick={() => onPolygonChange({ active: false, isDrawing: false, coordinates: [] })}
-              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100"
+              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition-colors"
               title="Clear Drawn Area"
             >
               <Trash2 className="w-4 h-4" />
@@ -1044,219 +1091,21 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         </div>
       )}
 
-      {/* LAND SURVEYOR HEADS-UP DISPLAY (HUD) - DESKTOP ONLY */}
-      {landSurvey.active && (
-        <div className="hidden sm:block absolute top-20 left-4 sm:left-6 z-20 pointer-events-auto bg-slate-950/90 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700/80 p-4 max-w-sm w-full animate-in fade-in space-y-3">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xs">
-                <Ruler className="w-4 h-4" />
-              </div>
-              <div>
-                <div className="text-xs font-black tracking-wide uppercase text-white">Land Boundary Surveyor</div>
-                <div className="text-[10px] text-amber-300 font-medium">Standard Indian Land Metrics</div>
-              </div>
-            </div>
-
-            <button
-              onClick={() =>
-                onLandSurveyChange({
-                  active: false,
-                  isDrawing: false,
-                  points: [],
-                  areaSqYards: 0,
-                  areaGunthas: 0,
-                  areaAcres: 0,
-                  areaSqFt: 0,
-                  areaSqMeters: 0,
-                  perimeterMeters: 0
-                })
-              }
-              className="text-slate-400 hover:text-white"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Area Metrics Grid */}
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Sq. Yards (Gaj)</div>
-              <div className="text-lg font-black text-amber-400">{landSurvey.areaSqYards.toLocaleString('en-IN')}</div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Gunthas</div>
-              <div className="text-lg font-black text-amber-400">{landSurvey.areaGunthas}</div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Acres</div>
-              <div className="text-base font-black text-white">{landSurvey.areaAcres} Ac</div>
-            </div>
-
-            <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800">
-              <div className="text-[10px] font-bold uppercase text-slate-400">Perimeter</div>
-              <div className="text-base font-black text-white">{landSurvey.perimeterMeters} m</div>
-            </div>
-          </div>
-
-          <div className="text-[11px] text-slate-400 flex items-center justify-between">
-            <span>Pegged Vertices: <strong className="text-white">{landSurvey.points.length}</strong></span>
-            <span>Total Area: <strong className="text-white">{landSurvey.areaSqFt.toLocaleString('en-IN')} Sq. Ft</strong></span>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 pt-1 border-t border-slate-800">
-            <button
-              onClick={handleCopySurveyReport}
-              disabled={landSurvey.points.length < 3}
-              className="flex-1 h-8 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold rounded-lg text-xs flex items-center justify-center gap-1.5 transition-colors"
-            >
-              {copiedSurvey ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedSurvey ? 'Copied' : 'Copy Report'}</span>
-            </button>
-
-            <button
-              onClick={() => {
-                const cleared = calculateLandParcelMetrics([]);
-                onLandSurveyChange({
-                  ...landSurvey,
-                  ...cleared,
-                  points: []
-                });
-              }}
-              className="h-8 px-3 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-bold transition-colors"
-            >
-              Reset
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MOBILE COMPACT LAND SURVEYOR STRIP */}
-      {landSurvey.active && (
-        <div className="sm:hidden absolute top-16 left-3 right-3 z-20 pointer-events-auto bg-slate-950/95 text-white backdrop-blur-md rounded-2xl shadow-2xl border border-slate-700 p-2.5 flex items-center justify-between gap-2 animate-in fade-in">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-black text-xs flex-shrink-0">
-              <Ruler className="w-4 h-4" />
-            </div>
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-amber-400 truncate">
-                {landSurvey.areaAcres.toFixed(2)} Ac &bull; {landSurvey.areaSqYards.toLocaleString('en-IN')} Gaj
-              </div>
-              <div className="text-[10px] text-slate-400 truncate">
-                {landSurvey.points.length} nodes &bull; {landSurvey.perimeterMeters}m perimeter
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <button
-              onClick={() => setIsMobileSurveyorMetricsOpen(true)}
-              className="px-2.5 py-1 bg-amber-500 text-slate-950 rounded-xl text-xs font-bold flex items-center gap-1 shadow-xs active:scale-95"
-            >
-              <BarChart2 className="w-3.5 h-3.5" />
-              <span>Metrics</span>
-            </button>
-            <button
-              onClick={() =>
-                onLandSurveyChange({
-                  active: false,
-                  isDrawing: false,
-                  points: [],
-                  areaSqYards: 0,
-                  areaGunthas: 0,
-                  areaAcres: 0,
-                  areaSqFt: 0,
-                  areaSqMeters: 0,
-                  perimeterMeters: 0
-                })
-              }
-              className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* MOBILE SURVEYOR METRICS BOTTOM SHEET */}
-      {isMobileSurveyorMetricsOpen && (
-        <>
-          <div
-            className="sm:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 transition-opacity"
-            onClick={() => setIsMobileSurveyorMetricsOpen(false)}
-          />
-          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-slate-950 text-white rounded-t-3xl shadow-2xl border-t border-slate-800 p-5 pb-8 animate-in slide-in-from-bottom duration-200 space-y-4">
-            <div className="w-12 h-1.5 bg-slate-700 rounded-full mx-auto" />
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-black">
-                  <Ruler className="w-4 h-4" />
-                </div>
-                <div>
-                  <h4 className="text-sm font-extrabold text-white">Land Boundary Surveyor</h4>
-                  <p className="text-[11px] text-amber-300 font-medium">Standard Indian Land Metrics</p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsMobileSurveyorMetricsOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                <div className="text-[10px] font-bold uppercase text-slate-400">Sq. Yards (Gaj)</div>
-                <div className="text-xl font-black text-amber-400">{landSurvey.areaSqYards.toLocaleString('en-IN')}</div>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                <div className="text-[10px] font-bold uppercase text-slate-400">Gunthas</div>
-                <div className="text-xl font-black text-amber-400">{landSurvey.areaGunthas}</div>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                <div className="text-[10px] font-bold uppercase text-slate-400">Acres</div>
-                <div className="text-lg font-black text-white">{landSurvey.areaAcres} Ac</div>
-              </div>
-              <div className="p-3 rounded-2xl bg-slate-900 border border-slate-800">
-                <div className="text-[10px] font-bold uppercase text-slate-400">Perimeter</div>
-                <div className="text-lg font-black text-white">{landSurvey.perimeterMeters} m</div>
-              </div>
-            </div>
-
-            <div className="text-xs text-slate-400 flex items-center justify-between px-1">
-              <span>Pegged Vertices: <strong className="text-white">{landSurvey.points.length}</strong></span>
-              <span>Total: <strong className="text-white">{landSurvey.areaSqFt.toLocaleString('en-IN')} Sq. Ft</strong></span>
-            </div>
-
-            <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-              <button
-                onClick={handleCopySurveyReport}
-                disabled={landSurvey.points.length < 3}
-                className="flex-1 h-10 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-2 shadow-md active:scale-95"
-              >
-                {copiedSurvey ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedSurvey ? 'Copied to Clipboard' : 'Copy Survey Report'}</span>
-              </button>
-              <button
-                onClick={() => {
-                  const cleared = calculateLandParcelMetrics([]);
-                  onLandSurveyChange({
-                    ...landSurvey,
-                    ...cleared,
-                    points: []
-                  });
-                }}
-                className="h-10 px-4 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 text-xs font-bold active:scale-95"
-              >
-                Reset
-              </button>
-            </div>
-          </div>
-        </>
+      {/* 
+        LAND BOUNDARY SURVEYOR HEADS-UP DISPLAY (Unified Modern SaaS Command Bar)
+        Used for both general map parcel survey and agricultural land listing
+      */}
+      {(landSurvey.active || isDrawingLandForProperty) && (
+        <LandBoundarySurveyorHUD
+          surveyState={landSurvey}
+          onChange={onLandSurveyChange}
+          onUndo={handleSurveyUndo}
+          onClear={handleSurveyClear}
+          onClose={handleSurveyClose}
+          isListingMode={isDrawingLandForProperty}
+          onSaveListingBoundary={onSaveListingBoundary}
+          onListThisLand={onListThisLand}
+        />
       )}
 
       {/* DESKTOP GEOSPATIAL TOOLBAR (Hidden on Mobile) */}

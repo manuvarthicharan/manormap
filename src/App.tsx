@@ -16,8 +16,7 @@ import {
   filterPropertiesByPolygon,
   addCustomProperty,
   deleteCustomProperty,
-  syncPropertiesFromCloud,
-  calculateLandParcelMetrics
+  syncPropertiesFromCloud
 } from './services/propertyService';
 import { reverseGeocodeLocation, ReverseGeocodeResult } from './services/geocoding';
 import { mapActionBridge } from './services/mapActionBridge';
@@ -411,6 +410,54 @@ export const App: React.FC = () => {
     setPropertyLandMetrics(null);
   };
 
+  // Convert any active map survey directly into an Agricultural Land listing draft
+  const handleListFromSurvey = (survey: LandSurveyState) => {
+    const profile = getUserProfile();
+    if (!profile.isAuthenticated) {
+      setAuthModalState({
+        isOpen: true,
+        reason: 'add_property'
+      });
+      return;
+    }
+
+    if (survey.points.length >= 3) {
+      const sumLng = survey.points.reduce((acc, p) => acc + p[0], 0);
+      const sumLat = survey.points.reduce((acc, p) => acc + p[1], 0);
+      const centerLng = sumLng / survey.points.length;
+      const centerLat = sumLat / survey.points.length;
+
+      setPropertyDrawnBorders(survey.points);
+      setPropertyLandMetrics({
+        areaAcres: survey.areaAcres,
+        areaGunthas: survey.areaGunthas,
+        areaSqYards: survey.areaSqYards,
+        perimeterMeters: survey.perimeterMeters
+      });
+      setSelectedPinLocation({
+        coordinates: [centerLng, centerLat],
+        area: currentLocalityName || 'Surveyed Agricultural Zone',
+        city: currentCityName || 'District',
+        state: 'Telangana',
+        pinCode: '500001',
+        address: `${survey.areaAcres.toFixed(2)} Acres Surveyed Land Parcel, ${currentLocalityName || 'District'}`
+      });
+    }
+
+    setLandSurvey({
+      active: false,
+      isDrawing: false,
+      points: [],
+      areaSqYards: 0,
+      areaGunthas: 0,
+      areaAcres: 0,
+      areaSqFt: 0,
+      areaSqMeters: 0,
+      perimeterMeters: 0
+    });
+    setIsAddPropertyOpen(true);
+  };
+
   // Filter properties in visible area + radius + polygon + advanced filters
   const visibleProperties = useMemo(() => {
     let list = filterPropertiesByBounds(allProps, currentBounds, filterState);
@@ -674,6 +721,10 @@ export const App: React.FC = () => {
         onPolygonChange={setPolygonSearch}
         landSurvey={landSurvey}
         onLandSurveyChange={setLandSurvey}
+        isDrawingLandForProperty={isDrawingLandForProperty}
+        onSaveListingBoundary={handleConfirmLandBoundary}
+        onCancelListingBoundary={handleCancelLandBoundary}
+        onListThisLand={handleListFromSurvey}
         theme={theme}
         highlightedPropertyIds={highlightedPropertyIds}
         aiPolygon={aiPolygon}
@@ -690,60 +741,6 @@ export const App: React.FC = () => {
         locationInfo={droppedLocationInfo}
         isLoadingLocation={isLoadingLocationInfo}
       />
-
-      {/* 
-        Interactive Land Parcel Drawing Mode (Active while mapping Agricultural Land borders)
-      */}
-      {isDrawingLandForProperty && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white p-3 sm:px-5 sm:py-3 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center gap-2 sm:gap-3 animate-in slide-in-from-top sm:max-w-lg justify-between">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
-            <div className="min-w-0">
-              <div className="text-xs font-bold text-white truncate">Tap map to mark parcel corners</div>
-              <div className="text-[10px] text-slate-300 hidden sm:block">Drop 3 or more vertices to map boundary perimeter</div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 flex-shrink-0">
-            {landSurvey.points.length > 0 && (
-              <div className="flex items-center gap-1.5">
-                <div className="text-xs font-extrabold text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
-                  {landSurvey.areaAcres.toFixed(2)} Ac ({landSurvey.points.length} nodes)
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const updated = landSurvey.points.slice(0, -1);
-                    const metrics = calculateLandParcelMetrics(updated);
-                    setLandSurvey({
-                      ...landSurvey,
-                      ...metrics,
-                      points: updated
-                    });
-                  }}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold border border-slate-700 transition-colors"
-                  title="Undo last node point"
-                >
-                  Undo
-                </button>
-              </div>
-            )}
-            <button
-              onClick={handleConfirmLandBoundary}
-              disabled={landSurvey.points.length < 3}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-xs"
-            >
-              Save Boundary
-            </button>
-            <button
-              onClick={handleCancelLandBoundary}
-              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* 
         2. MINIMAL FLOATING CONTROLS

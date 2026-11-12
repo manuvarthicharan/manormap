@@ -32,12 +32,17 @@ export class CustomOverlayMarker {
       div.setAttribute('data-property-id', this.property.id);
 
       const pill = document.createElement('div');
-      pill.className = `marker-pill ${this.property.type}`;
+      const isAgri = this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
+      pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''}`;
 
-      // Enterprise Indicator Dot: Blue for Sale, Emerald for Rent
-      const dotColor = this.property.type === 'sale' ? '#2563eb' : '#059669';
+      // Modern Indicator: Emerald for Agricultural, Blue for Sale, Green for Rent
+      const dotColor = isAgri ? '#10b981' : (this.property.type === 'sale' ? '#2563eb' : '#059669');
+      const acresDisplay = (isAgri && this.property.landMetrics?.areaAcres)
+        ? `<span class="agri-tag font-extrabold text-[10px] text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-md mr-1 border border-emerald-300/60">🌾 ${this.property.landMetrics.areaAcres.toFixed(1)} Ac</span>`
+        : (isAgri ? '<span class="mr-1 text-[11px]">🌾</span>' : `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>`);
+
       pill.innerHTML = `
-        <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>
+        ${acresDisplay}
         <span class="price-text font-bold text-xs tracking-tight">${this.property.priceDisplay}</span>
       `;
 
