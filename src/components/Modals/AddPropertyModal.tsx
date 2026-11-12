@@ -151,13 +151,11 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
   ]);
 
   // Genuine Photo URLs & Device Upload state
-  const [photoUrls, setPhotoUrls] = useState<string[]>([
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'
-  ]);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [currentUrlInput, setCurrentUrlInput] = useState('');
   const [urlInputError, setUrlInputError] = useState('');
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
+  const [showUrlInput, setShowUrlInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isOptimizingImages, setIsOptimizingImages] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
@@ -268,10 +266,18 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       : [78.3820, 17.4474];
 
     // Ensure at least one valid image
+    const categoryDefaults: Record<string, string> = {
+      'Agricultural Land': 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+      'Plot': 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
+      'Villa': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80',
+      'Commercial': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
+      'Apartment': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'
+    };
+
     const finalImages =
       photoUrls.length > 0
         ? photoUrls
-        : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'];
+        : [categoryDefaults[category] || categoryDefaults['Apartment']];
 
     const newProperty: Property = {
       id: `custom-prop-${Date.now()}`,
@@ -807,18 +813,18 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <ImageIcon className="w-4 h-4 text-blue-600" />
-                    Property Photographs (Device Upload & Links)
+                    Property Photographs (Device Upload)
                   </h4>
                   <p className="text-[11px] text-slate-500">
-                    Select photos from your phone gallery or computer. Images are optimized and converted to links in the background with zero storage hassle.
+                    Upload photos directly from your device. Each photo is automatically compressed and converted into a link in the background.
                   </p>
                 </div>
-                <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
-                  {photoUrls.length} {photoUrls.length === 1 ? 'Photo' : 'Photos'} Added
+                <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200 self-start sm:self-auto">
+                  {photoUrls.length} {photoUrls.length === 1 ? 'Photo' : 'Photos'} Attached
                 </span>
               </div>
 
-              {/* Native Device File Picker (Hidden input with trigger drop zone) */}
+              {/* Native Device File Picker (Hero Action) */}
               <input
                 ref={fileInputRef}
                 type="file"
@@ -837,72 +843,93 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     handleDroppedFiles(e.dataTransfer.files);
                   }
                 }}
-                className="border-2 border-dashed border-blue-300 hover:border-blue-500 rounded-2xl p-4 sm:p-6 text-center cursor-pointer bg-white hover:bg-blue-50/40 transition-all group"
+                className="border-2 border-dashed border-blue-400 hover:border-blue-600 bg-blue-50/40 hover:bg-blue-50/80 rounded-3xl p-5 sm:p-7 text-center cursor-pointer transition-all group shadow-2xs"
               >
-                <div className="flex flex-col items-center justify-center gap-2">
-                  <div className="w-12 h-12 rounded-2xl bg-blue-100/70 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform shadow-xs">
-                    <UploadCloud className="w-6 h-6" />
+                <div className="flex flex-col items-center justify-center gap-2.5">
+                  <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-md">
+                    <UploadCloud className="w-7 h-7" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-blue-600 hover:underline">
-                      Click to choose photos from device / gallery
-                    </span>
-                    <span className="text-xs text-slate-500"> or drag & drop</span>
+                    <button
+                      type="button"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all pointer-events-none mb-1.5"
+                    >
+                      Choose Photos from Device
+                    </button>
+                    <p className="text-xs text-slate-600 font-medium">
+                      Select multiple images from photo gallery or computer
+                    </p>
                   </div>
-                  <p className="text-[10px] text-slate-400">
-                    Supports JPG, PNG, WebP &bull; Automatically optimized into standalone links
-                  </p>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
+                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                    <span>Auto-converts to lightweight links &bull; Zero hosting storage needed</span>
+                  </div>
                 </div>
               </div>
 
               {isOptimizingImages && (
-                <div className="flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 p-2.5 rounded-xl animate-pulse border border-blue-200">
+                <div className="flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 p-3 rounded-2xl animate-pulse border border-blue-200">
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{uploadProgress || 'Processing selected photos...'}</span>
+                  <span>{uploadProgress || 'Converting photos to optimized links...'}</span>
                 </div>
               )}
 
-              {/* Secondary URL Link Input (for pasting external URLs) */}
-              <div className="pt-2 border-t border-slate-200/80">
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-[11px] font-semibold text-slate-500">
-                    Or paste an existing image link:
-                  </span>
-                </div>
-                <div className="flex gap-2">
-                  <div className="flex-1 relative">
-                    <input
-                      type="url"
-                      value={currentUrlInput}
-                      onChange={(e) => {
-                        setCurrentUrlInput(e.target.value);
-                        if (urlInputError) setUrlInputError('');
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddPhotoUrl();
-                        }
-                      }}
-                      placeholder="Paste image URL (e.g. https://images.unsplash.com/... or your CDN link)"
-                      className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
+              {/* Optional Collapsed Web URL Input */}
+              <div className="pt-1">
+                {!showUrlInput ? (
                   <button
                     type="button"
-                    onClick={handleAddPhotoUrl}
-                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors flex items-center gap-1 active:scale-95 flex-shrink-0"
+                    onClick={() => setShowUrlInput(true)}
+                    className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1"
                   >
-                    <Plus className="w-3.5 h-3.5 stroke-[3]" />
-                    <span>Add Link</span>
+                    <span>+ Or paste an existing web image link instead</span>
                   </button>
-                </div>
-
-                {urlInputError && (
-                  <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    {urlInputError}
-                  </p>
+                ) : (
+                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-semibold text-slate-600">
+                        Paste external image URL:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setShowUrlInput(false)}
+                        className="text-[10px] text-slate-400 hover:text-slate-600 font-bold"
+                      >
+                        Hide
+                      </button>
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={currentUrlInput}
+                        onChange={(e) => {
+                          setCurrentUrlInput(e.target.value);
+                          if (urlInputError) setUrlInputError('');
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddPhotoUrl();
+                          }
+                        }}
+                        placeholder="https://images.unsplash.com/... or your image link"
+                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddPhotoUrl}
+                        className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors flex-shrink-0"
+                      >
+                        Add Link
+                      </button>
+                    </div>
+                    {urlInputError && (
+                      <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {urlInputError}
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
 

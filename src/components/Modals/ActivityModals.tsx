@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Property } from '../../types';
 import {
   X,
@@ -18,12 +18,25 @@ import {
   Save,
   Check,
   Database,
-  LogOut
+  LogOut,
+  TrendingDown,
+  TrendingUp,
+  Sparkles,
+  ArrowRight,
+  CheckCheck
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
 import { getUserProfile, saveUserProfile, cycleNextAvatar, syncProfileFromSupabaseUser, UserProfile } from '../../services/userService';
 import { signInWithGoogle, signOut, isSupabaseConfigured } from '../../services/supabaseClient';
+import {
+  getStoredNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+  clearAllNotifications,
+  formatRelativeTime,
+  AppNotification
+} from '../../services/notificationService';
 
 interface ActivityModalProps {
   modalType: string | null;
@@ -55,6 +68,25 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   const [avatarUrlInput, setAvatarUrlInput] = useState(profile.avatarUrl);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState('');
   const supabaseOnline = isSupabaseConfigured();
+
+  // Dynamic Notifications State
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => getStoredNotifications());
+
+  useEffect(() => {
+    if (modalType === 'notifications') {
+      setNotifications(getStoredNotifications());
+    }
+  }, [modalType]);
+
+  const handleMarkAllRead = () => {
+    const updated = markAllNotificationsAsRead();
+    setNotifications(updated);
+  };
+
+  const handleClearNotifications = () => {
+    clearAllNotifications();
+    setNotifications([]);
+  };
 
   const handleGoogleSignIn = async () => {
     if (!supabaseOnline) {
@@ -542,28 +574,141 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
               </div>
             )}
 
-            {/* NOTIFICATIONS */}
+            {/* DYNAMIC REAL-TIME NOTIFICATIONS */}
             {modalType === 'notifications' && (
               <div className="space-y-3">
-                <div className="p-3.5 rounded-2xl border border-slate-100 bg-blue-50/50">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-slate-900">Price Appreciation Alert</span>
-                    <span className="text-[10px] text-slate-400">2 hours ago</span>
+                {/* Notification Controls Bar */}
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs font-bold text-slate-800">
+                      Alerts & Activity
+                    </span>
+                    {notifications.filter((n) => !n.read).length > 0 && (
+                      <span className="px-1.5 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-extrabold animate-pulse">
+                        {notifications.filter((n) => !n.read).length} new
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs text-slate-600">
-                    Properties in Madhapur & Hitec City corridor rose by +14.2% YoY according to Q3 RERA market index.
-                  </p>
+                  <div className="flex items-center gap-2">
+                    {notifications.some((n) => !n.read) && (
+                      <button
+                        onClick={handleMarkAllRead}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                      >
+                        <CheckCheck className="w-3.5 h-3.5" />
+                        <span>Mark read</span>
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button
+                        onClick={handleClearNotifications}
+                        className="text-[11px] font-medium text-slate-400 hover:text-rose-600"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl border border-slate-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-slate-900">New Direct Inquiries</span>
-                    <span className="text-[10px] text-slate-400">1 day ago</span>
+                {/* Notifications List */}
+                {notifications.length > 0 ? (
+                  <div className="space-y-2.5 max-h-[60vh] overflow-y-auto pr-1">
+                    {notifications.map((notif) => {
+                      const isUnread = !notif.read;
+                      const isPriceChange = notif.type === 'price_change';
+                      const isNearby = notif.type === 'nearby_property';
+
+                      return (
+                        <div
+                          key={notif.id}
+                          className={`p-3.5 rounded-2xl border transition-all text-left relative ${
+                            isUnread
+                              ? 'bg-blue-50/40 border-blue-200/80 shadow-xs'
+                              : 'bg-white border-slate-200 hover:bg-slate-50/60'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            {/* Icon Badge */}
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                isPriceChange
+                                  ? notif.priceChange && notif.priceChange.difference < 0
+                                    ? 'bg-emerald-100 text-emerald-600'
+                                    : 'bg-amber-100 text-amber-600'
+                                  : isNearby
+                                  ? 'bg-blue-100 text-blue-600'
+                                  : 'bg-purple-100 text-purple-600'
+                              }`}
+                            >
+                              {isPriceChange ? (
+                                notif.priceChange && notif.priceChange.difference < 0 ? (
+                                  <TrendingDown className="w-4 h-4" />
+                                ) : (
+                                  <TrendingUp className="w-4 h-4" />
+                                )
+                              ) : isNearby ? (
+                                <MapPin className="w-4 h-4" />
+                              ) : (
+                                <Sparkles className="w-4 h-4" />
+                              )}
+                            </div>
+
+                            {/* Notification Content */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between gap-1 mb-1">
+                                <h4 className="text-xs font-bold text-slate-900 truncate">
+                                  {notif.title}
+                                </h4>
+                                <span className="text-[10px] text-slate-400 whitespace-nowrap flex-shrink-0">
+                                  {formatRelativeTime(notif.timestamp)}
+                                </span>
+                              </div>
+
+                              <p className="text-xs text-slate-600 leading-relaxed mb-2">
+                                {notif.message}
+                              </p>
+
+                              {/* Action: View on Map */}
+                              {(notif.propertyId || notif.coordinates) && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    markNotificationAsRead(notif.id);
+                                    if (notif.propertyId) {
+                                      const targetProp = properties.find((p) => p.id === notif.propertyId);
+                                      if (targetProp) {
+                                        onSelectProperty(targetProp);
+                                      } else if (notif.coordinates && onSelectLocationCoords) {
+                                        onSelectLocationCoords(notif.coordinates);
+                                      }
+                                    } else if (notif.coordinates && onSelectLocationCoords) {
+                                      onSelectLocationCoords(notif.coordinates);
+                                    }
+                                    onClose();
+                                  }}
+                                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[11px] font-bold shadow-2xs active:scale-95 transition-all"
+                                >
+                                  <span>View Property on Map</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <p className="text-xs text-slate-600">
-                    3 verified buyers viewed your listing in Financial District.
-                  </p>
-                </div>
+                ) : (
+                  <div className="p-8 rounded-2xl border border-dashed border-slate-200 text-center space-y-2">
+                    <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                      <Bell className="w-5 h-5" />
+                    </div>
+                    <div className="text-xs font-bold text-slate-800">No Notifications Yet</div>
+                    <p className="text-[11px] text-slate-400 max-w-xs mx-auto">
+                      You will be notified whenever new properties are added nearby or when prices change on your liked properties.
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

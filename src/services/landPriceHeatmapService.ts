@@ -141,14 +141,13 @@ export const BENCHMARK_PRICE_NODES: MicroMarketPriceNode[] = [
  */
 export const PRICE_HEATMAP_GRADIENT = [
   'rgba(16, 185, 129, 0)',    // 0: Fully transparent emerald base
-  'rgba(16, 185, 129, 1)',    // 🟢 Cool Emerald: Affordable (< ₹5,000/sqft)
-  'rgba(52, 211, 153, 1)',    // 🟢 Soft Green: Emerging Value (₹5,000 - ₹7,500)
-  'rgba(163, 230, 53, 1)',    // 🟢 Lime: Value Growth (₹7,500 - ₹9,500)
-  'rgba(250, 204, 21, 1)',    // 🟡 Warm Amber/Yellow: Balanced Mid-tier (₹9,500 - ₹13,000)
-  'rgba(249, 115, 22, 1)',    // 🟠 Hot Orange: Premium Tech Corridor (₹13,000 - ₹18,000)
-  'rgba(239, 68, 68, 1)',     // 🔴 Thermal Red: Prime Luxury (₹18,000 - ₹26,000)
-  'rgba(225, 29, 72, 1)',     // 🔴 Crimson: Ultra Peak Land Cost (₹26,000 - ₹35,000)
-  'rgba(255, 255, 255, 1)'    // ⚪ White-Hot: Extreme Peak (> ₹35,000/sqft)
+  'rgba(16, 185, 129, 1)',    // 🟢 Cool Emerald: Value / Farmland / Affordable (< ₹6,000/sqft)
+  'rgba(101, 163, 13, 1)',    // 🟢 Deep Lime: Value Growth (₹6,000 - ₹8,500)
+  'rgba(234, 179, 8, 1)',     // 🟡 Warm Amber / Golden Yellow: Balanced (₹8,500 - ₹12,500)
+  'rgba(249, 115, 22, 1)',    // 🟠 Hot Orange: Premium Tech Corridor (₹12,500 - ₹18,500)
+  'rgba(239, 68, 68, 1)',     // 🔴 Radiant Thermal Red: Prime Luxury (₹18,500 - ₹28,000)
+  'rgba(190, 18, 60, 1)',     // 🔴 Deep Crimson: Ultra Peak (₹28,000 - ₹40,000)
+  'rgba(255, 255, 255, 1)'    // ⚪ White-Hot: Extreme Peak (> ₹40,000/sqft)
 ];
 
 /**
@@ -156,23 +155,36 @@ export const PRICE_HEATMAP_GRADIENT = [
  * Expanded radius creates a seamless, contiguous thermal camera heatmap blanket.
  */
 export function getHeatmapRadius(zoom: number): number {
-  if (zoom >= 16) return 85;
-  if (zoom >= 14) return 70;
-  if (zoom >= 12) return 55;
-  if (zoom >= 10) return 40;
-  if (zoom >= 8) return 26;
-  return 16;
+  if (zoom >= 16) return 95;
+  if (zoom >= 14) return 80;
+  if (zoom >= 12) return 65;
+  if (zoom >= 10) return 45;
+  if (zoom >= 8) return 30;
+  return 18;
 }
 
 /**
  * Calculates weighted heatmap points combining real catalog properties and regional benchmarks.
- * Weights are normalized 1 to 10 based on relative land prices / cost of living.
+ * Uses micro-mesh spatial expansion so thermal heat fields blend into continuous contours.
  */
 export function buildHeatmapWeightedPoints(
   properties: Property[],
   metric: HeatmapMetric = 'sqft'
 ): { points: HeatmapWeightedPoint[]; stats: HeatmapPriceStatistics } {
   const combinedRaw: { lat: number; lng: number; rate: number; name: string; isProperty: boolean }[] = [];
+
+  // Spatial diffusion lattice offsets (generates contoured thermal blankets around nodes)
+  const MESH_OFFSETS = [
+    { dLng: 0, dLat: 0, factor: 1.0 },
+    { dLng: 0.0035, dLat: 0.0025, factor: 0.96 },
+    { dLng: -0.0035, dLat: -0.0025, factor: 0.96 },
+    { dLng: 0.0030, dLat: -0.0030, factor: 0.94 },
+    { dLng: -0.0030, dLat: 0.0030, factor: 0.94 },
+    { dLng: 0.0055, dLat: 0.0000, factor: 0.91 },
+    { dLng: -0.0055, dLat: 0.0000, factor: 0.91 },
+    { dLng: 0.0000, dLat: 0.0055, factor: 0.91 },
+    { dLng: 0.0000, dLat: -0.0055, factor: 0.91 }
+  ];
 
   // 1. Process active properties from database/catalog
   properties.forEach((p) => {
@@ -183,11 +195,11 @@ export function buildHeatmapWeightedPoints(
     if (metric === 'sqft') {
       rate = p.areaSqFt > 0 ? Math.round(p.price / p.areaSqFt) : Math.round(p.price / 1200);
     } else {
-      // Total price scaled down to avoid floating point blowouts
       rate = p.price;
     }
 
     if (rate > 0) {
+      // Primary point
       combinedRaw.push({
         lat,
         lng,
@@ -195,25 +207,42 @@ export function buildHeatmapWeightedPoints(
         name: p.title || p.area || 'Property Listing',
         isProperty: true
       });
+
+      // Subtle localized micro-halo around actual property
+      combinedRaw.push({
+        lat: lat + 0.0015,
+        lng: lng + 0.0015,
+        rate: Math.round(rate * 0.97),
+        name: p.title,
+        isProperty: true
+      });
+      combinedRaw.push({
+        lat: lat - 0.0015,
+        lng: lng - 0.0015,
+        rate: Math.round(rate * 0.97),
+        name: p.title,
+        isProperty: true
+      });
     }
   });
 
-  // 2. Include regional benchmark nodes to provide spatial continuity across the city
+  // 2. Include regional benchmark nodes with micro-mesh expansion for continuous heat blending
   BENCHMARK_PRICE_NODES.forEach((b) => {
     let rate = 0;
     if (metric === 'sqft') {
       rate = b.pricePerSqFt;
     } else {
-      // Estimated typical home price for the benchmark area (assuming 1500 sq.ft)
       rate = b.pricePerSqFt * 1500;
     }
 
-    combinedRaw.push({
-      lat: b.coordinates[1],
-      lng: b.coordinates[0],
-      rate,
-      name: `${b.name}, ${b.city}`,
-      isProperty: false
+    MESH_OFFSETS.forEach((off) => {
+      combinedRaw.push({
+        lat: b.coordinates[1] + off.dLat,
+        lng: b.coordinates[0] + off.dLng,
+        rate: Math.round(rate * off.factor),
+        name: `${b.name}, ${b.city}`,
+        isProperty: false
+      });
     });
   });
 

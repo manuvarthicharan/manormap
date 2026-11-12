@@ -21,6 +21,7 @@ import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
 import { getUserProfile, syncProfileFromSupabaseUser } from '../../services/userService';
 import { signInWithGoogle, signOut, isSupabaseConfigured } from '../../services/supabaseClient';
+import { getUnreadNotificationCount } from '../../services/notificationService';
 
 interface SlideMenuDrawerProps {
   isOpen: boolean;
@@ -29,6 +30,7 @@ interface SlideMenuDrawerProps {
   activeOption: string;
   myPropertiesCount: number;
   favoritesCount: number;
+  notificationsCount?: number;
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
 }
@@ -40,6 +42,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
   activeOption,
   myPropertiesCount,
   favoritesCount,
+  notificationsCount,
   theme = 'light',
   onToggleTheme
 }) => {
@@ -279,9 +282,13 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                     <Bell className="w-4 h-4 text-slate-500" />
                     <span>Notifications</span>
                   </div>
-                  <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">
-                    2 NEW
-                  </span>
+                  {(typeof notificationsCount === 'number' ? notificationsCount : getUnreadNotificationCount()) > 0 ? (
+                    <span className="text-[10px] bg-rose-500 text-white font-extrabold px-2 py-0.5 rounded-full shadow-xs animate-pulse">
+                      {typeof notificationsCount === 'number' ? notificationsCount : getUnreadNotificationCount()} NEW
+                    </span>
+                  ) : (
+                    <span className="text-[10px] text-slate-400 font-medium">Updated</span>
+                  )}
                 </button>
               </div>
             </div>
