@@ -138,9 +138,19 @@ declare namespace google {
       position?: LatLng | LatLngLiteral;
       map?: Map;
       title?: string;
+      label?: any;
       icon?: string | Icon | Symbol;
       visible?: boolean;
       zIndex?: number;
+      clickable?: boolean;
+    }
+
+    export enum SymbolPath {
+      BACKWARD_CLOSED_ARROW = 3,
+      BACKWARD_OPEN_ARROW = 4,
+      CIRCLE = 0,
+      FORWARD_CLOSED_ARROW = 1,
+      FORWARD_OPEN_ARROW = 2
     }
 
     export interface Icon {
@@ -167,6 +177,8 @@ declare namespace google {
       setRadius(radius: number): void;
       getCenter(): LatLng;
       getRadius(): number;
+      setOptions(opts?: any): void;
+      addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
     }
 
     export class Polygon {
@@ -174,6 +186,8 @@ declare namespace google {
       setMap(map: Map | null): void;
       setPaths(paths: any): void;
       getPaths(): any;
+      setOptions(opts?: any): void;
+      addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
     }
 
     export class Polyline {
@@ -181,6 +195,8 @@ declare namespace google {
       setMap(map: Map | null): void;
       setPath(path: any): void;
       getPath(): any;
+      setOptions(opts?: any): void;
+      addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
     }
 
     export namespace visualization {

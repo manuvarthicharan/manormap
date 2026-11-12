@@ -178,11 +178,11 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
   const surveyorPolygonRef = useRef<google.maps.Polygon | null>(null);
   const surveyorPolylineRef = useRef<google.maps.Polyline | null>(null);
-  const surveyorNodeMarkersRef = useRef<google.maps.Marker[]>([]);
+  const surveyorPegMarkersRef = useRef<google.maps.Marker[]>([]);
+  const allPropertyBoundariesRef = useRef<Map<string, google.maps.Polygon>>(new Map());
   const transitLayerRef = useRef<any>(null);
   const heatmapLayerRef = useRef<any>(null);
   const aiPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
-  const allParcelsRef = useRef<Map<string, any>>(new Map());
 
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -483,16 +483,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   }, [hoveredPropertyId]);
 
-  // When drawing tools or land surveyor are active, disable marker pointer events so taps hit the map
-  useEffect(() => {
-    markersRef.current.forEach((marker) => {
-      marker.setInteractive(!isAnyToolActive);
-    });
-    allParcelsRef.current.forEach((polygon) => {
-      (polygon as any).setOptions({ clickable: !isAnyToolActive });
-    });
-  }, [isAnyToolActive]);
-
   // Toggle Transit Layer (Google Maps TransitLayer)
   useEffect(() => {
     const map = mapRef.current;
@@ -537,8 +527,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             data: googleWeightedData,
             dissipating: true,
             radius: getHeatmapRadius(currentZoom),
-            opacity: 0.82,
-            maxIntensity: 6.5,
+            opacity: 0.8,
+            maxIntensity: 10,
             gradient: PRICE_HEATMAP_GRADIENT,
             map: map
           });
@@ -547,8 +537,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           heatmapLayerRef.current.setOptions({
             radius: getHeatmapRadius(currentZoom),
             gradient: PRICE_HEATMAP_GRADIENT,
-            opacity: 0.82,
-            maxIntensity: 6.5,
+            opacity: 0.8,
+            maxIntensity: 10,
             dissipating: true
           });
           heatmapLayerRef.current.setMap(map);
@@ -617,12 +607,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           strokeColor: '#2563eb',
           strokeOpacity: 0.9,
           strokeWeight: 2,
-          clickable: false,
           map: map
         });
       } else {
         polygonOverlayRef.current.setPaths(paths);
-        (polygonOverlayRef.current as any).setOptions({ clickable: false });
         polygonOverlayRef.current.setMap(map);
       }
     } else if (polygonOverlayRef.current) {
@@ -667,147 +655,152 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   }, [theme, mapLoaded]);
 
-  // Permanent Cadastral Land Parcel Boundaries for all listed Agricultural Lands & Plots
-  // Shaded parcel area is ALWAYS displayed on the map, not only when clicked.
+  // Permanent Land Parcel Boundary Overlays for ALL Agricultural Land and Plots
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
+    if (!map || !mapLoaded || !window.google?.maps) return;
 
-    const maps = window.google.maps;
-    const currentParcelMap = allParcelsRef.current;
-    const activeBoundaryPropertyIds = new Set<string>();
+    const currentMap = allPropertyBoundariesRef.current;
+    const activeIds = new Set<string>();
 
     properties.forEach((prop) => {
       if (prop.boundaryPolygon && prop.boundaryPolygon.length >= 3) {
-        activeBoundaryPropertyIds.add(prop.id);
-        const paths = prop.boundaryPolygon.map(([lng, lat]) => new maps.LatLng(lat, lng));
-        const isSelected = selectedProperty?.id === prop.id;
+        activeIds.add(prop.id);
+        const paths = prop.boundaryPolygon.map((c) => new google.maps.LatLng(c[1], c[0]));
         const isAgri = prop.category === 'Agricultural Land' || prop.category === 'Plot';
+        const isSelected = selectedProperty?.id === prop.id;
+        const isHovered = hoveredPropertyId === prop.id;
 
-        const fillColor = isSelected ? '#047857' : isAgri ? '#10b981' : '#3b82f6';
-        const fillOpacity = isSelected ? 0.45 : 0.28;
-        const strokeColor = isSelected ? '#065f46' : isAgri ? '#059669' : '#1d4ed8';
-        const strokeWeight = isSelected ? 3.5 : 2;
+        const fillColor = isAgri ? '#10b981' : '#3b82f6';
+        const strokeColor = isSelected ? '#047857' : (isAgri ? '#059669' : '#2563eb');
+        const fillOpacity = isSelected ? 0.38 : (isHovered ? 0.30 : 0.22);
+        const strokeWeight = isSelected ? 3.5 : (isHovered ? 2.5 : 2);
+        const zIndex = isSelected ? 90 : (isHovered ? 60 : 35);
 
-        let polygon = currentParcelMap.get(prop.id);
-        if (!polygon) {
-          polygon = new maps.Polygon({
+        let poly = currentMap.get(prop.id);
+        if (!poly) {
+          poly = new google.maps.Polygon({
             paths,
             fillColor,
             fillOpacity,
             strokeColor,
             strokeWeight,
             strokeOpacity: 0.95,
-            zIndex: isSelected ? 85 : 35,
-            clickable: true,
-            map: map
+            zIndex,
+            map: map,
+            clickable: true
           });
 
-          // Clicking directly on the permanent shaded land parcel selects it and shows details
-          (polygon as any).addListener('click', (e: any) => {
-            if (e && e.stop) e.stop();
+          poly.addListener('click', () => {
             onSelectProperty(prop);
           });
 
-          currentParcelMap.set(prop.id, polygon);
+          currentMap.set(prop.id, poly);
         } else {
-          polygon.setPaths(paths);
-          (polygon as any).setOptions({
+          poly.setPaths(paths);
+          poly.setOptions({
             fillColor,
             fillOpacity,
             strokeColor,
             strokeWeight,
-            zIndex: isSelected ? 85 : 35
+            zIndex
           });
-          polygon.setMap(map);
+          poly.setMap(map);
         }
       }
     });
 
-    // Clean up polygons for deleted properties
-    currentParcelMap.forEach((poly, id) => {
-      if (!activeBoundaryPropertyIds.has(id)) {
+    // Remove polygons for properties no longer in visible list
+    currentMap.forEach((poly, id) => {
+      if (!activeIds.has(id)) {
         poly.setMap(null);
-        currentParcelMap.delete(id);
+        currentMap.delete(id);
       }
     });
-  }, [properties, selectedProperty, mapLoaded, onSelectProperty]);
+  }, [properties, selectedProperty, hoveredPropertyId, mapLoaded]);
 
-  // Land Surveyor Tool: Numbered Peg Markers, Polyline, and Non-blocking Preview Polygon
-  // clickable: false allows unlimited boundary nodes (4, 5, 8, 15+ nodes) without blocking map clicks!
+  // Land Surveyor Tool Polygons & Multi-Node Vertex Pegs
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
 
-    // Clean up previous node peg markers
-    surveyorNodeMarkersRef.current.forEach((m) => m.setMap(null));
-    surveyorNodeMarkersRef.current = [];
-
     if (landSurvey.active && landSurvey.points.length > 0) {
-      // 1. Create a numbered circular peg marker at every boundary corner
-      landSurvey.points.forEach((pt, index) => {
-        const svgIcon = {
-          url: `data:image/svg+xml;charset=UTF-8,<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28"><circle cx="14" cy="14" r="11" fill="%23059669" stroke="%23ffffff" stroke-width="2.5"/><text x="14" y="18" font-size="11" font-family="sans-serif" font-weight="900" fill="%23ffffff" text-anchor="middle">${index + 1}</text></svg>`,
-          scaledSize: new google.maps.Point(28, 28),
-          anchor: new google.maps.Point(14, 14)
-        };
-
-        const marker = new google.maps.Marker({
-          position: new google.maps.LatLng(pt[1], pt[0]),
-          map,
-          title: `Boundary Node #${index + 1}`,
-          icon: svgIcon,
-          zIndex: 900 + index
-        } as any);
-
-        surveyorNodeMarkersRef.current.push(marker);
-      });
-
-      // 2. Draw high-visibility polyline connecting all nodes
       const paths = landSurvey.points.map((p) => new google.maps.LatLng(p[1], p[0]));
-      const closedPaths = landSurvey.points.length >= 3 ? [...paths, paths[0]] : paths;
 
-      if (!surveyorPolylineRef.current) {
-        surveyorPolylineRef.current = new google.maps.Polyline({
-          path: closedPaths,
-          strokeColor: '#059669',
-          strokeOpacity: 1,
-          strokeWeight: 3.5,
-          clickable: false,
-          zIndex: 85,
-          map: map
-        });
-      } else {
-        surveyorPolylineRef.current.setPath(closedPaths);
-        (surveyorPolylineRef.current as any).setOptions({ clickable: false });
-        surveyorPolylineRef.current.setMap(map);
-      }
-
-      // 3. Shaded parcel preview polygon (strictly non-clickable while drawing)
+      // 1. Shaded Polygon when >= 3 points (clickable: false so clicks pass through for 4th, 5th, 6th... unlimited nodes!)
       if (landSurvey.points.length >= 3) {
         if (!surveyorPolygonRef.current) {
           surveyorPolygonRef.current = new google.maps.Polygon({
             paths: paths,
             fillColor: '#10b981',
-            fillOpacity: 0.22,
+            fillOpacity: 0.25,
             strokeColor: '#059669',
-            strokeOpacity: 0.6,
-            strokeWeight: 1,
-            clickable: false,
-            zIndex: 80,
+            strokeOpacity: 1,
+            strokeWeight: 3,
+            clickable: false, // CRITICAL: Allows clicks to pass through to map for unlimited nodes!
             map: map
           });
         } else {
           surveyorPolygonRef.current.setPaths(paths);
-          (surveyorPolygonRef.current as any).setOptions({ clickable: false });
+          surveyorPolygonRef.current.setOptions({ clickable: false });
           surveyorPolygonRef.current.setMap(map);
         }
-      } else if (surveyorPolygonRef.current) {
-        surveyorPolygonRef.current.setMap(null);
+        if (surveyorPolylineRef.current) {
+          surveyorPolylineRef.current.setMap(null);
+        }
+      } else {
+        if (!surveyorPolylineRef.current) {
+          surveyorPolylineRef.current = new google.maps.Polyline({
+            path: paths,
+            strokeColor: '#059669',
+            strokeOpacity: 1,
+            strokeWeight: 3,
+            clickable: false, // CRITICAL: Allows clicks to pass through to map!
+            map: map
+          });
+        } else {
+          surveyorPolylineRef.current.setPath(paths);
+          surveyorPolylineRef.current.setOptions({ clickable: false });
+          surveyorPolylineRef.current.setMap(map);
+        }
+        if (surveyorPolygonRef.current) {
+          surveyorPolygonRef.current.setMap(null);
+        }
       }
+
+      // 2. Render numbered vertex peg markers at each coordinate
+      // Clear previous pegs
+      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
+      surveyorPegMarkersRef.current = [];
+
+      landSurvey.points.forEach((pt, idx) => {
+        const marker = new google.maps.Marker({
+          position: new google.maps.LatLng(pt[1], pt[0]),
+          map: map,
+          label: {
+            text: String(idx + 1),
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: 'bold'
+          },
+          icon: {
+            path: google.maps.SymbolPath.CIRCLE,
+            scale: 10,
+            fillColor: '#059669',
+            fillOpacity: 1,
+            strokeColor: '#ffffff',
+            strokeWeight: 2
+          },
+          zIndex: 200,
+          clickable: false
+        });
+        surveyorPegMarkersRef.current.push(marker);
+      });
     } else {
-      if (surveyorPolylineRef.current) surveyorPolylineRef.current.setMap(null);
       if (surveyorPolygonRef.current) surveyorPolygonRef.current.setMap(null);
+      if (surveyorPolylineRef.current) surveyorPolylineRef.current.setMap(null);
+      surveyorPegMarkersRef.current.forEach((m) => m.setMap(null));
+      surveyorPegMarkersRef.current = [];
     }
   }, [landSurvey, mapLoaded]);
 

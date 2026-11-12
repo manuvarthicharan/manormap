@@ -8,7 +8,6 @@ import {
   MapPin,
   Check,
   Trash2,
-  Image as ImageIcon,
   AlertCircle,
   ShieldCheck,
   Building,
@@ -16,56 +15,9 @@ import {
   Ruler,
   PenTool,
   UploadCloud,
+  Camera,
   Loader2
 } from 'lucide-react';
-
-/**
- * Optimizes an image selected from the user's device and auto-converts it
- * into a lightweight JPEG Data URI link, avoiding manual links or external file storage.
- */
-function compressAndConvertImageToLink(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error('Failed to read file'));
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onerror = () => reject(new Error('Failed to decode image'));
-      img.onload = () => {
-        const maxWidth = 1280;
-        const maxHeight = 960;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > maxWidth) {
-            height = Math.round((height * maxWidth) / width);
-            width = maxWidth;
-          }
-        } else {
-          if (height > maxHeight) {
-            width = Math.round((width * maxHeight) / height);
-            height = maxHeight;
-          }
-        }
-
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-          resolve(e.target?.result as string);
-          return;
-        }
-
-        ctx.drawImage(img, 0, 0, width, height);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
-        resolve(dataUrl);
-      };
-      img.src = e.target?.result as string;
-    };
-    reader.readAsDataURL(file);
-  });
-}
 
 interface AddPropertyModalProps {
   isOpen: boolean;
@@ -150,54 +102,82 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
     'Clubhouse & Banquet Hall'
   ]);
 
-  // Genuine Photo URLs & Device Upload state
-  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  // Genuine Photo URLs & Local Device Upload
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessingFiles, setIsProcessingFiles] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80',
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80'
+  ]);
   const [currentUrlInput, setCurrentUrlInput] = useState('');
   const [urlInputError, setUrlInputError] = useState('');
   const [brokenUrls, setBrokenUrls] = useState<Set<string>>(new Set());
-  const [showUrlInput, setShowUrlInput] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [isOptimizingImages, setIsOptimizingImages] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
-  const processImageFiles = async (files: FileList | File[]) => {
+  // Handle files selected from user's device (phone gallery or file explorer)
+  // Automatically scales and converts to standalone data links in background
+  const handleFilesSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
     if (!files || files.length === 0) return;
-    setIsOptimizingImages(true);
-    setUploadProgress(`Optimizing ${files.length} photo${files.length > 1 ? 's' : ''}...`);
 
-    const newLinks: string[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      if (!file.type.startsWith('image/')) continue;
-      try {
-        setUploadProgress(`Processing photo ${i + 1} of ${files.length}...`);
-        const link = await compressAndConvertImageToLink(file);
-        newLinks.push(link);
-      } catch (err) {
-        console.warn('Failed to convert photo file:', file.name, err);
+    setIsProcessingFiles(true);
+    const fileList = Array.from(files);
+
+    const promises = fileList.map((file) => {
+      return new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (readerEvent) => {
+          const resultStr = readerEvent.target?.result as string;
+          if (!resultStr) {
+            resolve('');
+            return;
+          }
+
+          const img = new Image();
+          img.onload = () => {
+            const maxDimension = 1280;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxDimension || height > maxDimension) {
+              if (width > height) {
+                height = Math.round((height * maxDimension) / width);
+                width = maxDimension;
+              } else {
+                width = Math.round((width * maxDimension) / height);
+                height = maxDimension;
+              }
+            }
+
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(img, 0, 0, width, height);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.82);
+              resolve(dataUrl);
+            } else {
+              resolve(resultStr);
+            }
+          };
+          img.onerror = () => {
+            resolve(resultStr);
+          };
+          img.src = resultStr;
+        };
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+      });
+    });
+
+    Promise.all(promises).then((dataUrls) => {
+      const valid = dataUrls.filter((url) => !!url);
+      setPhotoUrls((prev) => [...prev, ...valid]);
+      setIsProcessingFiles(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-    }
-
-    if (newLinks.length > 0) {
-      setPhotoUrls((prev) => [...prev, ...newLinks]);
-      setUrlInputError('');
-    }
-
-    setIsOptimizingImages(false);
-    setUploadProgress(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
-  };
-
-  const handleDeviceFilesSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      processImageFiles(e.target.files);
-    }
-  };
-
-  const handleDroppedFiles = (files: FileList) => {
-    processImageFiles(files);
+    });
   };
 
   // Contact
@@ -266,18 +246,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       : [78.3820, 17.4474];
 
     // Ensure at least one valid image
-    const categoryDefaults: Record<string, string> = {
-      'Agricultural Land': 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
-      'Plot': 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80',
-      'Villa': 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=1200&q=80',
-      'Commercial': 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80',
-      'Apartment': 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'
-    };
-
     const finalImages =
       photoUrls.length > 0
         ? photoUrls
-        : [categoryDefaults[category] || categoryDefaults['Apartment']];
+        : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'];
 
     const newProperty: Property = {
       id: `custom-prop-${Date.now()}`,
@@ -612,16 +584,12 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <input
                     type="number"
                     required
-                    min={0}
+                    min={1}
                     step="any"
                     value={price}
                     onChange={(e) => setPrice(Number(e.target.value))}
-                    placeholder="Enter custom property price"
                     className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-bold focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Enter any exact custom price without rounding restrictions
-                  </p>
                 </div>
 
                 <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
@@ -691,7 +659,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <label className="text-xs font-bold text-slate-600 block mb-1">Super Area (sq.ft)</label>
                   <input
                     type="number"
-                    min={0}
+                    min={1}
                     step="any"
                     value={areaSqFt}
                     onChange={(e) => setAreaSqFt(Number(e.target.value))}
@@ -705,8 +673,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <label className="text-xs font-bold text-slate-600 block mb-1">Carpet Area (sq.ft)</label>
                   <input
                     type="number"
-                    min={0}
-                    step="any"
+                    min={50}
                     value={carpetAreaSqFt}
                     onChange={(e) => setCarpetAreaSqFt(Number(e.target.value))}
                     placeholder="e.g. 1820"
@@ -807,129 +774,96 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
               </div>
             </div>
 
-            {/* 5. PROPERTY PHOTOGRAPHS: DEVICE / GALLERY UPLOAD WITH AUTO LINK CONVERSION */}
+            {/* 5. PROPERTY PHOTOGRAPHS (SELECT FROM DEVICE OR URL) */}
             <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
-                    <ImageIcon className="w-4 h-4 text-blue-600" />
-                    Property Photographs (Device Upload)
+                    <Camera className="w-4 h-4 text-blue-600" />
+                    Property Photographs (Device Upload or Links)
                   </h4>
                   <p className="text-[11px] text-slate-500">
-                    Upload photos directly from your device. Each photo is automatically compressed and converted into a link in the background.
+                    Select photos from your device gallery or file explorer. They are automatically converted into instant image links.
                   </p>
                 </div>
-                <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200 self-start sm:self-auto">
-                  {photoUrls.length} {photoUrls.length === 1 ? 'Photo' : 'Photos'} Attached
+                <span className="text-xs font-bold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                  {photoUrls.length} {photoUrls.length === 1 ? 'Photo' : 'Photos'} Added
                 </span>
               </div>
 
-              {/* Native Device File Picker (Hero Action) */}
+              {/* Hidden Native File Input */}
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 multiple
-                onChange={handleDeviceFilesSelect}
                 className="hidden"
+                onChange={handleFilesSelected}
               />
 
+              {/* Prominent Device File Picker Drag/Drop Card */}
               <div
                 onClick={() => fileInputRef.current?.click()}
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (e.dataTransfer.files) {
-                    handleDroppedFiles(e.dataTransfer.files);
-                  }
-                }}
-                className="border-2 border-dashed border-blue-400 hover:border-blue-600 bg-blue-50/40 hover:bg-blue-50/80 rounded-3xl p-5 sm:p-7 text-center cursor-pointer transition-all group shadow-2xs"
+                className="border-2 border-dashed border-blue-300 hover:border-blue-500 bg-blue-50/60 hover:bg-blue-50/90 rounded-2xl p-4 sm:p-5 text-center cursor-pointer transition-all flex flex-col items-center justify-center gap-2 group shadow-2xs"
               >
-                <div className="flex flex-col items-center justify-center gap-2.5">
-                  <div className="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center group-hover:scale-105 transition-transform shadow-md">
-                    <UploadCloud className="w-7 h-7" />
+                <div className="w-11 h-11 rounded-2xl bg-blue-600 group-hover:bg-blue-700 text-white flex items-center justify-center shadow-md transition-all group-hover:scale-105">
+                  {isProcessingFiles ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <UploadCloud className="w-5 h-5" />
+                  )}
+                </div>
+                <div>
+                  <div className="text-xs font-bold text-slate-900">
+                    {isProcessingFiles
+                      ? 'Converting and optimizing photos...'
+                      : 'Choose Photos from Device (Gallery / File Explorer)'}
                   </div>
-                  <div>
-                    <button
-                      type="button"
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all pointer-events-none mb-1.5"
-                    >
-                      Choose Photos from Device
-                    </button>
-                    <p className="text-xs text-slate-600 font-medium">
-                      Select multiple images from photo gallery or computer
-                    </p>
-                  </div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-semibold">
-                    <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
-                    <span>Auto-converts to lightweight links &bull; Zero hosting storage needed</span>
-                  </div>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Tap to browse files • Supports JPEG, PNG, HEIC & WebP
+                  </p>
                 </div>
               </div>
 
-              {isOptimizingImages && (
-                <div className="flex items-center justify-center gap-2 text-xs font-bold text-blue-600 bg-blue-50 p-3 rounded-2xl animate-pulse border border-blue-200">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>{uploadProgress || 'Converting photos to optimized links...'}</span>
-                </div>
-              )}
-
-              {/* Optional Collapsed Web URL Input */}
+              {/* Optional Link Input for Direct URLs */}
               <div className="pt-1">
-                {!showUrlInput ? (
+                <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                  Or add photo via web link
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 relative">
+                    <input
+                      type="url"
+                      value={currentUrlInput}
+                      onChange={(e) => {
+                        setCurrentUrlInput(e.target.value);
+                        if (urlInputError) setUrlInputError('');
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddPhotoUrl();
+                        }
+                      }}
+                      placeholder="Paste image URL (e.g. https://images.unsplash.com/...)"
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-xs"
+                    />
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setShowUrlInput(true)}
-                    className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1"
+                    onClick={handleAddPhotoUrl}
+                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 flex-shrink-0"
                   >
-                    <span>+ Or paste an existing web image link instead</span>
+                    <Plus className="w-4 h-4 stroke-[3]" />
+                    <span>Add Link</span>
                   </button>
-                ) : (
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2 animate-in fade-in">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-slate-600">
-                        Paste external image URL:
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setShowUrlInput(false)}
-                        className="text-[10px] text-slate-400 hover:text-slate-600 font-bold"
-                      >
-                        Hide
-                      </button>
-                    </div>
-                    <div className="flex gap-2">
-                      <input
-                        type="url"
-                        value={currentUrlInput}
-                        onChange={(e) => {
-                          setCurrentUrlInput(e.target.value);
-                          if (urlInputError) setUrlInputError('');
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            e.preventDefault();
-                            handleAddPhotoUrl();
-                          }
-                        }}
-                        placeholder="https://images.unsplash.com/... or your image link"
-                        className="flex-1 bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleAddPhotoUrl}
-                        className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-colors flex-shrink-0"
-                      >
-                        Add Link
-                      </button>
-                    </div>
-                    {urlInputError && (
-                      <p className="text-[11px] font-semibold text-rose-600 flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5" />
-                        {urlInputError}
-                      </p>
-                    )}
-                  </div>
+                </div>
+
+                {urlInputError && (
+                  <p className="text-[11px] font-semibold text-rose-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5" />
+                    {urlInputError}
+                  </p>
                 )}
               </div>
 
@@ -992,7 +926,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 </div>
               ) : (
                 <div className="p-6 rounded-xl border border-dashed border-slate-300 text-center text-slate-400 text-xs">
-                  No property photos added yet. Select photos from device or paste links above to preview.
+                  No property photos added yet. Paste image links above to render live previews.
                 </div>
               )}
             </div>

@@ -140,12 +140,6 @@ export class CustomOverlayMarker {
     }
   }
 
-  public setInteractive(interactive: boolean) {
-    if (this.container) {
-      this.container.style.pointerEvents = interactive ? 'auto' : 'none';
-    }
-  }
-
   public remove() {
     this.overlay.setMap(null);
   }

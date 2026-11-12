@@ -22,7 +22,7 @@ import {
 import { reverseGeocodeLocation, ReverseGeocodeResult } from './services/geocoding';
 import { mapActionBridge } from './services/mapActionBridge';
 import { isSupabaseConfigured, onAuthStateChange } from './services/supabaseClient';
-import { syncProfileFromSupabaseUser, getUserProfile, UserProfile } from './services/userService';
+import { syncProfileFromSupabaseUser, getUserProfile } from './services/userService';
 import { fetchSupabaseFavorites, toggleSupabaseFavorite } from './services/supabasePropertyService';
 import { GoogleMap } from './components/Map/GoogleMap';
 import { PinDropOverlay } from './components/Map/PinDropOverlay';
@@ -39,12 +39,7 @@ import { AdvancedFilterModal } from './components/Navigation/AdvancedFilterModal
 import { PropertyComparisonModal } from './components/Modals/PropertyComparisonModal';
 import { InvestmentCalculatorModal } from './components/Modals/InvestmentCalculatorModal';
 import { AIAssistantDrawer } from './components/AI/AIAssistantDrawer';
-import { Map as MapIcon, Building2, Sparkles, Plus, Scale, RotateCcw, Trash2, Check } from 'lucide-react';
-import {
-  checkAndNotifyLikedPropertyPriceChanges,
-  notifyNewNearbyProperty,
-  getUnreadNotificationCount
-} from './services/notificationService';
+import { Map as MapIcon, Building2, Sparkles, Plus, Scale } from 'lucide-react';
 
 export const App: React.FC = () => {
   // All properties & custom additions
@@ -173,6 +168,16 @@ export const App: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
+  // Authentication prompt modal state
+  const [authModalState, setAuthModalState] = useState<{
+    isOpen: boolean;
+    reason: 'add_property' | 'view_details' | 'general';
+    propertyTitle?: string;
+  }>({
+    isOpen: false,
+    reason: 'general'
+  });
+
   // Add Property & Interactive Pin Dropping Mode
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
   const [isDroppingPin, setIsDroppingPin] = useState(false);
@@ -186,17 +191,6 @@ export const App: React.FC = () => {
     pinCode: string;
     address: string;
   } | null>(null);
-
-  // Active User Profile & Authentication Gate State
-  const [currentUser, setCurrentUser] = useState<UserProfile>(() => getUserProfile());
-  const [authModalConfig, setAuthModalConfig] = useState<{
-    isOpen: boolean;
-    actionTitle?: string;
-    actionDescription?: string;
-    pendingAction?: () => void;
-  }>({
-    isOpen: false
-  });
 
   // Google Maps instance reference
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
@@ -220,8 +214,7 @@ export const App: React.FC = () => {
     }
 
     const { unsubscribe } = onAuthStateChange((_event, session) => {
-      const updatedProfile = syncProfileFromSupabaseUser(session?.user || null);
-      setCurrentUser(updatedProfile);
+      syncProfileFromSupabaseUser(session?.user || null);
       if (session?.user && isSupabaseConfigured()) {
         syncPropertiesFromCloud().then((cloudProps) => {
           if (cloudProps && cloudProps.length > 0) setAllProps(cloudProps);
@@ -238,13 +231,6 @@ export const App: React.FC = () => {
       unsubscribe();
     };
   }, []);
-
-  // Monitor price changes on liked / favorited properties
-  useEffect(() => {
-    if (favorites.length > 0 && allProps.length > 0) {
-      checkAndNotifyLikedPropertyPriceChanges(allProps, favorites);
-    }
-  }, [favorites, allProps]);
 
   // Register real Google Maps instance with the Autonomous AI Agent action bridge
   useEffect(() => {
@@ -419,32 +405,6 @@ export const App: React.FC = () => {
     setIsAddPropertyOpen(true);
   };
 
-  // Undo last boundary vertex
-  const handleUndoLandBoundaryVertex = () => {
-    if (landSurvey.points.length === 0) return;
-    const remaining = landSurvey.points.slice(0, -1);
-    const metrics = calculateLandParcelMetrics(remaining);
-    setLandSurvey({
-      ...landSurvey,
-      ...metrics,
-      points: remaining
-    });
-  };
-
-  // Reset all boundary points during drawing
-  const handleResetLandBoundaryPoints = () => {
-    setLandSurvey({
-      ...landSurvey,
-      points: [],
-      areaSqYards: 0,
-      areaGunthas: 0,
-      areaAcres: 0,
-      areaSqFt: 0,
-      areaSqMeters: 0,
-      perimeterMeters: 0
-    });
-  };
-
   // Clear land boundary
   const handleClearLandBorders = () => {
     setPropertyDrawnBorders([]);
@@ -560,9 +520,6 @@ export const App: React.FC = () => {
   const handleAddProperty = (newProp: Property) => {
     const saved = addCustomProperty(newProp);
 
-    // Notify user of newly added nearby property
-    notifyNewNearbyProperty(saved, currentMapCenter);
-
     setPropertyDrawnBorders([]);
     setPropertyLandMetrics(null);
     setSelectedPinLocation(null);
@@ -605,43 +562,36 @@ export const App: React.FC = () => {
     setComparedPropertyIds((prev) => prev.filter((id) => id !== propertyId));
   };
 
-  // Auth-gated Add Property handler
-  const handleOpenAddProperty = () => {
-    if (!currentUser?.isAuthenticated) {
-      setAuthModalConfig({
-        isOpen: true,
-        actionTitle: 'Sign In to List Property',
-        actionDescription: 'Sign in with your Google account to list your flat, villa, commercial unit, or agricultural land with precision GPS and cadastral parcel mapping.',
-        pendingAction: () => {
-          setIsAddPropertyOpen(true);
-        }
-      });
-      return;
-    }
-    setIsAddPropertyOpen(true);
-  };
-
-  // Open full property details or jump directly to Loan EMI / Locality / AI tab
+  // Open full property details (Requires sign in per Requirement 1)
   const handleOpenDetails = (
     prop: Property,
     tab: 'overview' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby' = 'overview'
   ) => {
-    if (!currentUser?.isAuthenticated) {
-      setAuthModalConfig({
+    const profile = getUserProfile();
+    if (!profile.isAuthenticated) {
+      setAuthModalState({
         isOpen: true,
-        actionTitle: 'Sign In to View Full Details',
-        actionDescription: 'Sign in with your Google account to unlock full property documentation, verified builder contacts, RERA numbers, and institutional pricing audits.',
-        pendingAction: () => {
-          setSelectedProperty(prop);
-          setDetailModalTab(tab);
-          setIsDetailModalOpen(true);
-        }
+        reason: 'view_details',
+        propertyTitle: prop.title
       });
       return;
     }
     setSelectedProperty(prop);
     setDetailModalTab(tab);
     setIsDetailModalOpen(true);
+  };
+
+  // Open Add Property flow (Requires sign in per Requirement 1)
+  const handleOpenAddProperty = () => {
+    const profile = getUserProfile();
+    if (!profile.isAuthenticated) {
+      setAuthModalState({
+        isOpen: true,
+        reason: 'add_property'
+      });
+      return;
+    }
+    setIsAddPropertyOpen(true);
   };
 
   // Open ManorMap AI Advisor
@@ -745,62 +695,49 @@ export const App: React.FC = () => {
         Interactive Land Parcel Drawing Mode (Active while mapping Agricultural Land borders)
       */}
       {isDrawingLandForProperty && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white p-3 sm:px-5 sm:py-3.5 rounded-3xl shadow-2xl border border-slate-700/80 flex flex-col sm:flex-row items-center gap-3 sm:max-w-xl animate-in slide-in-from-top duration-200">
-          <div className="flex items-center justify-between w-full sm:w-auto gap-3">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-white flex items-center gap-1.5">
-                  <span>Mark Parcel Boundary</span>
-                  <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold border border-emerald-500/30">
-                    {landSurvey.points.length} {landSurvey.points.length === 1 ? 'Node' : 'Nodes'}
-                  </span>
-                </div>
-                <div className="text-[11px] text-slate-300">
-                  {landSurvey.points.length === 0
-                    ? 'Tap on map to place 1st corner'
-                    : landSurvey.points.length < 3
-                    ? `Tap map to add ${3 - landSurvey.points.length} more corner${3 - landSurvey.points.length > 1 ? 's' : ''}`
-                    : `Boundary closed: ${landSurvey.areaAcres.toFixed(2)} Ac (${landSurvey.areaSqYards.toLocaleString('en-IN')} Gaj)`}
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Undo & Reset Controls */}
-            <div className="flex items-center gap-1">
-              <button
-                type="button"
-                onClick={handleUndoLandBoundaryVertex}
-                disabled={landSurvey.points.length === 0}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 hover:text-white transition-colors"
-                title="Undo Last Node"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleResetLandBoundaryPoints}
-                disabled={landSurvey.points.length === 0}
-                className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-30 text-slate-300 hover:text-rose-400 transition-colors"
-                title="Clear All Nodes"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 z-40 bg-slate-900/95 backdrop-blur-md text-white p-3 sm:px-5 sm:py-3 rounded-2xl shadow-2xl border border-slate-700 flex flex-wrap items-center gap-2 sm:gap-3 animate-in slide-in-from-top sm:max-w-lg justify-between">
+          <div className="flex items-center gap-2 min-w-0">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping flex-shrink-0" />
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-white truncate">Tap map to mark parcel corners</div>
+              <div className="text-[10px] text-slate-300 hidden sm:block">Drop 3 or more vertices to map boundary perimeter</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 border-slate-800 pt-2 sm:pt-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {landSurvey.points.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <div className="text-xs font-extrabold text-emerald-400 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700">
+                  {landSurvey.areaAcres.toFixed(2)} Ac ({landSurvey.points.length} nodes)
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const updated = landSurvey.points.slice(0, -1);
+                    const metrics = calculateLandParcelMetrics(updated);
+                    setLandSurvey({
+                      ...landSurvey,
+                      ...metrics,
+                      points: updated
+                    });
+                  }}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold border border-slate-700 transition-colors"
+                  title="Undo last node point"
+                >
+                  Undo
+                </button>
+              </div>
+            )}
             <button
               onClick={handleConfirmLandBoundary}
               disabled={landSurvey.points.length < 3}
-              className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-md active:scale-95 whitespace-nowrap flex items-center justify-center gap-1.5"
+              className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-40 text-white text-xs font-bold transition-all shadow-xs"
             >
-              <Check className="w-3.5 h-3.5 stroke-[3]" />
-              <span>Save Boundary ({landSurvey.points.length} Nodes)</span>
+              Save Boundary
             </button>
             <button
               onClick={handleCancelLandBoundary}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium transition-colors"
+              className="px-2.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium"
             >
               Cancel
             </button>
@@ -943,7 +880,6 @@ export const App: React.FC = () => {
           ).length
         }
         favoritesCount={favorites.length}
-        notificationsCount={getUnreadNotificationCount()}
         theme={theme}
         onToggleTheme={toggleTheme}
       />
@@ -1088,21 +1024,13 @@ export const App: React.FC = () => {
       />
 
       {/* 
-        14. AUTHENTICATION REQUIRED MODAL (Gates Property Details & Property Listing)
+        14. AUTHENTICATION REQUIRED MODAL (Google Sign-In gate for Add Property & View Details)
       */}
       <AuthRequiredModal
-        isOpen={authModalConfig.isOpen}
-        onClose={() => setAuthModalConfig((prev) => ({ ...prev, isOpen: false }))}
-        actionTitle={authModalConfig.actionTitle}
-        actionDescription={authModalConfig.actionDescription}
-        onSignInSuccess={() => {
-          const updated = getUserProfile();
-          setCurrentUser(updated);
-          if (authModalConfig.pendingAction) {
-            authModalConfig.pendingAction();
-          }
-          setAuthModalConfig((prev) => ({ ...prev, isOpen: false }));
-        }}
+        isOpen={authModalState.isOpen}
+        onClose={() => setAuthModalState((prev) => ({ ...prev, isOpen: false }))}
+        reason={authModalState.reason}
+        propertyTitle={authModalState.propertyTitle}
       />
     </main>
   );

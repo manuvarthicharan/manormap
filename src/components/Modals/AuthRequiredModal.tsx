@@ -1,147 +1,136 @@
-import React, { useState } from 'react';
-import { X, Lock, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import React from 'react';
+import { X, Lock, ShieldCheck, CheckCircle2, ArrowRight } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
 import { signInWithGoogle, isSupabaseConfigured } from '../../services/supabaseClient';
-import { saveUserProfile } from '../../services/userService';
 
 interface AuthRequiredModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSignInSuccess?: () => void;
-  actionTitle?: string;
-  actionDescription?: string;
+  reason: 'add_property' | 'view_details' | 'general';
+  propertyTitle?: string;
 }
 
 export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
   isOpen,
   onClose,
-  onSignInSuccess,
-  actionTitle = 'Sign In to ManorMap',
-  actionDescription = 'Sign in with your Google account to access full property records, cadastral boundaries, verified builder contacts, and to list your own real estate.'
+  reason,
+  propertyTitle
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   if (!isOpen) return null;
 
-  const handleGoogleSignIn = async () => {
-    setIsLoading(true);
-    setErrorMsg(null);
+  const supabaseOnline = isSupabaseConfigured();
 
-    try {
-      if (isSupabaseConfigured()) {
-        const { error } = await signInWithGoogle();
-        if (error) {
-          setErrorMsg(error.message);
-          setIsLoading(false);
-          return;
-        }
-        // OAuth redirect will take over
-      } else {
-        // Fallback for development/offline mode
-        saveUserProfile({
-          id: `usr_${Date.now()}`,
-          name: 'Verified User',
-          email: 'user@manormap.in',
-          isAuthenticated: true,
-          authProvider: 'google'
-        });
-        if (onSignInSuccess) onSignInSuccess();
-        onClose();
-      }
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Authentication failed. Please try again.');
-      setIsLoading(false);
+  const handleGoogleSignIn = async () => {
+    if (!supabaseOnline) {
+      alert(
+        'Supabase is not configured yet. Please ensure VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set.'
+      );
+      return;
+    }
+    const { error } = await signInWithGoogle();
+    if (error) {
+      alert(`Sign in error: ${error.message}`);
     }
   };
+
+  const isAdding = reason === 'add_property';
 
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/75 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity animate-in fade-in"
         onClick={onClose}
       />
 
       <div className="min-h-full flex items-center justify-center p-4 text-center">
-        <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100 p-6 sm:p-7 space-y-5">
+        <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100 p-6 space-y-5">
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 w-8 h-8 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
-            aria-label="Close"
+            className="absolute top-5 right-5 p-1.5 text-slate-400 hover:text-slate-700 rounded-xl hover:bg-slate-100 transition-colors"
+            aria-label="Close modal"
           >
             <X className="w-5 h-5" />
           </button>
 
-          {/* Header */}
-          <div className="text-center space-y-2 pt-1">
-            <div className="inline-flex p-3 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/25 mb-1">
-              <Lock className="w-7 h-7 stroke-[2.2]" />
+          {/* Logo & Header */}
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs">
+              <Lock className="w-6 h-6 text-blue-600" />
             </div>
-            <div className="flex justify-center">
-              <Logo size="sm" />
-            </div>
-            <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
-              {actionTitle}
-            </h3>
-            <p className="text-xs text-slate-500 leading-relaxed max-w-sm mx-auto">
-              {actionDescription}
-            </p>
-          </div>
-
-          {/* Value Highlights */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100 space-y-2.5 text-xs text-slate-700">
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span className="font-medium">Direct verified Owner & Builder phone contacts</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span className="font-medium">Cadastral land parcel boundaries & acreages</span>
-            </div>
-            <div className="flex items-center gap-2.5">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
-              <span className="font-medium">List custom properties with geolocation & photo upload</span>
+            <div>
+              <div className="flex items-center gap-2">
+                <Logo size="xs" />
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                  Sign In Required
+                </span>
+              </div>
+              <h3 className="text-base font-extrabold text-slate-900 mt-1">
+                {isAdding ? 'Sign In to List Property' : 'Sign In to View Property Details'}
+              </h3>
             </div>
           </div>
 
-          {/* Error notice if any */}
-          {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 text-center">
-              {errorMsg}
-            </div>
-          )}
+          {/* Context Explanation */}
+          <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 space-y-2">
+            {isAdding ? (
+              <p className="leading-relaxed">
+                To list a residential home, villa, or agricultural land with surveyed parcel borders, please sign in with your Google account.
+              </p>
+            ) : (
+              <p className="leading-relaxed">
+                {propertyTitle ? (
+                  <>
+                    To view full architectural specifications, verified seller contacts, and legal documents for{' '}
+                    <strong className="text-slate-900">"{propertyTitle}"</strong>, please sign in.
+                  </>
+                ) : (
+                  'To view verified builder contacts, cadastral parcel maps, EMI schedules, and AI livability audits, please sign in with your Google account.'
+                )}
+              </p>
+            )}
 
-          {/* Google Sign In CTA */}
-          <div className="space-y-3 pt-1">
+            <div className="space-y-1.5 pt-1 text-[11px] text-slate-700">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>Verified Owner & Builder direct contact info</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>Full RERA registration IDs & cadastral border reports</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" />
+                <span>Save favorites & list unlimited properties</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="space-y-2.5 pt-1">
             <button
               onClick={handleGoogleSignIn}
-              disabled={isLoading}
-              className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-2xl shadow-xl shadow-slate-900/15 transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+              className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
             >
-              {isLoading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-              ) : (
-                <>
-                  <GoogleIcon className="w-5 h-5" />
-                  <span>Continue with Google</span>
-                </>
-              )}
+              <GoogleIcon className="w-4 h-4" />
+              <span>Continue with Google</span>
+              <ArrowRight className="w-4 h-4 ml-auto text-slate-400" />
             </button>
 
             <button
               onClick={onClose}
-              className="w-full py-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
+              className="w-full py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
             >
-              Cancel and continue browsing map
+              Continue Browsing Map
             </button>
           </div>
 
-          <div className="text-center pt-1 border-t border-slate-100 text-[10px] text-slate-400 flex items-center justify-center gap-1.5">
+          {/* Security badge */}
+          <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 border-t border-slate-100 pt-3">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Secure 256-bit OAuth authentication &bull; Zero spam</span>
+            <span>Secure Supabase OAuth 2.0 • Zero spam policy</span>
           </div>
         </div>
       </div>

@@ -18,7 +18,6 @@ import { searchLocations } from '../../services/geocoding';
 import { SearchResult, FilterState } from '../../types';
 import { getUserProfile } from '../../services/userService';
 import { parseNaturalLanguageQuery } from '../../services/aiIntelligenceService';
-import { getUnreadNotificationCount } from '../../services/notificationService';
 import { Logo } from '../Common/Logo';
 
 interface FloatingHeaderProps {
@@ -219,13 +218,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               onClick={onOpenMenu}
               title="Open Navigation Menu"
-              className="relative w-9 h-9 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95 flex-shrink-0"
+              className="w-9 h-9 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95 flex-shrink-0"
               aria-label="Menu"
             >
               <Menu className="w-5 h-5" />
-              {getUnreadNotificationCount() > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white animate-pulse" />
-              )}
             </button>
 
             {/* Brand Logo Pic */}
