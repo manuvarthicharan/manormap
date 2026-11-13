@@ -171,9 +171,11 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   // Overlay Objects
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const polygonOverlayRef = useRef<google.maps.Polygon | null>(null);
-  const drawingManagerRef = useRef<any>(null);
-  const activeDrawnOverlayRef = useRef<google.maps.Polygon | google.maps.Rectangle | null>(null);
-  const [drawingShapeMode, setDrawingShapeMode] = useState<'polygon' | 'rectangle'>('polygon');
+  const maskCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const isMaskingRef = useRef<boolean>(false);
+  const maskStrokePointsRef = useRef<[number, number][]>([]);
+  const [maskToolMode, setMaskToolMode] = useState<'freehand' | 'box'>('freehand');
+  const maskedPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
   const allPropertyBoundariesRef = useRef<Map<string, google.maps.Polygon>>(new Map());
   const transitLayerRef = useRef<any>(null);
   const aiPolygonOverlayRef = useRef<google.maps.Polygon | null>(null);
@@ -355,13 +357,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       markersRef.current.clear();
       clusterMarkersRef.current.forEach((c) => c.remove());
       clusterMarkersRef.current = [];
-      if (drawingManagerRef.current) {
-        drawingManagerRef.current.setMap(null);
-        drawingManagerRef.current = null;
-      }
-      if (activeDrawnOverlayRef.current) {
-        activeDrawnOverlayRef.current.setMap(null);
-        activeDrawnOverlayRef.current = null;
+      if (maskedPolygonOverlayRef.current) {
+        maskedPolygonOverlayRef.current.setMap(null);
+        maskedPolygonOverlayRef.current = null;
       }
     };
   }, []);
@@ -560,143 +558,56 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   }, [polygonSearch, mapLoaded]);
 
-  // Google Maps Native DrawingManager for Agricultural Land & Plot Boundaries
+  // Render and update the masked land polygon overlay when masked coordinates exist
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !mapLoaded || !window.google?.maps?.drawing) return;
+    if (!map || !mapLoaded || !window.google?.maps) return;
 
-    if (!isDrawingLandForProperty) {
-      if (drawingManagerRef.current) {
-        drawingManagerRef.current.setMap(null);
-        drawingManagerRef.current = null;
+    if (isDrawingLandForProperty && landDrawCoordinates.length >= 3) {
+      const paths = landDrawCoordinates.map((c) => new google.maps.LatLng(c[1], c[0]));
+
+      if (!maskedPolygonOverlayRef.current) {
+        maskedPolygonOverlayRef.current = new google.maps.Polygon({
+          paths,
+          fillColor: '#10b981',
+          fillOpacity: 0.35,
+          strokeColor: '#059669',
+          strokeWeight: 2.5,
+          strokeOpacity: 0.95,
+          clickable: false,
+          zIndex: 150,
+          map
+        });
+      } else {
+        maskedPolygonOverlayRef.current.setPaths(paths);
+        maskedPolygonOverlayRef.current.setOptions({
+          fillColor: '#10b981',
+          fillOpacity: 0.35,
+          strokeColor: '#059669',
+          strokeWeight: 2.5,
+          clickable: false,
+          zIndex: 150
+        });
+        maskedPolygonOverlayRef.current.setMap(map);
       }
-      if (activeDrawnOverlayRef.current) {
-        activeDrawnOverlayRef.current.setMap(null);
-        activeDrawnOverlayRef.current = null;
-      }
-      return;
+    } else if (maskedPolygonOverlayRef.current) {
+      maskedPolygonOverlayRef.current.setMap(null);
     }
+  }, [isDrawingLandForProperty, landDrawCoordinates, mapLoaded]);
 
-    const extractCoordsFromPolygon = (poly: google.maps.Polygon) => {
-      const path = poly.getPath();
-      const coords: [number, number][] = [];
-      for (let i = 0; i < path.getLength(); i++) {
-        const pt = path.getAt(i);
-        coords.push([pt.lng(), pt.lat()]);
-      }
-      setLandDrawCoordinates(coords);
+  // Sync mask canvas sizing with map viewport
+  useEffect(() => {
+    if (!isDrawingLandForProperty || !maskCanvasRef.current || !mapContainerRef.current) return;
+    const canvas = maskCanvasRef.current;
+    const container = mapContainerRef.current;
+    const syncSize = () => {
+      canvas.width = container.clientWidth;
+      canvas.height = container.clientHeight;
     };
-
-    const extractCoordsFromRectangle = (rect: google.maps.Rectangle) => {
-      const bounds = rect.getBounds();
-      if (!bounds) return;
-      const sw = bounds.getSouthWest();
-      const ne = bounds.getNorthEast();
-      const coords: [number, number][] = [
-        [sw.lng(), sw.lat()],
-        [ne.lng(), sw.lat()],
-        [ne.lng(), ne.lat()],
-        [sw.lng(), ne.lat()]
-      ];
-      setLandDrawCoordinates(coords);
-    };
-
-    const polygonOptions: google.maps.PolygonOptions = {
-      fillColor: '#10b981',
-      fillOpacity: 0.35,
-      strokeColor: '#059669',
-      strokeWeight: 2.5,
-      strokeOpacity: 0.95,
-      clickable: true,
-      editable: true,
-      draggable: true,
-      zIndex: 150
-    };
-
-    const rectangleOptions: google.maps.RectangleOptions = {
-      fillColor: '#10b981',
-      fillOpacity: 0.35,
-      strokeColor: '#059669',
-      strokeWeight: 2.5,
-      strokeOpacity: 0.95,
-      clickable: true,
-      editable: true,
-      draggable: true,
-      zIndex: 150
-    };
-
-    // If an overlay already exists, adjust its drawing mode, else create DrawingManager
-    let dm = drawingManagerRef.current;
-    if (!dm) {
-      dm = new google.maps.drawing.DrawingManager({
-        drawingControl: false,
-        drawingMode: (drawnLandBorders && drawnLandBorders.length >= 3)
-          ? null
-          : (drawingShapeMode === 'rectangle'
-              ? google.maps.drawing.OverlayType.RECTANGLE
-              : google.maps.drawing.OverlayType.POLYGON),
-        polygonOptions,
-        rectangleOptions
-      });
-      dm.setMap(map);
-      drawingManagerRef.current = dm;
-
-      google.maps.event.addListener(dm, 'overlaycomplete', (event: any) => {
-        if (activeDrawnOverlayRef.current) {
-          activeDrawnOverlayRef.current.setMap(null);
-        }
-
-        const overlay = event.overlay;
-        activeDrawnOverlayRef.current = overlay;
-        dm.setDrawingMode(null);
-
-        if (event.type === google.maps.drawing.OverlayType.POLYGON) {
-          extractCoordsFromPolygon(overlay);
-          const path = overlay.getPath();
-          google.maps.event.addListener(path, 'set_at', () => extractCoordsFromPolygon(overlay));
-          google.maps.event.addListener(path, 'insert_at', () => extractCoordsFromPolygon(overlay));
-          google.maps.event.addListener(path, 'remove_at', () => extractCoordsFromPolygon(overlay));
-        } else if (event.type === google.maps.drawing.OverlayType.RECTANGLE) {
-          extractCoordsFromRectangle(overlay);
-          google.maps.event.addListener(overlay, 'bounds_changed', () => extractCoordsFromRectangle(overlay));
-        }
-      });
-    } else {
-      if (!activeDrawnOverlayRef.current) {
-        dm.setDrawingMode(
-          drawingShapeMode === 'rectangle'
-            ? google.maps.drawing.OverlayType.RECTANGLE
-            : google.maps.drawing.OverlayType.POLYGON
-        );
-      }
-    }
-
-    if (drawnLandBorders && drawnLandBorders.length >= 3 && !activeDrawnOverlayRef.current) {
-      const paths = drawnLandBorders.map((c) => new google.maps.LatLng(c[1], c[0]));
-      const existingPolygon = new google.maps.Polygon({
-        ...polygonOptions,
-        paths,
-        map
-      });
-      activeDrawnOverlayRef.current = existingPolygon;
-      const path = existingPolygon.getPath();
-      google.maps.event.addListener(path, 'set_at', () => extractCoordsFromPolygon(existingPolygon));
-      google.maps.event.addListener(path, 'insert_at', () => extractCoordsFromPolygon(existingPolygon));
-      google.maps.event.addListener(path, 'remove_at', () => extractCoordsFromPolygon(existingPolygon));
-      dm.setDrawingMode(null);
-    }
-
-    return () => {
-      if (drawingManagerRef.current) {
-        drawingManagerRef.current.setMap(null);
-        drawingManagerRef.current = null;
-      }
-      if (activeDrawnOverlayRef.current) {
-        activeDrawnOverlayRef.current.setMap(null);
-        activeDrawnOverlayRef.current = null;
-      }
-    };
-  }, [isDrawingLandForProperty, drawingShapeMode, mapLoaded]);
+    syncSize();
+    window.addEventListener('resize', syncSize);
+    return () => window.removeEventListener('resize', syncSize);
+  }, [isDrawingLandForProperty]);
 
   // AI Boundary & Polygon Overlay (highlight_area / draw_map_polygon)
   useEffect(() => {
@@ -889,35 +800,193 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   };
 
-  // Google Maps DrawingManager shape switch & redraw handlers
-  const handleSwitchDrawingShape = (mode: 'polygon' | 'rectangle') => {
-    setDrawingShapeMode(mode);
-    if (activeDrawnOverlayRef.current) {
-      activeDrawnOverlayRef.current.setMap(null);
-      activeDrawnOverlayRef.current = null;
-    }
-    setLandDrawCoordinates([]);
-    if (drawingManagerRef.current && window.google?.maps?.drawing) {
-      drawingManagerRef.current.setDrawingMode(
-        mode === 'rectangle'
-          ? google.maps.drawing.OverlayType.RECTANGLE
-          : google.maps.drawing.OverlayType.POLYGON
-      );
+  // Web Mercator screen pixel to Google Maps LatLng conversion
+  const pixelToLatLng = (
+    pixelX: number,
+    pixelY: number,
+    map: google.maps.Map,
+    rect: DOMRect
+  ): [number, number] => {
+    const center = map.getCenter();
+    const zoom = map.getZoom() || 13;
+    if (!center) return [78.382, 17.447];
+
+    const scale = 256 * Math.pow(2, zoom);
+    const centerLng = center.lng();
+    const centerLat = center.lat();
+
+    const centerWorldX = ((centerLng + 180) / 360) * scale;
+    const sinLat = Math.sin((centerLat * Math.PI) / 180);
+    const clampedSin = Math.max(-0.9999, Math.min(0.9999, sinLat));
+    const centerWorldY = (0.5 - Math.log((1 + clampedSin) / (1 - clampedSin)) / (4 * Math.PI)) * scale;
+
+    const deltaX = pixelX - rect.width / 2;
+    const deltaY = pixelY - rect.height / 2;
+
+    const targetWorldX = centerWorldX + deltaX;
+    const targetWorldY = centerWorldY + deltaY;
+
+    const targetLng = (targetWorldX / scale) * 360 - 180;
+    const n = Math.PI - (2 * Math.PI * targetWorldY) / scale;
+    const targetLat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+
+    return [targetLng, targetLat];
+  };
+
+  // Custom Land Masking: Pointer Down
+  const handleMaskPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    const canvas = maskCanvasRef.current;
+    if (!canvas) return;
+
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (_) {}
+
+    isMaskingRef.current = true;
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    maskStrokePointsRef.current = [[x, y]];
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#059669';
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.arc(x, y, 2.5, 0, Math.PI * 2);
+      ctx.fill();
     }
   };
 
-  const handleRedrawShape = () => {
-    if (activeDrawnOverlayRef.current) {
-      activeDrawnOverlayRef.current.setMap(null);
-      activeDrawnOverlayRef.current = null;
+  // Custom Land Masking: Pointer Move
+  const handleMaskPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isMaskingRef.current) return;
+    const canvas = maskCanvasRef.current;
+    if (!canvas) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (maskToolMode === 'freehand') {
+      const pts = maskStrokePointsRef.current;
+      pts.push([x, y]);
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (pts.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) {
+          ctx.lineTo(pts[i][0], pts[i][1]);
+        }
+        ctx.strokeStyle = '#059669';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+        ctx.fill();
+        ctx.stroke();
+      }
+    } else if (maskToolMode === 'box') {
+      const startPt = maskStrokePointsRef.current[0];
+      if (!startPt) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.strokeStyle = '#059669';
+      ctx.lineWidth = 3;
+      ctx.fillStyle = 'rgba(16, 185, 129, 0.35)';
+      const startX = Math.min(startPt[0], x);
+      const startY = Math.min(startPt[1], y);
+      const w = Math.abs(x - startPt[0]);
+      const h = Math.abs(y - startPt[1]);
+      ctx.fillRect(startX, startY, w, h);
+      ctx.strokeRect(startX, startY, w, h);
     }
+  };
+
+  // Custom Land Masking: Pointer Up
+  const handleMaskPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (!isMaskingRef.current) return;
+    isMaskingRef.current = false;
+
+    const canvas = maskCanvasRef.current;
+    const map = mapRef.current;
+    if (!canvas || !map) return;
+
+    try {
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    } catch (_) {}
+
+    const rect = canvas.getBoundingClientRect();
+    const currentX = e.clientX - rect.left;
+    const currentY = e.clientY - rect.top;
+
+    let finalScreenCoords: [number, number][] = [];
+
+    if (maskToolMode === 'box') {
+      const startPt = maskStrokePointsRef.current[0];
+      if (startPt) {
+        const minX = Math.min(startPt[0], currentX);
+        const maxX = Math.max(startPt[0], currentX);
+        const minY = Math.min(startPt[1], currentY);
+        const maxY = Math.max(startPt[1], currentY);
+
+        if (maxX - minX > 5 && maxY - minY > 5) {
+          finalScreenCoords = [
+            [minX, minY],
+            [maxX, minY],
+            [maxX, maxY],
+            [minX, maxY]
+          ];
+        }
+      }
+    } else {
+      const pts = maskStrokePointsRef.current;
+      if (pts.length >= 3) {
+        const filtered: [number, number][] = [pts[0]];
+        for (let i = 1; i < pts.length; i++) {
+          const last = filtered[filtered.length - 1];
+          const dx = pts[i][0] - last[0];
+          const dy = pts[i][1] - last[1];
+          if (dx * dx + dy * dy >= 16) {
+            filtered.push(pts[i]);
+          }
+        }
+        if (filtered.length >= 3) {
+          finalScreenCoords = filtered;
+        }
+      }
+    }
+
+    if (finalScreenCoords.length >= 3) {
+      const latLngs = finalScreenCoords.map(([px, py]) => pixelToLatLng(px, py, map, rect));
+      setLandDrawCoordinates(latLngs);
+    }
+
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  };
+
+  const handleClearMask = () => {
     setLandDrawCoordinates([]);
-    if (drawingManagerRef.current && window.google?.maps?.drawing) {
-      drawingManagerRef.current.setDrawingMode(
-        drawingShapeMode === 'rectangle'
-          ? google.maps.drawing.OverlayType.RECTANGLE
-          : google.maps.drawing.OverlayType.POLYGON
-      );
+    maskStrokePointsRef.current = [];
+    if (maskCanvasRef.current) {
+      const ctx = maskCanvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, maskCanvasRef.current.width, maskCanvasRef.current.height);
+      }
     }
   };
 
@@ -932,6 +1001,18 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             : ''
         }`}
       />
+
+      {/* Custom Draw & Mask Canvas for Agricultural Land */}
+      {isDrawingLandForProperty && (
+        <canvas
+          ref={maskCanvasRef}
+          className="absolute inset-0 z-10 cursor-crosshair touch-none select-none pointer-events-auto"
+          onPointerDown={handleMaskPointerDown}
+          onPointerMove={handleMaskPointerMove}
+          onPointerUp={handleMaskPointerUp}
+          onPointerCancel={handleMaskPointerUp}
+        />
+      )}
 
       {/* Load Error State */}
       {loadError && (
@@ -1078,7 +1159,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       )}
 
       {/* 
-        OFFICIAL GOOGLE MAPS DRAWING MANAGER BANNER FOR AGRICULTURAL LAND
+        CUSTOM DRAW & MASKING TOOL BANNER FOR AGRICULTURAL LAND
       */}
       {isDrawingLandForProperty && (
         <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-emerald-300 p-2.5 sm:p-3 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 animate-in fade-in">
@@ -1088,7 +1169,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             </div>
             <div className="text-xs min-w-0">
               <div className="font-bold text-slate-900 truncate flex items-center gap-2">
-                <span>{landDrawCoordinates.length >= 3 ? 'Land Parcel Boundary Formed' : 'Google Maps Land Drawing'}</span>
+                <span>{landDrawCoordinates.length >= 3 ? 'Property Land Masked' : 'Custom Land Masking Tool'}</span>
                 {landDrawCoordinates.length >= 3 && (
                   <span className="text-[11px] font-black text-emerald-800 bg-emerald-100/90 border border-emerald-300 px-2.5 py-0.5 rounded-lg flex items-center gap-1 shadow-2xs">
                     <Sparkles className="w-3 h-3 text-emerald-600" />
@@ -1099,54 +1180,60 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
               </div>
               <div className="text-[10px] text-slate-500 hidden sm:block">
                 {landDrawCoordinates.length < 3
-                  ? (drawingShapeMode === 'polygon'
-                      ? 'Click points on the map to outline property borders. Double-click or click starting point to finish.'
-                      : 'Click and drag across map to draw a rectangular land parcel.')
-                  : 'Drag the white adjustment handles on corners & edges to adjust the boundary. Area is shaded automatically.'}
+                  ? (maskToolMode === 'freehand'
+                      ? 'Press and drag your mouse or finger across the map to freely mask your land area.'
+                      : 'Click and drag across the map to drop a rectangular land parcel mask.')
+                  : 'Land area successfully masked and shaded in emerald. Save or re-mask anytime.'}
               </div>
             </div>
           </div>
 
           <div className="flex items-center justify-between sm:justify-end gap-1.5 flex-shrink-0">
-            {/* Tool Mode Toggles: Polygon vs Rectangle */}
+            {/* Tool Mode Toggles: Freehand Mask vs Box Mask */}
             <div className="flex items-center bg-slate-100 p-0.5 rounded-xl border border-slate-200">
               <button
                 type="button"
-                onClick={() => handleSwitchDrawingShape('polygon')}
+                onClick={() => {
+                  setMaskToolMode('freehand');
+                  handleClearMask();
+                }}
                 className={`h-7 px-2 sm:px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  drawingShapeMode === 'polygon'
+                  maskToolMode === 'freehand'
                     ? 'bg-white text-emerald-800 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="Multi-point Polygon boundary"
+                title="Custom Freehand Draw / Mask"
               >
                 <PenTool className="w-3 h-3 text-emerald-600" />
-                <span>Polygon</span>
+                <span>Freehand</span>
               </button>
               <button
                 type="button"
-                onClick={() => handleSwitchDrawingShape('rectangle')}
+                onClick={() => {
+                  setMaskToolMode('box');
+                  handleClearMask();
+                }}
                 className={`h-7 px-2 sm:px-2.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  drawingShapeMode === 'rectangle'
+                  maskToolMode === 'box'
                     ? 'bg-white text-emerald-800 shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
-                title="Rectangular plot boundary"
+                title="Box / Rectangle Mask"
               >
                 <Square className="w-3 h-3 text-emerald-600" />
-                <span>Rectangle</span>
+                <span>Box Mask</span>
               </button>
             </div>
 
-            {/* Redraw button */}
+            {/* Re-mask button */}
             <button
               type="button"
-              onClick={handleRedrawShape}
+              onClick={handleClearMask}
               className="h-8 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-semibold transition-colors"
-              title="Redraw shape from scratch"
+              title="Clear current mask and redraw"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Redraw</span>
+              <span className="hidden sm:inline">Re-mask</span>
             </button>
 
             {/* Save button */}
@@ -1161,7 +1248,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                 className="h-8 px-3 sm:px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
               >
                 <Check className="w-3.5 h-3.5 stroke-[3]" />
-                <span>Save Boundary</span>
+                <span>Save Land Mask</span>
               </button>
             )}
 

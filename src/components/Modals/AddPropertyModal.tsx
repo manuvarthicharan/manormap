@@ -504,20 +504,20 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <div>
                         <h4 className="text-xs font-black text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-                          <span>Draw Land Borders on Map</span>
+                          <span>Custom Mask Land on Map</span>
                           <span className="text-[10px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">
-                            {category === 'Agricultural Land' ? 'Required for Farmland' : 'Optional Plot Drawing'}
+                            {category === 'Agricultural Land' ? 'Required for Farmland' : 'Optional Plot Masking'}
                           </span>
                         </h4>
                         <p className="text-xs text-emerald-800 mt-1 leading-relaxed">
-                          Draw the border of your land on the live Google Map. The surface area between the drawn borders will be <strong>automatically calculated and shaded in emerald</strong> on the map.
+                          Mask your property on the live Google Map by freely drawing or dragging over your land. The masked area will be <strong>automatically calculated and shaded in emerald</strong> on the map.
                         </p>
                       </div>
                     </div>
 
                     {drawnLandBorders && drawnLandBorders.length >= 3 && (
                       <span className="text-[10px] font-bold bg-emerald-600 text-white px-2.5 py-1 rounded-full shadow-2xs whitespace-nowrap">
-                        ✓ Shaded & Ready
+                        ✓ Masked & Ready
                       </span>
                     )}
                   </div>
@@ -534,15 +534,15 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       <div className="space-y-1">
                         <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                           <Check className="w-4 h-4 text-emerald-600 stroke-[3]" />
-                          <span>Drawn Parcel: <strong className="text-emerald-700">{landMetrics?.areaAcres ? landMetrics.areaAcres.toFixed(2) : '0'} Acres</strong></span>
+                          <span>Masked Parcel: <strong className="text-emerald-700">{landMetrics?.areaAcres ? landMetrics.areaAcres.toFixed(2) : '0'} Acres</strong></span>
                           <span className="text-slate-500 font-normal">({landMetrics?.areaGunthas ? landMetrics.areaGunthas.toFixed(1) : '0'} Gunthas)</span>
                         </div>
                         <div className="text-[11px] text-slate-500 flex items-center gap-2">
-                          <span className="text-emerald-700 font-semibold">Drawn Land Boundary</span>
+                          <span className="text-emerald-700 font-semibold">Masked Land Boundary</span>
                           <span>•</span>
                           <span>Perimeter: {landMetrics?.perimeterMeters ? Math.round(landMetrics.perimeterMeters) : 0}m</span>
                           <span>•</span>
-                          <span className="text-emerald-600 font-semibold">Area shaded on map</span>
+                          <span className="text-emerald-600 font-semibold">Area masked on map</span>
                         </div>
                       </div>
 
@@ -557,7 +557,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                             className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 active:scale-95"
                           >
                             <PenTool className="w-3.5 h-3.5" />
-                            <span>Redraw on Map</span>
+                            <span>Re-mask on Map</span>
                           </button>
                         )}
                         {onClearLandBorders && (
@@ -575,7 +575,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   ) : (
                     <div className="p-3.5 bg-white rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
                       <div className="text-xs text-slate-600">
-                        Tap below to draw the border of your land on the map. The enclosed land area will be automatically shaded.
+                        Tap below to freely draw or mask your property area on the map. The masked area will be automatically calculated & shaded.
                       </div>
                       {onStartDrawLandBorders && (
                         <button
@@ -587,7 +587,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                           className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-extrabold transition-all shadow-xs flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
                         >
                           <PenTool className="w-4 h-4 stroke-[2.5]" />
-                          <span>Draw Land Borders on Map</span>
+                          <span>Mask Land on Map</span>
                         </button>
                       )}
                     </div>
