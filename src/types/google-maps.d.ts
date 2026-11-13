@@ -181,13 +181,31 @@ declare namespace google {
       addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
     }
 
+    export class Rectangle {
+      constructor(opts?: any);
+      setMap(map: Map | null): void;
+      setBounds(bounds: LatLngBounds | LatLngBoundsLiteral): void;
+      getBounds(): LatLngBounds | undefined;
+      setOptions(opts?: any): void;
+      addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
+    }
+
     export class Polygon {
       constructor(opts?: any);
       setMap(map: Map | null): void;
       setPaths(paths: any): void;
       getPaths(): any;
+      getPath(): any;
       setOptions(opts?: any): void;
       addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
+    }
+
+    export interface PolygonOptions {
+      [key: string]: any;
+    }
+
+    export interface RectangleOptions {
+      [key: string]: any;
     }
 
     export class Polyline {
@@ -197,6 +215,23 @@ declare namespace google {
       getPath(): any;
       setOptions(opts?: any): void;
       addListener(eventName: string, handler: (...args: any[]) => void): MapsEventListener;
+    }
+
+    export namespace drawing {
+      export class DrawingManager {
+        constructor(opts?: any);
+        setMap(map: Map | null): void;
+        setDrawingMode(mode: any): void;
+        getDrawingMode(): any;
+        setOptions(opts?: any): void;
+      }
+      export enum OverlayType {
+        MARKER = 'marker',
+        POLYGON = 'polygon',
+        POLYLINE = 'polyline',
+        RECTANGLE = 'rectangle',
+        CIRCLE = 'circle'
+      }
     }
 
     export namespace visualization {
