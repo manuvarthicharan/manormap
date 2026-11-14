@@ -424,7 +424,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
             </div>
 
             {/* Exact-Geometry Segmented Tab Navigation */}
-            <div className="flex bg-slate-100 p-1 rounded-xl gap-1 overflow-x-auto text-xs font-bold scrollbar-none">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl gap-1 overflow-x-auto text-xs font-bold scrollbar-none">
               {[
                 { id: 'overview', label: 'Overview & Specs' },
                 { id: 'ai-risk', label: 'AI Risk & Pros/Cons' },
@@ -439,8 +439,8 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                   onClick={() => setActiveTab(tab.id as any)}
                   className={`h-9 px-3.5 rounded-lg transition-all whitespace-nowrap flex items-center justify-center ${
                     activeTab === tab.id
-                      ? 'bg-white text-slate-900 shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
+                      ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
                   {tab.label}

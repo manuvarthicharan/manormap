@@ -167,7 +167,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
               <label className="block text-xs font-bold text-slate-900 mb-2 uppercase tracking-wider">
                 Bedrooms (BHK)
               </label>
-              <div className="grid grid-cols-6 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
                 {[
                   { id: 'all', label: 'All' },
                   { id: 1, label: '1 BHK' },
@@ -234,7 +234,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   </span>
                 )}
               </div>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {priceOptions.map((opt, idx) => (
                   <button
                     key={idx}
@@ -256,7 +256,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
               <label className="block text-xs font-bold text-slate-900 mb-2 uppercase tracking-wider">
                 Furnishing Status
               </label>
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 {[
                   { id: 'all', label: 'All' },
                   { id: 'Fully Furnished', label: 'Furnished' },
@@ -283,7 +283,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
               <label className="block text-xs font-bold text-slate-900 mb-2 uppercase tracking-wider">
                 Facing / Vastu Orientation
               </label>
-              <div className="grid grid-cols-5 gap-2">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                 {['all', 'East', 'North', 'West', 'South'].map((f) => (
                   <button
                     key={f}

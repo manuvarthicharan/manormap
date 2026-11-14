@@ -6,20 +6,7 @@ export default {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        serif: ['Newsreader', 'Georgia', 'serif'],
-        mono: ['"JetBrains Mono"', 'monospace'],
-      },
       colors: {
-        terracotta: {
-          50: '#fdf6f2',
-          100: '#fbf2ed',
-          200: '#ecd5c8',
-          700: '#8b3a24',
-          800: '#7c2d12',
-          900: '#5c2214'
-        },
         brand: {
           50: '#eff6ff',
           100: '#dbeafe',

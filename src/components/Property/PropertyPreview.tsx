@@ -3,8 +3,12 @@ import { Property } from '../../types';
 import {
   X,
   MapPin,
+  BedDouble,
+  Bath,
+  Maximize2,
   Heart,
   ArrowRight,
+  ShieldCheck,
   Calculator,
   Scale,
   Sparkles
@@ -33,18 +37,19 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
 }) => {
   if (!property) return null;
 
-  const isAgri = property.category === 'Agricultural Land' || property.category === 'Plot';
-
   return (
     <div className="z-30 pointer-events-auto">
       {/* Mobile: Bottom Sheet | Desktop: Floating Card near bottom left */}
-      <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-5 sm:right-auto sm:max-w-lg w-full animate-in slide-in-from-bottom duration-150 ease-out z-30">
-        <div className="bg-[#fbf9f6] dark:bg-[#181716] rounded-xs border border-[#e7e5e4] dark:border-[#292524] shadow-[0_4px_20px_rgba(0,0,0,0.08)] overflow-hidden transition-colors">
+      <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md w-full animate-in slide-in-from-bottom duration-200 ease-out z-30">
+        <div className="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto">
           
-          {/* Card Layout: Asymmetrical Photo (40%) + Editorial Specs (60%) */}
-          <div className="flex flex-col sm:flex-row">
-            {/* Photo */}
-            <div className="relative w-full sm:w-44 h-44 sm:h-auto flex-shrink-0 bg-[#f5f2eb] dark:bg-[#211f1d] border-b sm:border-b-0 sm:border-r border-[#e7e5e4] dark:border-[#292524]">
+          {/* Mobile Drag Indicator */}
+          <div className="sm:hidden w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2.5" />
+
+          {/* Card Layout */}
+          <div className="p-4 flex flex-col sm:flex-row gap-3.5 items-stretch">
+            {/* Property Image & Badges */}
+            <div className="relative w-full sm:w-40 h-40 sm:h-36 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800">
               <img
                 src={property.images[0]}
                 alt={property.title}
@@ -52,12 +57,16 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 loading="lazy"
               />
               
-              {/* Type tag */}
-              <div className="absolute top-2 left-2 flex items-center gap-1">
-                <span className="font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 bg-[#1c1917]/90 text-[#fbf9f6] backdrop-blur-xs rounded-xs">
-                  {property.type === 'sale' ? 'For sale' : 'For rent'}
+              {/* Rent / Sale Badge */}
+              <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
+                <span
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${
+                    property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
+                  }`}
+                >
+                  {property.type === 'sale' ? 'For Sale' : 'For Rent'}
                 </span>
-                <span className="font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 bg-[#fbf9f6]/90 text-[#1c1917] backdrop-blur-xs rounded-xs">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-900/80 backdrop-blur-sm text-white">
                   {property.category}
                 </span>
               </div>
@@ -65,35 +74,38 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
               {/* Close Button on Image for Mobile */}
               <button
                 onClick={onClose}
-                className="sm:hidden absolute top-2 right-2 w-7 h-7 bg-[#1c1917]/80 text-white flex items-center justify-center rounded-xs"
-                aria-label="Close"
+                className="sm:hidden absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-900/70 text-white flex items-center justify-center backdrop-blur-sm"
+                aria-label="Dismiss preview"
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Information Column */}
-            <div className="p-3.5 sm:p-4 flex-1 min-w-0 flex flex-col justify-between">
+            {/* Property Information */}
+            <div className="flex-1 min-w-0 flex flex-col justify-between">
               <div>
-                {/* Header Row: Price + Icon Actions */}
-                <div className="flex items-start justify-between gap-2 mb-1.5">
-                  <div>
-                    <div className="text-xl sm:text-2xl font-serif tracking-tight text-[#1c1917] dark:text-[#f5f5f4] leading-none">
+                {/* Desktop Top Row with Price, Compare, AI, Favorite & Close */}
+                <div className="hidden sm:flex items-center justify-between gap-1.5 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
                       {property.priceDisplay}
-                    </div>
+                    </span>
+                    {property.verified && (
+                      <span title="Verified Listing" className="flex items-center">
+                        <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </span>
+                    )}
                   </div>
-
-                  {/* Actions */}
                   <div className="flex items-center gap-1">
                     {onToggleCompare && (
                       <button
                         onClick={() => onToggleCompare(property)}
-                        className={`w-7 h-7 rounded-xs flex items-center justify-center transition-colors ${
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                           isCompared
-                            ? 'text-[#8b3a24] bg-[#fbf2ed] dark:bg-[#2b1f1a]'
-                            : 'text-[#78716c] hover:text-[#1c1917] dark:hover:text-[#f5f5f4]'
+                            ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800'
+                            : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
                         }`}
-                        title={isCompared ? 'Remove from compare' : 'Compare'}
+                        title={isCompared ? 'In Comparison' : 'Add to Compare'}
                       >
                         <Scale className="w-3.5 h-3.5" />
                       </button>
@@ -101,92 +113,133 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     {onOpenAIAdvisor && (
                       <button
                         onClick={() => onOpenAIAdvisor(property)}
-                        className="w-7 h-7 rounded-xs flex items-center justify-center text-[#78716c] hover:text-[#8b3a24] transition-colors"
-                        title="AI Analysis"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                        title="Analyze with AI Agent"
                       >
-                        <Sparkles className="w-3.5 h-3.5" />
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
                       </button>
                     )}
                     <button
                       onClick={() => onToggleFavorite(property.id)}
-                      className={`w-7 h-7 rounded-xs flex items-center justify-center transition-colors ${
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                         isFavorite
-                          ? 'text-[#8b3a24]'
-                          : 'text-[#78716c] hover:text-[#8b3a24]'
+                          ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60'
+                          : 'text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800'
                       }`}
-                      aria-label="Save"
+                      aria-label="Save property"
                     >
-                      <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-[#8b3a24]' : ''}`} />
+                      <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-600' : ''}`} />
                     </button>
                     <button
                       onClick={onClose}
-                      className="hidden sm:flex w-7 h-7 rounded-xs text-[#a8a29e] hover:text-[#1c1917] dark:hover:text-[#f5f5f4] items-center justify-center transition-colors"
-                      aria-label="Close"
+                      className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors"
+                      aria-label="Close preview"
                     >
-                      <X className="w-3.5 h-3.5" />
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Price Row */}
+                <div className="sm:hidden flex items-center justify-between mb-1">
+                  <span className="text-xl font-black text-slate-900 dark:text-white">
+                    {property.priceDisplay}
+                  </span>
+                  <div className="flex items-center gap-1">
+                    {onToggleCompare && (
+                      <button
+                        onClick={() => onToggleCompare(property)}
+                        className={`p-1.5 rounded-lg ${isCompared ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60' : 'text-slate-400 bg-slate-100 dark:bg-slate-800'}`}
+                      >
+                        <Scale className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button
+                      onClick={() => onToggleFavorite(property.id)}
+                      className={`p-1.5 rounded-lg ${
+                        isFavorite ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60' : 'text-slate-400 bg-slate-100 dark:bg-slate-800'
+                      }`}
+                    >
+                      <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-600' : ''}`} />
                     </button>
                   </div>
                 </div>
 
                 {/* Title */}
-                <h3 className="text-xs sm:text-sm font-medium text-[#1c1917] dark:text-[#f5f5f4] line-clamp-1 mb-1">
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 mb-1">
                   {property.title}
                 </h3>
 
                 {/* Location */}
-                <div className="flex items-center gap-1 text-[11px] text-[#78716c] dark:text-[#a8a29e] mb-2.5">
-                  <MapPin className="w-3 h-3 text-[#8b3a24] flex-shrink-0" />
+                <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
+                  <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                   <span className="truncate">
                     {property.area}, {property.city}
                   </span>
                 </div>
 
-                {/* Specs */}
-                {isAgri ? (
-                  <div className="flex items-center gap-2 text-xs font-mono text-[#1c1917] dark:text-[#f5f5f4] flex-wrap">
-                    <span className="text-[#8b3a24] font-medium">
-                      {property.landMetrics?.areaAcres
-                        ? `${property.landMetrics.areaAcres.toFixed(2)} acres`
-                        : `${(property.areaSqFt / 43560).toFixed(2)} acres`}
-                    </span>
+                {/* Specs / Agricultural Metrics */}
+                {property.category === 'Agricultural Land' || property.category === 'Plot' ? (
+                  <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-semibold flex-wrap">
+                    <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
+                      <span className="text-xs">🌾</span>
+                      <span className="font-extrabold">
+                        {property.landMetrics?.areaAcres
+                          ? `${property.landMetrics.areaAcres.toFixed(2)} Acres`
+                          : `${(property.areaSqFt / 43560).toFixed(2)} Acres`}
+                      </span>
+                    </div>
                     {property.landMetrics?.areaGunthas && (
-                      <span className="text-[#78716c]">
-                        ({property.landMetrics.areaGunthas.toFixed(1)} gunthas)
+                      <span className="text-slate-500 dark:text-slate-400 font-medium">
+                        ({property.landMetrics.areaGunthas.toFixed(1)} Gunthas)
                       </span>
                     )}
-                    <span className="text-[#78716c]">
-                      • {property.areaSqFt.toLocaleString('en-IN')} sq ft
-                    </span>
+                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.areaSqFt.toLocaleString('en-IN')} sqft</span>
+                    </div>
+                    {property.boundaryPolygon && property.boundaryPolygon.length >= 3 && (
+                      <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                        Shaded Land Parcel
+                      </span>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2 text-xs font-mono text-[#78716c] dark:text-[#a8a29e]">
-                    <span className="text-[#1c1917] dark:text-[#f5f5f4] font-medium">{property.bhk} BHK</span>
-                    <span>•</span>
-                    <span>{property.bathrooms} baths</span>
-                    <span>•</span>
-                    <span>{property.areaSqFt.toLocaleString('en-IN')} sq ft</span>
+                  <div className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
+                    <div className="flex items-center gap-1">
+                      <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.bhk} BHK</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Bath className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.bathrooms} Baths</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{property.areaSqFt} sqft</span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              {/* Action Buttons: Asymmetrical split (65% View / 35% EMI) */}
-              <div className="pt-3 mt-3 border-t border-[#e7e5e4] dark:border-[#292524] flex items-center gap-2">
+              {/* Exact-Fit Action Buttons: View Details & Loan EMI */}
+              <div className="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => onViewDetails(property, 'overview')}
-                  className="flex-1 h-8 px-3 bg-[#1c1917] dark:bg-[#f5f5f4] hover:bg-[#8b3a24] dark:hover:bg-[#8b3a24] dark:hover:text-white text-[#fbf9f6] dark:text-[#1c1917] text-xs font-medium uppercase tracking-wider rounded-xs flex items-center justify-center gap-1.5 transition-colors"
+                  className="h-9 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
                 >
-                  <span>View listing</span>
-                  <ArrowRight className="w-3 h-3" />
+                  <span>View Details</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
                 <button
                   type="button"
                   onClick={() => onViewDetails(property, 'emi')}
-                  className="h-8 px-3 border border-[#e7e5e4] dark:border-[#292524] hover:bg-[#f5f2eb] dark:hover:bg-[#211f1d] text-[#1c1917] dark:text-[#f5f5f4] text-xs font-medium rounded-xs flex items-center justify-center gap-1 transition-colors"
+                  className="h-9 px-3 border border-slate-300 dark:border-slate-700 hover:border-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
                 >
-                  <Calculator className="w-3 h-3 text-[#8b3a24]" />
-                  <span>EMI</span>
+                  <Calculator className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span>Loan EMI</span>
                 </button>
               </div>
             </div>
