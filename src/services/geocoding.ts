@@ -343,38 +343,34 @@ const DEFAULT_CONFIG: GeocodingConfig = {
 
 // Fast Google Maps Geocoder Resolver (works on all Indian localities, cities & PIN codes)
 async function searchGoogleGeocoder(query: string): Promise<SearchResult[]> {
-  const gMaps = typeof window !== 'undefined' ? (window as any).google?.maps : undefined;
-  if (!gMaps || !gMaps.Geocoder) {
+  if (typeof window === 'undefined' || !window.google?.maps?.Geocoder) {
     return [];
   }
 
   return new Promise<SearchResult[]>((resolve) => {
     try {
-      const geocoder = new gMaps.Geocoder();
+      const geocoder = new google.maps.Geocoder();
       geocoder.geocode(
         {
           address: query,
           componentRestrictions: { country: 'IN' }
         },
-        (results: any[] | null, status: string) => {
-          if (status === 'OK' && results && results.length > 0) {
-            const mapped: SearchResult[] = results.slice(0, 6).map((r: any, i: number) => {
-              const loc = r.geometry?.location;
+        (results, status) => {
+          if (status === google.maps.GeocoderStatus.OK && results && results.length > 0) {
+            const mapped: SearchResult[] = results.slice(0, 6).map((r, i) => {
+              const loc = r.geometry.location;
               const formatted = r.formatted_address || query;
-              const parts = formatted.split(',').map((s: string) => s.trim());
+              const parts = formatted.split(',').map((s) => s.trim());
               const title = parts[0] || query;
               const subTitle = parts.slice(1, 4).join(', ');
-              const types = r.types || [];
-              const isCity = types.includes('locality') || types.includes('administrative_area_level_2');
-              const isPincode = types.includes('postal_code');
-              const isNeighborhood = types.includes('sublocality') || types.includes('neighborhood');
-              const lng = loc ? (typeof loc.lng === 'function' ? loc.lng() : loc.lng) : 0;
-              const lat = loc ? (typeof loc.lat === 'function' ? loc.lat() : loc.lat) : 0;
+              const isCity = r.types.includes('locality') || r.types.includes('administrative_area_level_2');
+              const isPincode = r.types.includes('postal_code');
+              const isNeighborhood = r.types.includes('sublocality') || r.types.includes('neighborhood');
               return {
                 id: `google-${r.place_id || i}`,
                 title: title,
                 subTitle: subTitle,
-                coordinates: [lng, lat],
+                coordinates: [loc.lng(), loc.lat()],
                 type: isCity ? 'city' : isPincode ? 'pincode' : isNeighborhood ? 'neighborhood' : 'area'
               };
             });

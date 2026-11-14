@@ -1,317 +1,267 @@
 import React, { useState } from 'react';
+import { LandSurveyState } from '../../types';
 import {
-  Ruler,
+  PenTool,
+  MapPin,
+  Square,
   RotateCcw,
   Trash2,
   Check,
+  Plus,
   X,
-  Copy,
   ChevronDown,
   ChevronUp,
-  Plus,
-  PenTool,
-  MapPin,
-  Square
+  Copy
 } from 'lucide-react';
-import { LandSurveyState } from '../../types';
 
 export type SurveyDrawMode = 'freehand' | 'pegs' | 'box';
 
 interface LandBoundarySurveyorHUDProps {
   surveyState: LandSurveyState;
-  onChange?: (state: LandSurveyState) => void;
-  drawMode: SurveyDrawMode;
-  onDrawModeChange: (mode: SurveyDrawMode) => void;
-  onUndo: () => void;
   onClear: () => void;
+  onUndo: () => void;
   onClose: () => void;
+  onListThisLand?: (surveyState: LandSurveyState) => void;
   isListingMode?: boolean;
   onSaveListingBoundary?: () => void;
-  onListThisLand?: (survey: LandSurveyState) => void;
+  drawMode: SurveyDrawMode;
+  onDrawModeChange: (mode: SurveyDrawMode) => void;
 }
 
 export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = ({
   surveyState,
-  drawMode,
-  onDrawModeChange,
-  onUndo,
   onClear,
+  onUndo,
   onClose,
+  onListThisLand,
   isListingMode = false,
   onSaveListingBoundary,
-  onListThisLand
+  drawMode,
+  onDrawModeChange
 }) => {
   const [showDetailedMetrics, setShowDetailedMetrics] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const { points, areaAcres, areaGunthas, areaSqYards, areaSqFt, perimeterMeters } = surveyState;
-  const nodeCount = points.length;
+  const nodeCount = surveyState.points.length;
   const isComplete = nodeCount >= 3;
 
-  // Generate survey text report for clipboard copy
-  const handleCopyReport = () => {
-    const report = `LAND BOUNDARY SURVEY REPORT (ManorMap Cadastral Survey)
-===================================================
-• Surveyed Parcel Area: ${areaAcres.toFixed(3)} Acres
-• Gunthas: ${areaGunthas} Gunthas
-• Sq. Yards (Gaj): ${areaSqYards.toLocaleString('en-IN')} Gaj
-• Total Sq. Feet: ${areaSqFt.toLocaleString('en-IN')} Sq. Ft
-• Outer Perimeter: ${perimeterMeters.toLocaleString('en-IN')} meters
-• Boundary Vertices: ${nodeCount} Pegged GPS Nodes
-• Verified Standard: Indian Cadastral Standards (1 Acre = 40 Gunthas = 4840 Gaj)`;
+  const areaAcres = surveyState.areaAcres || 0;
+  const areaGunthas = surveyState.areaGunthas || 0;
+  const areaSqYards = surveyState.areaSqYards || 0;
+  const areaSqFt = surveyState.areaSqFt || 0;
+  const perimeterMeters = surveyState.perimeterMeters || 0;
 
-    navigator.clipboard.writeText(report).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2200);
-    });
+  const handleCopyReport = () => {
+    const text = `Parcel Measurements:\n• Area: ${areaAcres.toFixed(3)} acres (${areaGunthas} gunthas)\n• Gaj: ${areaSqYards.toLocaleString('en-IN')} sq yards\n• Sq Ft: ${areaSqFt.toLocaleString('en-IN')} sq ft\n• Perimeter: ${perimeterMeters} meters\n• Coordinates: ${nodeCount} vertices`;
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
-    <div className="fixed top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto sm:max-w-4xl z-40 pointer-events-auto transition-all animate-in fade-in slide-in-from-top-2 duration-200">
-      {/* 
-        MAIN TOP SAAS COMMAND BAR
-      */}
-      <div className="bg-slate-900/95 dark:bg-slate-950/95 text-white backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/80 p-2.5 sm:px-4 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-4">
+    <div className="fixed top-16 inset-x-3 sm:left-5 sm:right-auto sm:max-w-3xl z-30 pointer-events-auto">
+      {/* Drafting HUD Bar */}
+      <div className="bg-[#181716] text-[#f5f5f4] rounded-xs border border-[#44403c] shadow-[0_2px_12px_rgba(0,0,0,0.2)] p-2 sm:px-3 sm:py-2 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
         
-        {/* Left: Indicator & Status */}
-        <div className="flex items-center gap-2.5 min-w-0 flex-1">
-          <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center flex-shrink-0 shadow-inner">
-            <Ruler className="w-4 h-4 stroke-[2.2]" />
-          </div>
-
+        {/* Left: Tool Name & Guide */}
+        <div className="flex items-center gap-2 min-w-0">
+          <span className="w-2 h-2 rounded-full bg-[#8b3a24] flex-shrink-0" />
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-xs sm:text-sm font-black tracking-tight text-white truncate">
-                {isListingMode ? 'Map Agricultural Parcel Boundary' : 'Land Boundary Surveyor'}
+              <span className="text-xs font-medium tracking-wide uppercase font-mono text-[#f5f5f4] truncate">
+                {isListingMode ? 'Listing Boundary' : 'Boundary Survey'}
               </span>
-              <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                {nodeCount >= 3 ? `${nodeCount} Vertices Mapped` : `${nodeCount} Nodes`}
+              <span className="text-[10px] font-mono text-[#a8a29e]">
+                {nodeCount >= 3 ? `${nodeCount} vertices` : `${nodeCount} nodes`}
               </span>
             </div>
-
-            <p className="text-[11px] text-slate-300 truncate font-medium">
-              {drawMode === 'freehand' && (
-                nodeCount >= 3
-                  ? `${areaAcres.toFixed(2)} Acres • Drag with mouse to re-mask around property`
-                  : 'Click & drag with mouse around your property boundary to mask it'
-              )}
-              {drawMode === 'pegs' && (
-                nodeCount === 0
-                  ? 'Click map to drop 1st corner peg'
-                  : `${nodeCount} corners placed • Click map to add 4th, 5th, 6th... corners`
-              )}
-              {drawMode === 'box' && 'Click & drag diagonally on map to create rectangular boundary'}
+            <p className="text-[11px] text-[#a8a29e] truncate">
+              {drawMode === 'freehand' && (nodeCount >= 3 ? 'Drag on map to redraw outline' : 'Drag on map to draw outline')}
+              {drawMode === 'pegs' && (nodeCount === 0 ? 'Click map to place first corner' : 'Click map to add corner')}
+              {drawMode === 'box' && 'Drag diagonally to form rectangle'}
             </p>
           </div>
         </div>
 
-        {/* Center: Drawing Mode Toggles */}
-        <div className="flex items-center gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700">
+        {/* Center: Mode Toggles */}
+        <div className="flex items-center border border-[#292524] rounded-xs bg-[#211f1d] p-0.5 text-[11px]">
           <button
             type="button"
             onClick={() => onDrawModeChange('freehand')}
-            title="Freehand Mouse Masking (Drag around boundary)"
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+            title="Draw outline"
+            className={`px-2.5 py-1 rounded-xs font-medium transition-colors flex items-center gap-1 ${
               drawMode === 'freehand'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                ? 'bg-[#181716] text-[#f5f5f4] border border-[#44403c]'
+                : 'text-[#a8a29e] hover:text-[#f5f5f4]'
             }`}
           >
-            <PenTool className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Freehand Mask</span>
+            <PenTool className="w-3 h-3" />
+            <span className="hidden sm:inline">Outline</span>
           </button>
 
           <button
             type="button"
             onClick={() => onDrawModeChange('pegs')}
-            title="Click Corner Pegs (Multi-point polygon)"
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+            title="Place points"
+            className={`px-2.5 py-1 rounded-xs font-medium transition-colors flex items-center gap-1 ${
               drawMode === 'pegs'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                ? 'bg-[#181716] text-[#f5f5f4] border border-[#44403c]'
+                : 'text-[#a8a29e] hover:text-[#f5f5f4]'
             }`}
           >
-            <MapPin className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Corner Pegs</span>
+            <MapPin className="w-3 h-3" />
+            <span className="hidden sm:inline">Points</span>
           </button>
 
           <button
             type="button"
             onClick={() => onDrawModeChange('box')}
-            title="Box Drag (4-corner rectangle)"
-            className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+            title="Rectangle"
+            className={`px-2.5 py-1 rounded-xs font-medium transition-colors flex items-center gap-1 ${
               drawMode === 'box'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700'
+                ? 'bg-[#181716] text-[#f5f5f4] border border-[#44403c]'
+                : 'text-[#a8a29e] hover:text-[#f5f5f4]'
             }`}
           >
-            <Square className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Box</span>
+            <Square className="w-3 h-3" />
+            <span className="hidden sm:inline">Rectangle</span>
           </button>
         </div>
 
-        {/* Live Metrics Pills (Visible when nodes placed) */}
+        {/* Readout when >= 3 nodes placed */}
         {nodeCount >= 3 && (
-          <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
-            {/* Acreage Pill */}
-            <div className="h-8 px-2.5 rounded-xl bg-emerald-950/60 border border-emerald-500/40 flex items-center gap-1 text-xs">
-              <span className="text-[10px] text-emerald-400 font-bold uppercase">Ac:</span>
-              <span className="font-extrabold text-white text-xs">{areaAcres.toFixed(2)}</span>
+          <div className="flex items-center gap-2">
+            <div className="font-mono text-xs">
+              <span className="text-[#8b3a24] font-medium">{areaAcres.toFixed(2)} ac</span>
+              <span className="text-[#78716c] mx-1">•</span>
+              <span className="text-[#a8a29e]">{areaGunthas} gu</span>
             </div>
 
-            {/* Gunthas Pill */}
-            <div className="h-8 px-2.5 rounded-xl bg-slate-800/80 border border-slate-700 hidden md:flex items-center gap-1 text-xs">
-              <span className="text-[10px] text-amber-400 font-bold uppercase">Gunthas:</span>
-              <span className="font-bold text-white text-xs">{areaGunthas}</span>
-            </div>
-
-            {/* Gaj Pill */}
-            <div className="h-8 px-2.5 rounded-xl bg-slate-800/80 border border-slate-700 hidden lg:flex items-center gap-1 text-xs">
-              <span className="text-[10px] text-sky-400 font-bold uppercase">Gaj:</span>
-              <span className="font-bold text-white text-xs">{areaSqYards.toLocaleString('en-IN')}</span>
-            </div>
-
-            {/* Expand Details Toggle */}
             <button
               type="button"
               onClick={() => setShowDetailedMetrics(!showDetailedMetrics)}
-              className="h-8 px-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 text-xs font-semibold flex items-center gap-1 transition-colors"
-              title="Show full cadastral breakdown"
+              className="text-[11px] font-mono text-[#a8a29e] hover:text-[#f5f5f4] px-1.5 py-1 border border-[#292524] rounded-xs flex items-center gap-0.5"
             >
-              <span>Metrics</span>
-              {showDetailedMetrics ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+              <span>Specs</span>
+              {showDetailedMetrics ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
           </div>
         )}
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-          {/* Undo */}
+        <div className="flex items-center gap-1">
           {nodeCount > 0 && (
             <button
               type="button"
               onClick={onUndo}
-              className="h-8 w-8 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white flex items-center justify-center border border-slate-700 transition-colors"
-              title="Undo Last Node"
+              className="w-7 h-7 rounded-xs border border-[#292524] text-[#a8a29e] hover:text-[#f5f5f4] flex items-center justify-center transition-colors"
+              title="Undo last node"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           )}
 
-          {/* Clear */}
           {nodeCount > 0 && (
             <button
               type="button"
               onClick={onClear}
-              className="h-8 w-8 rounded-xl bg-slate-800 hover:bg-rose-900/60 text-slate-300 hover:text-rose-300 flex items-center justify-center border border-slate-700 transition-colors"
-              title="Clear Mask"
+              className="w-7 h-7 rounded-xs border border-[#292524] text-[#a8a29e] hover:text-[#8b3a24] flex items-center justify-center transition-colors"
+              title="Clear"
             >
               <Trash2 className="w-3.5 h-3.5" />
             </button>
           )}
 
-          {/* Primary Action Button */}
           {isListingMode ? (
             <button
               type="button"
               disabled={!isComplete}
               onClick={onSaveListingBoundary}
-              className={`h-8 px-3 text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md transition-all ${
+              className={`h-7 px-3 text-xs uppercase font-mono tracking-wider rounded-xs flex items-center gap-1 transition-colors ${
                 isComplete
-                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
-                  : 'bg-slate-800 text-slate-500 cursor-not-allowed border border-slate-700'
+                  ? 'bg-[#8b3a24] hover:bg-[#7c2d12] text-white'
+                  : 'bg-[#211f1d] text-[#78716c] cursor-not-allowed border border-[#292524]'
               }`}
             >
-              <Check className="w-3.5 h-3.5" />
-              <span>Save Boundary</span>
+              <Check className="w-3 h-3" />
+              <span>Save</span>
             </button>
           ) : (
-            isComplete && (
-              <div className="flex items-center gap-1.5">
-                {onListThisLand && (
-                  <button
-                    type="button"
-                    onClick={() => onListThisLand(surveyState)}
-                    className="h-8 px-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shadow-md transition-all active:scale-95"
-                    title="List this surveyed land as an Agricultural Property"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>List Land</span>
-                  </button>
-                )}
-              </div>
+            isComplete && onListThisLand && (
+              <button
+                type="button"
+                onClick={() => onListThisLand(surveyState)}
+                className="h-7 px-2.5 bg-[#8b3a24] hover:bg-[#7c2d12] text-white text-xs uppercase font-mono tracking-wider rounded-xs flex items-center gap-1 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+                <span>List</span>
+              </button>
             )
           )}
 
-          {/* Exit / Close */}
           <button
             type="button"
             onClick={onClose}
-            className="h-8 w-8 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center border border-slate-700 transition-colors"
-            title="Exit Surveyor"
+            className="w-7 h-7 rounded-xs border border-[#292524] text-[#a8a29e] hover:text-[#f5f5f4] flex items-center justify-center transition-colors"
+            title="Exit"
           >
-            <X className="w-4 h-4" />
+            <X className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
 
-      {/* 
-        EXPANDED DETAILED SAAS METRICS CARD (Standard Indian Land Units)
-      */}
+      {/* Asymmetrical Editorial Specs Sheet */}
       {showDetailedMetrics && nodeCount >= 3 && (
-        <div className="mt-2 bg-slate-900/98 text-white backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700 p-4 space-y-3 animate-in fade-in duration-150">
-          <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
-                Indian Cadastral Land Metrics Breakdown
-              </h4>
-            </div>
+        <div className="mt-1.5 bg-[#181716] text-[#f5f5f4] rounded-xs border border-[#44403c] p-3 space-y-2.5 animate-in fade-in duration-100">
+          <div className="flex items-center justify-between border-b border-[#292524] pb-2">
+            <span className="text-[10px] uppercase font-mono tracking-widest text-[#a8a29e]">
+              Parcel measurements
+            </span>
 
             <button
               type="button"
               onClick={handleCopyReport}
-              className="px-2.5 py-1 rounded-lg bg-emerald-600/30 hover:bg-emerald-600/50 text-emerald-300 border border-emerald-500/40 text-[11px] font-bold flex items-center gap-1 transition-colors"
+              className="px-2 py-0.5 text-[11px] font-mono text-[#8b3a24] hover:text-white border border-[#44403c] rounded-xs flex items-center gap-1 transition-colors"
             >
-              {copied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-              <span>{copied ? 'Copied' : 'Copy Report'}</span>
+              {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+              <span>{copied ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
 
-          {/* 4-Box Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            {/* Acres */}
-            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-[10px] font-bold uppercase text-slate-400">Acres (Ac)</span>
-              <div className="text-lg font-black text-emerald-400">{areaAcres.toFixed(3)}</div>
-              <span className="text-[9px] text-slate-500">1 Ac = 40 Gunthas</span>
+          {/* Asymmetrical 2-Panel Layout: Large Primary Acreage (45%) + Tabular Secondary List (55%) */}
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 text-xs font-mono">
+            {/* Primary Left Metric */}
+            <div className="sm:col-span-5 p-3 rounded-xs bg-[#211f1d] border border-[#292524] flex flex-col justify-between">
+              <div>
+                <span className="text-[10px] text-[#78716c] uppercase tracking-wider">Primary Acreage</span>
+                <div className="text-2xl font-serif text-[#f5f5f4] mt-0.5">
+                  {areaAcres.toFixed(3)} <span className="text-sm font-sans text-[#8b3a24]">acres</span>
+                </div>
+              </div>
+              <div className="text-[11px] text-[#a8a29e] mt-2 pt-2 border-t border-[#292524]">
+                Equals <strong className="text-[#f5f5f4]">{areaGunthas}</strong> Gunthas (1 Ac = 40 Gu)
+              </div>
             </div>
 
-            {/* Gunthas */}
-            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-[10px] font-bold uppercase text-slate-400">Gunthas</span>
-              <div className="text-lg font-black text-amber-400">{areaGunthas}</div>
-              <span className="text-[9px] text-slate-500">1 Guntha = 121 Gaj</span>
+            {/* Secondary Right Table */}
+            <div className="sm:col-span-7 divide-y divide-[#292524] text-xs">
+              <div className="py-1.5 flex items-center justify-between">
+                <span className="text-[#a8a29e]">Square Yards (Gaj)</span>
+                <span className="font-semibold text-[#f5f5f4]">{areaSqYards.toLocaleString('en-IN')}</span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between">
+                <span className="text-[#a8a29e]">Total Square Feet</span>
+                <span className="font-semibold text-[#f5f5f4]">{areaSqFt.toLocaleString('en-IN')} sq ft</span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between">
+                <span className="text-[#a8a29e]">Fencing Perimeter</span>
+                <span className="font-semibold text-[#f5f5f4]">{perimeterMeters} meters</span>
+              </div>
+              <div className="py-1.5 flex items-center justify-between text-[11px] text-[#78716c]">
+                <span>GPS Boundary Vertices</span>
+                <span>{nodeCount} coordinates</span>
+              </div>
             </div>
-
-            {/* Sq. Yards (Gaj) */}
-            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-[10px] font-bold uppercase text-slate-400">Sq. Yards (Gaj)</span>
-              <div className="text-lg font-black text-white">{areaSqYards.toLocaleString('en-IN')}</div>
-              <span className="text-[9px] text-slate-500">Standard plot unit</span>
-            </div>
-
-            {/* Outer Perimeter */}
-            <div className="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80">
-              <span className="text-[10px] font-bold uppercase text-slate-400">Perimeter</span>
-              <div className="text-lg font-black text-sky-400">{perimeterMeters} m</div>
-              <span className="text-[9px] text-slate-500">Fencing distance</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-800">
-            <span>Boundary Vertices: <strong className="text-white">{nodeCount} Custom Nodes</strong></span>
-            <span>Total Area: <strong className="text-white">{areaSqFt.toLocaleString('en-IN')} Sq. Ft</strong></span>
           </div>
         </div>
       )}

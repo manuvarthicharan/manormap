@@ -35,15 +35,15 @@ export class CustomOverlayMarker {
       const isAgri = this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
       pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''}`;
 
-      // Modern Indicator: Emerald for Agricultural, Blue for Sale, Green for Rent
-      const dotColor = isAgri ? '#10b981' : (this.property.type === 'sale' ? '#2563eb' : '#059669');
+      // Restrained palette: terracotta for land/active, warm charcoal for sale, muted stone for rent
+      const dotColor = isAgri ? '#8b3a24' : (this.property.type === 'sale' ? '#1c1917' : '#78716c');
       const acresDisplay = (isAgri && this.property.landMetrics?.areaAcres)
-        ? `<span class="agri-tag font-extrabold text-[10px] text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-md mr-1 border border-emerald-300/60">🌾 ${this.property.landMetrics.areaAcres.toFixed(1)} Ac</span>`
-        : (isAgri ? '<span class="mr-1 text-[11px]">🌾</span>' : `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>`);
+        ? `<span class="agri-tag font-mono text-[10px] text-[#8b3a24] bg-[#fbf2ed] px-1 py-0.2 rounded-xs mr-1 border border-[#ecd5c8]">${this.property.landMetrics.areaAcres.toFixed(1)} ac</span>`
+        : (isAgri ? '<span class="font-mono text-[10px] text-[#8b3a24] mr-1">plot</span>' : `<span class="w-1.5 h-1.5 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>`);
 
       pill.innerHTML = `
         ${acresDisplay}
-        <span class="price-text font-bold text-xs tracking-tight">${this.property.priceDisplay}</span>
+        <span class="price-text font-medium text-xs tracking-tight">${this.property.priceDisplay}</span>
       `;
 
       const tip = document.createElement('div');

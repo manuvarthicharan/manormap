@@ -79,63 +79,59 @@ html, body, #root {
   z-index: 140 !important;
 }
 
-/* Custom marker pill */
+/* Bespoke Flat Editorial Marker */
 .marker-pill {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 5px 11px;
-  border-radius: 9999px;
-  background-color: #ffffff;
-  color: #0f172a;
-  font-weight: 750;
-  font-size: 12.5px;
-  letter-spacing: -0.015em;
-  box-shadow: 0 4px 14px -1px rgba(0, 0, 0, 0.2), 0 2px 5px -1px rgba(0, 0, 0, 0.1);
-  border: 1.5px solid rgba(255, 255, 255, 0.95);
+  gap: 5px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  background-color: #fbf9f6;
+  color: #1c1917;
+  font-weight: 650;
+  font-size: 11.5px;
+  letter-spacing: -0.01em;
+  border: 1px solid #d6d3d1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
   white-space: nowrap;
   user-select: none;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .prop-marker:hover .marker-pill,
 .prop-marker.hovered .marker-pill {
-  box-shadow: 0 8px 24px -2px rgba(0, 0, 0, 0.25), 0 4px 8px -2px rgba(0, 0, 0, 0.15);
+  background-color: #ffffff;
+  border-color: #a8a29e;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
 }
 
 .prop-marker.selected .marker-pill {
-  background-color: #0f172a;
-  color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 10px 28px -3px rgba(37, 99, 235, 0.45), 0 4px 10px -2px rgba(15, 23, 42, 0.3);
+  background-color: #1c1917;
+  color: #fbf9f6;
+  border-color: #8b3a24;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .prop-marker.highlighted .marker-pill {
-  background-color: #0f172a;
-  color: #ffffff;
-  border-color: #10b981;
-  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 10px 28px -3px rgba(16, 185, 129, 0.5);
-  animation: marker-glow 1.6s infinite alternate;
-}
-
-@keyframes marker-glow {
-  0% { transform: scale(1); filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4)); }
-  100% { transform: scale(1.08); filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.8)); }
+  background-color: #1c1917;
+  color: #fbf9f6;
+  border-color: #8b3a24;
+  box-shadow: 0 0 0 2px rgba(139, 58, 36, 0.4);
 }
 
 /* Marker bottom tip triangle */
 .marker-tip {
   width: 0;
   height: 0;
-  border-left: 5px solid transparent;
-  border-right: 5px solid transparent;
-  border-top: 6px solid #ffffff;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #d6d3d1;
   margin: -1px auto 0 auto;
-  transition: border-top-color 0.2s ease;
+  transition: border-top-color 0.15s ease;
 }
 
 .prop-marker.selected .marker-tip {
-  border-top-color: #0f172a;
+  border-top-color: #8b3a24;
 }
 
 /* Pulse animation for current location dot */

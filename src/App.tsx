@@ -648,7 +648,7 @@ export const App: React.FC = () => {
   ]);
 
   return (
-    <main className="relative w-screen h-[100dvh] overflow-hidden bg-slate-900">
+    <main className="relative w-screen h-[100dvh] overflow-hidden bg-[#181716] text-[#1c1917] dark:text-[#f5f5f4]">
       {/* 
         1. THE FIRST SCREEN MUST BE THE MAP (GOOGLE MAPS POWERED)
         Occupies 100% of the available viewport.
@@ -728,10 +728,10 @@ export const App: React.FC = () => {
       )}
 
       {/* 
-        MOBILE FLOATING BOTTOM NAVIGATION BAR (Thumb-friendly, sleek, uncluttered)
+        MOBILE FLOATING BOTTOM NAVIGATION BAR (Flat, Editorial, Minimalist)
       */}
       {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && (
-        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-800 p-1.5 animate-in slide-in-from-bottom duration-200">
+        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-[#fbf9f6]/95 dark:bg-[#181716]/95 backdrop-blur-md rounded-xs border border-[#e7e5e4] dark:border-[#292524] shadow-[0_2px_8px_rgba(0,0,0,0.06)] p-1.5 animate-in slide-in-from-bottom duration-150">
           {/* Map / Recenter */}
           <button
             onClick={() => {
@@ -739,41 +739,41 @@ export const App: React.FC = () => {
                 mapInstance.panTo(new google.maps.LatLng(currentMapCenter[1], currentMapCenter[0]));
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            className="flex flex-col items-center justify-center py-1 px-3 text-[#78716c] hover:text-[#1c1917] dark:hover:text-[#f5f5f4] transition-colors"
           >
-            <MapIcon className="w-5 h-5 text-blue-400" />
-            <span className="text-[10px] font-bold mt-0.5">Explore</span>
+            <MapIcon className="w-4 h-4 text-[#8b3a24]" />
+            <span className="text-[10px] font-medium tracking-wide mt-0.5">Map</span>
           </button>
 
           {/* AI Advisor */}
           <button
             onClick={() => handleOpenAIAdvisor()}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            className="flex flex-col items-center justify-center py-1 px-3 text-[#78716c] hover:text-[#1c1917] dark:hover:text-[#f5f5f4] transition-colors"
           >
-            <Sparkles className="w-5 h-5 text-emerald-400" />
-            <span className="text-[10px] font-bold mt-0.5">AI Advisor</span>
+            <Sparkles className="w-4 h-4 text-[#78716c]" />
+            <span className="text-[10px] font-medium tracking-wide mt-0.5">Advisor</span>
           </button>
 
           {/* Compare (if any active) */}
           {comparedPropertyIds.length > 0 ? (
             <button
               onClick={() => setIsComparisonModalOpen(true)}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-300 hover:text-white transition-colors active:scale-95 relative"
+              className="flex flex-col items-center justify-center py-1 px-3 text-[#8b3a24] transition-colors relative"
             >
-              <Scale className="w-5 h-5 text-indigo-400" />
-              <span className="text-[10px] font-bold mt-0.5">Compare</span>
-              <span className="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full shadow-xs">
+              <Scale className="w-4 h-4 text-[#8b3a24]" />
+              <span className="text-[10px] font-medium tracking-wide mt-0.5">Compare</span>
+              <span className="absolute -top-1 right-2 bg-[#8b3a24] text-white text-[9px] font-mono font-bold px-1 rounded-xs">
                 {comparedPropertyIds.length}
               </span>
             </button>
           ) : (
-            /* List Property */
+            /* Add listing */
             <button
               onClick={handleOpenAddProperty}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+              className="flex flex-col items-center justify-center py-1 px-3 text-[#78716c] hover:text-[#1c1917] dark:hover:text-[#f5f5f4] transition-colors"
             >
-              <Plus className="w-5 h-5 text-amber-400" />
-              <span className="text-[10px] font-bold mt-0.5">List Prop</span>
+              <Plus className="w-4 h-4 text-[#1c1917] dark:text-[#f5f5f4]" />
+              <span className="text-[10px] font-medium tracking-wide mt-0.5">Add listing</span>
             </button>
           )}
         </nav>
