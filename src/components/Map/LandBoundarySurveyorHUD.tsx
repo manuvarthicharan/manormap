@@ -18,6 +18,7 @@ export type SurveyDrawMode = 'freehand' | 'pegs' | 'box';
 
 interface LandBoundarySurveyorHUDProps {
   surveyState: LandSurveyState;
+  onChange?: (updatedState: LandSurveyState) => void;
   onClear: () => void;
   onUndo: () => void;
   onClose: () => void;
@@ -30,6 +31,7 @@ interface LandBoundarySurveyorHUDProps {
 
 export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = ({
   surveyState,
+  onChange,
   onClear,
   onUndo,
   onClose,

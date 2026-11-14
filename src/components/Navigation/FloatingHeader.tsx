@@ -4,7 +4,6 @@ import {
   Search,
   X,
   MapPin,
-  Building2,
   SlidersHorizontal,
   Plus,
   Sparkles,
