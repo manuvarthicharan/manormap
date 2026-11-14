@@ -722,7 +722,7 @@ export const App: React.FC = () => {
         MOBILE FLOATING BOTTOM NAVIGATION BAR (Thumb-friendly, sleek, uncluttered)
       */}
       {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && (
-        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-800 p-1.5 animate-in slide-in-from-bottom duration-200">
+        <nav className="sm:hidden fixed bottom-4 inset-x-4 z-20 pointer-events-auto flex items-center justify-around bg-slate-900/95 dark:bg-slate-950/95 backdrop-blur-xl text-white rounded-full shadow-2xl border border-slate-800/80 px-2 py-1.5 animate-in slide-in-from-bottom duration-200">
           {/* Map / Recenter */}
           <button
             onClick={() => {
@@ -730,30 +730,30 @@ export const App: React.FC = () => {
                 mapInstance.panTo(new google.maps.LatLng(currentMapCenter[1], currentMapCenter[0]));
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-full text-slate-300 hover:text-white transition-colors active:scale-95"
           >
-            <MapIcon className="w-5 h-5 text-blue-400" />
-            <span className="text-[10px] font-bold mt-0.5">Explore</span>
+            <MapIcon className="w-4.5 h-4.5 text-blue-400" />
+            <span className="text-[10px] font-semibold mt-0.5">Explore</span>
           </button>
 
           {/* AI Advisor */}
           <button
             onClick={() => handleOpenAIAdvisor()}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-full text-slate-300 hover:text-white transition-colors active:scale-95"
           >
-            <Sparkles className="w-5 h-5 text-emerald-400" />
-            <span className="text-[10px] font-bold mt-0.5">AI Advisor</span>
+            <Sparkles className="w-4.5 h-4.5 text-emerald-400" />
+            <span className="text-[10px] font-semibold mt-0.5">AI Advisor</span>
           </button>
 
           {/* Compare (if any active) */}
           {comparedPropertyIds.length > 0 ? (
             <button
               onClick={() => setIsComparisonModalOpen(true)}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-300 hover:text-white transition-colors active:scale-95 relative"
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-full text-indigo-300 hover:text-white transition-colors active:scale-95 relative"
             >
-              <Scale className="w-5 h-5 text-indigo-400" />
-              <span className="text-[10px] font-bold mt-0.5">Compare</span>
-              <span className="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full shadow-xs">
+              <Scale className="w-4.5 h-4.5 text-indigo-400" />
+              <span className="text-[10px] font-semibold mt-0.5">Compare</span>
+              <span className="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] font-bold px-1.5 py-0.2 rounded-full shadow-xs">
                 {comparedPropertyIds.length}
               </span>
             </button>
@@ -761,10 +761,10 @@ export const App: React.FC = () => {
             /* List Property */
             <button
               onClick={handleOpenAddProperty}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-full text-slate-300 hover:text-white transition-colors active:scale-95"
             >
-              <Plus className="w-5 h-5 text-amber-400" />
-              <span className="text-[10px] font-bold mt-0.5">List Prop</span>
+              <Plus className="w-4.5 h-4.5 text-emerald-400" />
+              <span className="text-[10px] font-semibold mt-0.5">List Land</span>
             </button>
           )}
         </nav>

@@ -205,22 +205,22 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
         ref={searchContainerRef}
         className="fixed top-3 left-3 right-3 sm:top-4 sm:left-6 sm:w-auto sm:max-w-2xl z-30 pointer-events-auto"
       >
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white rounded-2xl shadow-lg border border-slate-200/90 p-1 sm:p-1.5 transition-all focus-within:border-blue-500">
+        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl shadow-md hover:shadow-lg border border-slate-200/80 dark:border-slate-800 p-1 sm:p-1.5 transition-all focus-within:border-blue-500/80 focus-within:ring-2 focus-within:ring-blue-500/15">
           {/* Logo & Menu Button */}
           <div className="flex items-center gap-1">
             <button
               onClick={onOpenMenu}
               title="Open Navigation Menu"
-              className="w-9 h-9 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-colors active:scale-95 flex-shrink-0"
+              className="w-8.5 h-8.5 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors active:scale-95 flex-shrink-0"
               aria-label="Menu"
             >
-              <Menu className="w-5 h-5" />
+              <Menu className="w-4.5 h-4.5" />
             </button>
 
             {/* Brand Logo Pic */}
             <div 
               onClick={onOpenMenu}
-              className="flex items-center pr-1.5 sm:pr-2.5 border-r border-slate-200 cursor-pointer select-none group flex-shrink-0"
+              className="flex items-center pr-1.5 sm:pr-2.5 border-r border-slate-200 dark:border-slate-800 cursor-pointer select-none group flex-shrink-0"
               title="Menu"
             >
               <div className="sm:hidden">
@@ -234,7 +234,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
           {/* Omnisearch Input Field with AI natural language search */}
           <div className="relative flex-1 flex items-center min-w-0">
-            <Search className="w-4 h-4 text-slate-400 ml-1 sm:ml-1.5 mr-1.5 sm:mr-2 pointer-events-none flex-shrink-0" />
+            <Search className="w-4 h-4 text-slate-400 dark:text-slate-500 ml-1 sm:ml-1.5 mr-1.5 sm:mr-2 pointer-events-none flex-shrink-0" />
             <input
               type="text"
               value={query}
@@ -247,12 +247,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                 if (e.key === 'Enter') handleExecuteAISearch();
               }}
               placeholder="Search locality, e.g. Gachibowli..."
-              className="w-full bg-transparent text-sm text-slate-900 placeholder-slate-400 focus:outline-none pr-6 sm:pr-7 py-1.5 font-medium truncate"
+              className="w-full bg-transparent text-xs sm:text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none pr-6 sm:pr-7 py-1 font-medium truncate"
             />
             {query && (
               <button
                 onClick={handleClear}
-                className="absolute right-1 text-slate-400 hover:text-slate-600 p-1"
+                className="absolute right-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 rounded-lg"
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -266,7 +266,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               type="button"
               onClick={handleExecuteAISearch}
               title="Parse with AI Search"
-              className="hidden sm:flex items-center gap-1 h-8 px-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex-shrink-0"
+              className="hidden sm:flex items-center gap-1 h-8 px-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold transition-all shadow-xs flex-shrink-0"
             >
               <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
               <span>AI Search</span>
@@ -274,12 +274,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           )}
 
           {/* Quick Inline Switcher: Buy vs Rent */}
-          <div className="hidden md:flex items-center bg-slate-100 p-0.5 rounded-lg text-xs font-bold text-slate-600 flex-shrink-0 h-8">
+          <div className="hidden md:flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-300 flex-shrink-0 h-8">
             <button
               type="button"
               onClick={() => onFilterChange({ ...filterState, type: filterState.type === 'sale' ? 'all' : 'sale' })}
-              className={`h-7 px-3 rounded-md transition-colors ${
-                filterState.type === 'sale' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+              className={`h-7 px-3 rounded-lg text-xs font-semibold transition-all ${
+                filterState.type === 'sale'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Buy
@@ -287,8 +289,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={() => onFilterChange({ ...filterState, type: filterState.type === 'rent' ? 'all' : 'rent' })}
-              className={`h-7 px-3 rounded-md transition-colors ${
-                filterState.type === 'rent' ? 'bg-white text-slate-900 shadow-xs' : 'hover:text-slate-900'
+              className={`h-7 px-3 rounded-lg text-xs font-semibold transition-all ${
+                filterState.type === 'rent'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs'
+                  : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
               Rent
@@ -300,10 +304,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             type="button"
             onClick={onOpenAdvancedFilters}
             title="Advanced Filters"
-            className={`relative w-9 h-9 flex items-center justify-center rounded-xl transition-colors flex-shrink-0 ${
+            className={`relative w-8.5 h-8.5 flex items-center justify-center rounded-xl transition-all flex-shrink-0 ${
               activeFilterCount > 0
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white border border-transparent hover:border-slate-200 dark:hover:border-slate-700'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -319,10 +323,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={onOpenCompare}
-              className="hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all hover:bg-indigo-100 shadow-xs flex-shrink-0"
+              className="hidden sm:flex items-center gap-1.5 h-8.5 px-3 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-all hover:bg-indigo-100 dark:hover:bg-indigo-900/60 shadow-xs flex-shrink-0"
               title="Open Property Comparison"
             >
-              <Scale className="w-3.5 h-3.5 text-indigo-600" />
+              <Scale className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
               <span>{comparedCount}</span>
             </button>
           )}
@@ -333,7 +337,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               type="button"
               onClick={onOpenAIAdvisor}
               title="Open AI Real Estate Advisor"
-              className="hidden sm:flex w-9 h-9 items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex-shrink-0"
+              className="hidden sm:flex w-8.5 h-8.5 items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/50 rounded-xl transition-colors flex-shrink-0"
             >
               <Sparkles className="w-4 h-4 text-emerald-500" />
             </button>
@@ -345,11 +349,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               type="button"
               onClick={onToggleTheme}
               title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
-              className="hidden sm:flex w-9 h-9 items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl transition-colors flex-shrink-0"
+              className="hidden sm:flex w-8.5 h-8.5 items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex-shrink-0"
               aria-label="Toggle theme"
             >
               {theme === 'dark' ? (
-                <Sun className="w-4 h-4 text-amber-500" />
+                <Sun className="w-4 h-4 text-amber-400" />
               ) : (
                 <Moon className="w-4 h-4 text-slate-600" />
               )}
@@ -360,20 +364,20 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenAddProperty}
-            className="hidden sm:flex items-center gap-1.5 h-9 px-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 flex-shrink-0"
+            className="hidden sm:flex items-center gap-1.5 h-8.5 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-slate-100 dark:hover:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95 flex-shrink-0"
           >
-            <Plus className="w-3.5 h-3.5 text-amber-400 dark:text-amber-600 stroke-[2.5]" />
+            <Plus className="w-3.5 h-3.5 text-emerald-400 dark:text-emerald-600 stroke-[2.5]" />
             <span>List Property</span>
           </button>
 
-          <div className="hidden sm:block w-[1px] h-5 bg-slate-200 dark:bg-slate-700 flex-shrink-0" />
+          <div className="hidden sm:block w-[1px] h-5 bg-slate-200 dark:bg-slate-800 flex-shrink-0" />
 
           {/* User Profile Avatar with Online Status */}
           <button
             type="button"
             onClick={onOpenProfile}
             title="Account & Settings"
-            className="hidden sm:flex relative w-9 h-9 rounded-xl overflow-hidden border border-slate-200 hover:ring-2 hover:ring-blue-500/30 transition-all items-center justify-center text-xs font-bold text-slate-700 active:scale-95 flex-shrink-0"
+            className="hidden sm:flex relative w-8.5 h-8.5 rounded-xl overflow-hidden border border-slate-200/90 dark:border-slate-700 hover:ring-2 hover:ring-blue-500/30 transition-all items-center justify-center text-xs font-bold text-slate-700 active:scale-95 flex-shrink-0"
             aria-label="Profile"
           >
             <img
@@ -381,7 +385,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               alt={userProfile.name}
               className="w-full h-full object-cover"
             />
-            <span className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-white" />
+            <span className="absolute bottom-0.5 right-0.5 w-2 h-2 rounded-full bg-emerald-500 border border-white dark:border-slate-900" />
           </button>
         </div>
 
@@ -403,9 +407,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
         {/* Omnisearch Dropdown with Trending Indian Hubs */}
         {showDropdown && (
-          <div className="mt-2 bg-white/98 backdrop-blur-md rounded-2xl sm:rounded-3xl shadow-floating-lg border border-slate-100 overflow-hidden divide-y divide-slate-100 animate-in fade-in duration-150 max-h-[60dvh] sm:max-h-88 overflow-y-auto">
+          <div className="mt-2 bg-white/98 dark:bg-slate-900/98 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800 animate-in fade-in duration-150 max-h-[60dvh] sm:max-h-88 overflow-y-auto">
             {isSearching && (
-              <div className="p-3 text-xs text-slate-400 flex items-center gap-2">
+              <div className="p-3 text-xs text-slate-400 dark:text-slate-500 flex items-center gap-2">
                 <div className="w-3.5 h-3.5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
                 <span>Searching Indian real estate locations...</span>
               </div>
@@ -416,9 +420,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               <div
                 key={item.id}
                 onClick={() => handleSelect(item)}
-                className="p-3 hover:bg-slate-50 cursor-pointer flex items-center gap-3 transition-colors text-left"
+                className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer flex items-center gap-3 transition-colors text-left"
               >
-                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
                   {item.type === 'city' ? (
                     <Building className="w-4 h-4" />
                   ) : (
@@ -426,16 +430,16 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-xs sm:text-sm font-bold text-slate-800 truncate">
+                  <div className="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 truncate">
                     {item.title}
                   </div>
                   {item.subTitle && (
-                    <div className="text-[11px] text-slate-400 truncate">
+                    <div className="text-[11px] text-slate-400 dark:text-slate-400 truncate">
                       {item.subTitle}
                     </div>
                   )}
                 </div>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-500">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                   {item.type}
                 </span>
               </div>
@@ -444,12 +448,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* Trending Hotspots Section (When input is empty or query is short) */}
             {suggestions.length === 0 && !isSearching && (
               <div className="p-3 sm:p-4">
-                <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center justify-between">
+                <div className="text-[11px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                    <TrendingUp className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                     <span>High-Demand Micro-Markets</span>
                   </div>
-                  <span className="text-[10px] text-emerald-600 font-bold lowercase">Q4 Market Trends</span>
+                  <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold lowercase">Q4 Market Trends</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -465,16 +469,16 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                           type: 'area'
                         })
                       }
-                      className="p-2.5 rounded-2xl hover:bg-blue-50/60 cursor-pointer text-left transition-colors flex items-center gap-2.5 group border border-slate-100/60"
+                      className="p-2.5 rounded-xl hover:bg-blue-50/60 dark:hover:bg-slate-800/80 cursor-pointer text-left transition-colors flex items-center gap-2.5 group border border-slate-100 dark:border-slate-800"
                     >
-                      <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-blue-100 group-hover:text-blue-700 text-slate-600 flex items-center justify-center flex-shrink-0 transition-colors">
+                      <div className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 group-hover:bg-blue-100 dark:group-hover:bg-blue-900/50 group-hover:text-blue-700 dark:group-hover:text-blue-300 text-slate-600 dark:text-slate-400 flex items-center justify-center flex-shrink-0 transition-colors">
                         <MapPin className="w-3.5 h-3.5" />
                       </div>
                       <div className="truncate flex-1">
-                        <div className="text-xs font-bold text-slate-800 group-hover:text-blue-700 truncate">
+                        <div className="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-700 dark:group-hover:text-blue-300 truncate">
                           {loc.title}
                         </div>
-                        <div className="text-[10px] text-emerald-600 font-semibold truncate">
+                        <div className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold truncate">
                           {loc.priceTrend}
                         </div>
                       </div>
