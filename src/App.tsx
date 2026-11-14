@@ -29,7 +29,6 @@ import { FloatingHeader } from './components/Navigation/FloatingHeader';
 import { SlideMenuDrawer } from './components/Navigation/SlideMenuDrawer';
 import { PropertyPreview } from './components/Property/PropertyPreview';
 import { PropertyDetailModal } from './components/Property/PropertyDetailModal';
-import { PropertyCardCarousel } from './components/Property/PropertyCardCarousel';
 import { AddPropertyModal } from './components/Modals/AddPropertyModal';
 import { AuthRequiredModal } from './components/Modals/AuthRequiredModal';
 import { SettingsModal } from './components/Modals/SettingsModal';
@@ -38,7 +37,7 @@ import { AdvancedFilterModal } from './components/Navigation/AdvancedFilterModal
 import { PropertyComparisonModal } from './components/Modals/PropertyComparisonModal';
 import { InvestmentCalculatorModal } from './components/Modals/InvestmentCalculatorModal';
 import { AIAssistantDrawer } from './components/AI/AIAssistantDrawer';
-import { Map as MapIcon, Building2, Sparkles, Plus, Scale } from 'lucide-react';
+import { Map as MapIcon, Sparkles, Plus, Scale } from 'lucide-react';
 
 export const App: React.FC = () => {
   // All properties & custom additions
@@ -49,10 +48,9 @@ export const App: React.FC = () => {
 
   // Selected & Hovered property for live marker feedback
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
+  const [hoveredPropertyId] = useState<string | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailModalTab, setDetailModalTab] = useState<'overview' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby'>('overview');
-  const [isTrayOpen, setIsTrayOpen] = useState(false);
 
   // Advanced Filter state & modal
   const [filterState, setFilterState] = useState<FilterState>({
@@ -128,13 +126,6 @@ export const App: React.FC = () => {
 
   // Check if any geospatial drawing tool or surveyor is active
   const isAnyGeospatialToolActive = radiusSearch.active || polygonSearch.active || isDrawingLandForProperty;
-
-  // Automatically stow/hide property tray when drawing or surveying to prevent clutter
-  useEffect(() => {
-    if (isAnyGeospatialToolActive && isTrayOpen) {
-      setIsTrayOpen(false);
-    }
-  }, [isAnyGeospatialToolActive, isTrayOpen]);
 
   // Favorites list in localStorage (clean zero fake entries)
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -675,9 +666,6 @@ export const App: React.FC = () => {
           filterState={filterState}
           onFilterChange={setFilterState}
           onOpenAdvancedFilters={() => setIsAdvancedFilterOpen(true)}
-          propertiesCount={visibleProperties.length}
-          onToggleTray={() => setIsTrayOpen(!isTrayOpen)}
-          isTrayOpen={isTrayOpen}
           comparedCount={comparedPropertyIds.length}
           onOpenCompare={() => setIsComparisonModalOpen(true)}
           onOpenAIAdvisor={() => handleOpenAIAdvisor()}
@@ -687,32 +675,9 @@ export const App: React.FC = () => {
       )}
 
       {/* 
-        3. PROPERTY HORIZONTAL CARDS TRAY
-      */}
-      {!isDroppingPin && !selectedProperty && (
-        <PropertyCardCarousel
-          properties={visibleProperties}
-          selectedProperty={selectedProperty}
-          onSelectProperty={(prop) => {
-            setSelectedProperty(prop);
-            if (mapInstance && typeof window !== 'undefined' && window.google?.maps) {
-              const [lng, lat] = prop.coordinates;
-              mapInstance.panTo(new google.maps.LatLng(lat, lng));
-            }
-          }}
-          onViewDetails={handleOpenDetails}
-          onHoverProperty={setHoveredPropertyId}
-          favorites={favorites}
-          onToggleFavorite={handleToggleFavorite}
-          isOpen={isTrayOpen}
-          onToggleOpen={() => setIsTrayOpen(!isTrayOpen)}
-        />
-      )}
-
-      {/* 
         MOBILE FLOATING BOTTOM NAVIGATION BAR (Thumb-friendly, sleek, uncluttered)
       */}
-      {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && !isTrayOpen && (
+      {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && (
         <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-800 p-1.5 animate-in slide-in-from-bottom duration-200">
           {/* Map / Recenter */}
           <button
@@ -725,20 +690,6 @@ export const App: React.FC = () => {
           >
             <MapIcon className="w-5 h-5 text-blue-400" />
             <span className="text-[10px] font-bold mt-0.5">Explore</span>
-          </button>
-
-          {/* Browse Properties Tray */}
-          <button
-            onClick={() => setIsTrayOpen(true)}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95 relative"
-          >
-            <Building2 className="w-5 h-5 text-indigo-400" />
-            <span className="text-[10px] font-bold mt-0.5">Properties</span>
-            {visibleProperties.length > 0 && (
-              <span className="absolute -top-1 right-2 bg-blue-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full shadow-xs">
-                {visibleProperties.length}
-              </span>
-            )}
           </button>
 
           {/* AI Advisor */}

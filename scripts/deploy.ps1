@@ -1,4 +1,4 @@
-﻿$ErrorActionPreference = "Stop"
+$ErrorActionPreference = "Stop"
 
 Write-Host "📦 Building production bundle..." -ForegroundColor Cyan
 npm run build

@@ -8,7 +8,6 @@ import {
   SlidersHorizontal,
   Plus,
   TrendingUp,
-  LayoutGrid,
   Sparkles,
   Scale,
   Sun,
@@ -28,9 +27,6 @@ interface FloatingHeaderProps {
   filterState: FilterState;
   onFilterChange: (filters: FilterState) => void;
   onOpenAdvancedFilters: () => void;
-  propertiesCount?: number;
-  onToggleTray?: () => void;
-  isTrayOpen?: boolean;
   comparedCount?: number;
   onOpenCompare?: () => void;
   onOpenAIAdvisor?: () => void;
@@ -85,9 +81,6 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   filterState,
   onFilterChange,
   onOpenAdvancedFilters,
-  propertiesCount = 0,
-  onToggleTray,
-  isTrayOpen = false,
   comparedCount = 0,
   onOpenCompare,
   onOpenAIAdvisor,
@@ -343,23 +336,6 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               className="hidden sm:flex w-9 h-9 items-center justify-center text-blue-600 hover:bg-blue-50 rounded-xl transition-colors flex-shrink-0"
             >
               <Sparkles className="w-4 h-4 text-emerald-500" />
-            </button>
-          )}
-
-          {/* View List / Tray Toggle Button */}
-          {onToggleTray && propertiesCount > 0 && (
-            <button
-              type="button"
-              onClick={onToggleTray}
-              title={isTrayOpen ? 'Hide Cards Tray' : 'Show Cards Tray'}
-              className={`hidden sm:flex items-center gap-1.5 h-9 px-3 rounded-xl text-xs font-bold transition-colors flex-shrink-0 ${
-                isTrayOpen
-                  ? 'bg-slate-900 text-white shadow-xs'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>{propertiesCount}</span>
             </button>
           )}
 
