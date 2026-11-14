@@ -31,7 +31,7 @@ interface LandBoundarySurveyorHUDProps {
 
 export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = ({
   surveyState,
-  onChange,
+  onChange: _onChange,
   onClear,
   onUndo,
   onClose,
