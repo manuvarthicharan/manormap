@@ -1142,32 +1142,36 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* Selected Property Cadastral Land Boundary Indicator */}
       {selectedProperty?.boundaryPolygon && selectedProperty.boundaryPolygon.length >= 3 && !isDroppingPin && (
-        <div className="absolute top-18 sm:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/90 text-white backdrop-blur-md rounded-full shadow-lg border border-emerald-500/50 px-3 py-1 flex items-center gap-2 animate-in fade-in">
-          <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="text-[11px] font-semibold text-slate-300">Parcel:</span>
-          <span className="text-xs font-bold text-emerald-400">
-            {selectedProperty.landMetrics?.areaAcres ? `${selectedProperty.landMetrics.areaAcres.toFixed(2)} Acres` : 'Shaded Parcel'}
-          </span>
-          {selectedProperty.landMetrics?.areaGunthas ? (
-            <span className="text-[10px] text-slate-400">({selectedProperty.landMetrics.areaGunthas.toFixed(1)} Gu)</span>
-          ) : null}
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/95 text-white backdrop-blur-md rounded-2xl shadow-xl border border-emerald-500/80 px-4 py-2 flex items-center gap-2.5 animate-in fade-in">
+          <Ruler className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+          <div className="flex items-center gap-2 text-xs">
+            <span className="font-bold text-white">Shaded Land Boundary:</span>
+            <span className="font-extrabold text-emerald-400">
+              {selectedProperty.landMetrics?.areaAcres ? `${selectedProperty.landMetrics.areaAcres.toFixed(2)} Acres` : 'Shaded Land Parcel'}
+            </span>
+            {selectedProperty.landMetrics?.areaGunthas ? (
+              <span className="text-slate-400">({selectedProperty.landMetrics.areaGunthas.toFixed(1)} Gunthas)</span>
+            ) : null}
+          </div>
         </div>
       )}
 
       {/* AI POLYGON OVERLAY BANNER */}
       {aiPolygon && (
-        <div className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/90 text-white backdrop-blur-md rounded-full shadow-lg border border-blue-500/50 px-3 py-1 flex items-center gap-2 animate-in fade-in max-w-[90vw]">
-          <Sparkles className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />
-          <span className="text-xs font-semibold truncate">
-            AI Zone: <strong className="text-white">{aiPolygon.label || 'Selected Locality'}</strong>
-          </span>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-blue-900/90 text-white backdrop-blur-md rounded-2xl shadow-xl border border-blue-600 p-2.5 flex items-center justify-between sm:justify-start gap-2 animate-in fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <span className="text-xs font-bold truncate">
+              AI Highlighted Zone: {aiPolygon.label || 'Selected Locality'}
+            </span>
+          </div>
           {onClearAIPolygon && (
             <button
               onClick={onClearAIPolygon}
-              className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-slate-800 text-slate-400 hover:text-white transition-colors"
+              className="p-1 hover:bg-blue-800 rounded-lg text-slate-300 hover:text-white flex-shrink-0"
               title="Clear Highlight"
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
@@ -1175,49 +1179,54 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* RADIUS SEARCH CONTROL OVERLAY */}
       {radiusSearch.active && (
-        <div className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/95 text-white backdrop-blur-md rounded-full shadow-xl border border-slate-700/70 px-2.5 py-1 flex items-center gap-1.5 animate-in fade-in">
-          <div className="flex items-center gap-1 text-[11px] font-bold text-slate-300 pr-1 border-r border-slate-700/80">
-            <CircleDot className="w-3.5 h-3.5 text-blue-400" />
-            <span className="hidden sm:inline">Radius</span>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2 sm:p-2.5 flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 animate-in fade-in overflow-x-auto">
+          <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 text-xs font-bold text-slate-800 flex-shrink-0">
+            <CircleDot className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <span className="hidden sm:inline">Radius:</span>
           </div>
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center gap-1 flex-1 sm:flex-initial overflow-x-auto py-0.5">
             {[1, 2, 5, 10, 20].map((km) => (
               <button
                 key={km}
                 onClick={() => onRadiusChange({ ...radiusSearch, radiusKm: km })}
-                className={`px-2 py-0.5 rounded-full text-[11px] font-semibold transition-all ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-bold transition-colors flex-shrink-0 ${
                   radiusSearch.radiusKm === km
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                 }`}
               >
                 {km}k
               </button>
             ))}
           </div>
-          <div className="w-px h-3.5 bg-slate-700/80 mx-0.5" />
           <button
             onClick={() => onRadiusChange({ ...radiusSearch, active: false })}
-            className="w-5 h-5 flex items-center justify-center text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"
+            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 ml-1 flex-shrink-0"
             title="Close Radius Search"
           >
-            <X className="w-3 h-3" />
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}
 
       {/* DRAW-TO-SEARCH POLYGON BANNER */}
       {polygonSearch.active && (
-        <div className="absolute top-16 sm:top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/95 text-white backdrop-blur-md rounded-full shadow-xl border border-slate-700/70 px-2.5 py-1 flex items-center gap-2 animate-in fade-in">
-          <div className="flex items-center gap-1.5 pl-1">
-            <PenTool className="w-3.5 h-3.5 text-blue-400" />
-            <span className="text-xs font-semibold text-slate-200">
-              {polygonSearch.isDrawing
-                ? (polygonSearch.coordinates.length === 0 ? 'Click to draw' : `${polygonSearch.coordinates.length} pts`)
-                : `Zone (${polygonSearch.coordinates.length} pts)`}
-            </span>
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2.5 sm:p-3 flex items-center justify-between gap-2.5 animate-in fade-in">
+          <div className="flex items-center gap-2 min-w-0">
+            <PenTool className="w-4 h-4 text-blue-600 flex-shrink-0" />
+            <div className="text-xs min-w-0">
+              <div className="font-bold text-slate-900 truncate">
+                {polygonSearch.isDrawing
+                  ? 'Click map to draw boundary'
+                  : `Filtered in zone (${polygonSearch.coordinates.length} pts)`}
+              </div>
+              <div className="text-[10px] text-slate-500 hidden sm:block">
+                {polygonSearch.isDrawing ? 'Drop 3 or more points to form shape' : 'Showing listings in custom drawn zone'}
+              </div>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
+
+          <div className="flex items-center gap-1.5 flex-shrink-0">
             {polygonSearch.coordinates.length > 0 && polygonSearch.isDrawing && (
               <button
                 type="button"
@@ -1225,27 +1234,30 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                   const updated = polygonSearch.coordinates.slice(0, -1);
                   onPolygonChange({ ...polygonSearch, coordinates: updated });
                 }}
-                className="w-6 h-6 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                className="h-8 px-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 flex items-center gap-1 text-xs font-semibold transition-colors"
                 title="Undo last point"
               >
-                <RotateCcw className="w-3 h-3" />
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Undo</span>
               </button>
             )}
+
             {polygonSearch.coordinates.length >= 3 && polygonSearch.isDrawing && (
               <button
                 onClick={() => onPolygonChange({ ...polygonSearch, isDrawing: false })}
-                className="px-2.5 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full text-[11px] font-bold shadow-xs flex items-center gap-1 transition-all"
+                className="px-2.5 sm:px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs flex items-center gap-1"
               >
-                <Check className="w-3 h-3 stroke-[2.5]" />
+                <Check className="w-3.5 h-3.5" />
                 <span>Done</span>
               </button>
             )}
+
             <button
               onClick={() => onPolygonChange({ active: false, isDrawing: false, coordinates: [] })}
-              className="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-full transition-colors"
+              className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 transition-colors"
               title="Clear Drawn Area"
             >
-              <Trash2 className="w-3 h-3" />
+              <Trash2 className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -1286,7 +1298,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       )}
 
       {/* DESKTOP GEOSPATIAL TOOLBAR (Hidden on Mobile) */}
-      <div className="hidden sm:flex absolute right-4 bottom-10 z-20 flex-col gap-1.5 pointer-events-auto">
+      <div className="hidden sm:flex absolute right-4 bottom-12 z-20 flex-col gap-2 pointer-events-auto">
         {/* Radius Search Toggle */}
         <button
           onClick={() => {
@@ -1299,14 +1311,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             });
           }}
           title="Radius Search (1km, 5km, 10km)"
-          className={`w-9 h-9 rounded-xl shadow-md flex items-center justify-center border transition-all active:scale-95 ${
+          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-colors active:scale-95 ${
             radiusSearch.active
-              ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/25 ring-2 ring-blue-400/40'
-              : 'bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/90 dark:border-slate-800'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Radius search"
         >
-          <CircleDot className="w-4.5 h-4.5" />
+          <CircleDot className="w-5 h-5" />
         </button>
 
         {/* Draw-to-Search Lasso Polygon */}
@@ -1319,14 +1331,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             });
           }}
           title="Draw to Search Boundary Polygon"
-          className={`w-9 h-9 rounded-xl shadow-md flex items-center justify-center border transition-all active:scale-95 ${
+          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-colors active:scale-95 ${
             polygonSearch.active
-              ? 'bg-indigo-600 text-white border-indigo-600 shadow-indigo-500/25 ring-2 ring-indigo-400/40'
-              : 'bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/90 dark:border-slate-800'
+              ? 'bg-blue-600 text-white border-blue-600 shadow-md'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Draw to search"
         >
-          <PenTool className="w-4.5 h-4.5" />
+          <PenTool className="w-5 h-5" />
         </button>
 
         {/* Land Boundary Surveyor (Cadastral Area & Contour Mapping) */}
@@ -1341,14 +1353,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             }
           }}
           title="Land Boundary Surveyor (Cadastral Acre / Guntha Mapping)"
-          className={`w-9 h-9 rounded-xl shadow-md flex items-center justify-center border transition-all active:scale-95 ${
+          className={`w-10 h-10 rounded-xl shadow-sm flex items-center justify-center border transition-colors active:scale-95 ${
             landSurvey?.active
-              ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-500/25 ring-2 ring-emerald-400/50'
-              : 'bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200/90 dark:border-slate-800'
+              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md ring-2 ring-emerald-400/50'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Land boundary surveyor"
         >
-          <Ruler className="w-4.5 h-4.5" />
+          <Ruler className="w-5 h-5" />
         </button>
 
         {/* Layer Switcher (Roadmap / Satellite / Terrain / Hybrid) */}
@@ -1356,22 +1368,22 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           <button
             onClick={() => setIsLayerMenuOpen(!isLayerMenuOpen)}
             title="Switch Google Map Layer"
-            className="w-9 h-9 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-800 transition-all active:scale-95"
+            className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-colors active:scale-95"
             aria-label="Map layers"
           >
-            <Layers className="w-4.5 h-4.5" />
+            <Layers className="w-5 h-5" />
           </button>
 
           {isLayerMenuOpen && (
-            <div className="absolute right-12 bottom-0 w-64 bg-white/98 dark:bg-slate-900/98 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/90 dark:border-slate-800 p-2 z-30 animate-in fade-in">
-              <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 py-1">
-                Map View Style
+            <div className="absolute right-12 bottom-0 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 z-30 animate-in fade-in">
+              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1">
+                Google Map Layer
               </div>
               <div className="space-y-1 mt-1">
                 {[
-                  { id: 'roadmap', name: 'Default Road Map', desc: 'Clean vector navigation' },
-                  { id: 'satellite', name: 'Satellite Imagery', desc: 'High-res aerial imagery' },
-                  { id: 'hybrid', name: 'Hybrid View', desc: 'Satellite with street labels' },
+                  { id: 'roadmap', name: 'Default Road Map', desc: 'Standard clean road navigation' },
+                  { id: 'satellite', name: 'Satellite Imagery', desc: 'High-res aerial satellite photography' },
+                  { id: 'hybrid', name: 'Hybrid View', desc: 'Satellite with street & landmark labels' },
                   { id: 'terrain', name: 'Terrain View', desc: 'Topographic contour elevation' }
                 ].map((layer) => (
                   <button
@@ -1379,33 +1391,33 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     onClick={() => handleSetMapType(layer.id)}
                     className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors flex flex-col ${
                       activeMapTypeId === layer.id
-                        ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 font-bold'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
+                        ? 'bg-blue-50 text-blue-700 font-bold'
+                        : 'text-slate-700 hover:bg-slate-50 font-medium'
                     }`}
                   >
                     <span>{layer.name}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{layer.desc}</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">{layer.desc}</span>
                   </button>
                 ))}
               </div>
 
               {/* Overlays & Specialized Layers */}
-              <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 px-1 space-y-1">
+              <div className="pt-2 mt-2 border-t border-slate-100 px-1 space-y-1">
                 {/* Transit & Metro Lines */}
                 <button
                   onClick={() => setShowTransitLayer(!showTransitLayer)}
                   className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
                     showTransitLayer
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <Navigation className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <Navigation className="w-3.5 h-3.5 text-blue-600" />
                     <span>Metro & Transit Lines</span>
                   </span>
                   <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                    showTransitLayer ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'
+                    showTransitLayer ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'
                   }`}>
                     {showTransitLayer ? 'ON' : 'OFF'}
                   </span>
@@ -1419,61 +1431,61 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleLocateMe}
           title="Current Location"
-          className="w-9 h-9 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-800 transition-all active:scale-95"
+          className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-colors active:scale-95"
           aria-label="Current Location"
         >
-          <Locate className="w-4.5 h-4.5" />
+          <Locate className="w-5 h-5" />
         </button>
 
         {/* Reset Orientation */}
         <button
           onClick={handleResetOrientation}
           title="Reset Orientation"
-          className="w-9 h-9 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200/90 dark:border-slate-800 transition-all active:scale-95"
+          className="w-10 h-10 bg-white rounded-xl shadow-sm flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-colors active:scale-95"
           aria-label="Reset orientation"
         >
           <Navigation className="w-4 h-4" />
         </button>
 
         {/* Zoom Controls group */}
-        <div className="w-9 bg-white/95 dark:bg-slate-900/95 rounded-xl shadow-md border border-slate-200/90 dark:border-slate-800 overflow-hidden flex flex-col">
+        <div className="w-10 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
           <button
             onClick={handleZoomIn}
             title="Zoom in"
-            className="w-9 h-9 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-800"
+            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors border-b border-slate-100"
             aria-label="Zoom in"
           >
-            <ZoomIn className="w-4.5 h-4.5" />
+            <ZoomIn className="w-5 h-5" />
           </button>
           <button
             onClick={handleZoomOut}
             title="Zoom out"
-            className="w-9 h-9 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors"
             aria-label="Zoom out"
           >
-            <ZoomOut className="w-4.5 h-4.5" />
+            <ZoomOut className="w-5 h-5" />
           </button>
         </div>
       </div>
 
-      {/* MOBILE FLOATING ACTION DOCK (Positioned top-right under header) */}
-      <div className={`sm:hidden absolute right-3 z-20 flex flex-col items-center gap-1.5 pointer-events-auto transition-all duration-200 ${
-        isAnyToolActive ? 'top-26' : 'top-16'
+      {/* MOBILE FLOATING ACTION DOCK (Positioned top-right under header, NEVER clashing with bottom cards) */}
+      <div className={`sm:hidden absolute right-3 z-20 flex flex-col items-center gap-2 pointer-events-auto transition-all duration-200 ${
+        isAnyToolActive ? 'top-28' : 'top-16'
       }`}>
         {/* Tools Menu FAB */}
         <button
           onClick={() => setIsMobileToolsOpen(true)}
           title="Map Tools & Layers"
-          className={`w-9 h-9 rounded-xl shadow-md border flex items-center justify-center transition-all active:scale-95 relative ${
+          className={`w-10 h-10 rounded-xl shadow-md border flex items-center justify-center transition-all active:scale-95 relative ${
             isAnyToolActive
               ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/25 ring-2 ring-blue-400/50'
-              : 'bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 border-slate-200/90 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
           }`}
           aria-label="Map tools and layers"
         >
           <Wrench className="w-4 h-4" />
           {isAnyToolActive && (
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-900 animate-pulse" />
+            <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white animate-pulse" />
           )}
         </button>
 
@@ -1481,7 +1493,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleLocateMe}
           title="Locate Me"
-          className="w-9 h-9 bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 rounded-xl shadow-md border border-slate-200/90 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all"
+          className="w-10 h-10 bg-white text-slate-700 rounded-xl shadow-md border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
           aria-label="Locate me"
         >
           <Locate className="w-4 h-4" />
@@ -1491,7 +1503,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleResetOrientation}
           title="Reset Orientation"
-          className="w-9 h-9 bg-white/95 dark:bg-slate-900/95 text-slate-700 dark:text-slate-200 rounded-xl shadow-md border border-slate-200/90 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all"
+          className="w-10 h-10 bg-white text-slate-700 rounded-xl shadow-md border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
           aria-label="Reset orientation"
         >
           <Navigation className="w-4 h-4" />
@@ -1505,22 +1517,22 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             className="sm:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 transition-opacity"
             onClick={() => setIsMobileToolsOpen(false)}
           />
-          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white dark:bg-slate-900 rounded-t-3xl shadow-2xl border-t border-slate-200 dark:border-slate-800 p-5 pb-8 animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85dvh] overflow-y-auto">
-            <div className="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto" />
+          <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 p-5 pb-8 animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85dvh] overflow-y-auto">
+            <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto" />
             
-            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
                   <Wrench className="w-4 h-4" />
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-slate-900 dark:text-slate-100">Map Tools & View Modes</h4>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">Discovery search tools, cadastral surveyor, and layers</p>
+                  <h4 className="text-sm font-extrabold text-slate-900">Map Tools & View Modes</h4>
+                  <p className="text-[11px] text-slate-500">Geospatial radius, boundary drawing, and layers</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsMobileToolsOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg"
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1528,7 +1540,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
             {/* Section 1: Geospatial Discovery Tools */}
             <div>
-              <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
+              <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
                 Geospatial Discovery & Survey Tools
               </div>
               <div className="grid grid-cols-3 gap-2">
@@ -1544,14 +1556,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                       radiusKm: 5
                     });
                   }}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                  className={`p-2.5 rounded-2xl border flex flex-col items-center gap-1 text-center transition-all ${
                     radiusSearch.active
-                      ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300'
+                      ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <CircleDot className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                  <span className="text-xs font-semibold leading-tight">Radius</span>
+                  <CircleDot className="w-5 h-5 text-blue-600" />
+                  <span className="text-xs font-bold leading-tight">Radius</span>
                   <span className="text-[9px] text-slate-400 font-medium">1–20 km</span>
                 </button>
 
@@ -1565,14 +1577,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                       coordinates: []
                     });
                   }}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                  className={`p-2.5 rounded-2xl border flex flex-col items-center gap-1 text-center transition-all ${
                     polygonSearch.active
-                      ? 'bg-indigo-50 dark:bg-indigo-950/60 border-indigo-500 text-indigo-700 dark:text-indigo-300 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300'
+                      ? 'bg-blue-50 border-blue-500 text-blue-700 shadow-sm'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <PenTool className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  <span className="text-xs font-semibold leading-tight">Lasso</span>
+                  <PenTool className="w-5 h-5 text-indigo-600" />
+                  <span className="text-xs font-bold leading-tight">Lasso</span>
                   <span className="text-[9px] text-slate-400 font-medium">Draw Area</span>
                 </button>
 
@@ -1588,14 +1600,14 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                       onLandSurveyChange?.(computeLandSurveyMetrics([]));
                     }
                   }}
-                  className={`p-2.5 rounded-xl border flex flex-col items-center gap-1 text-center transition-all ${
+                  className={`p-2.5 rounded-2xl border flex flex-col items-center gap-1 text-center transition-all ${
                     landSurvey?.active
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-500 text-emerald-800 dark:text-emerald-300 shadow-xs'
-                      : 'bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300'
+                      ? 'bg-emerald-50 border-emerald-500 text-emerald-800 shadow-sm'
+                      : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700'
                   }`}
                 >
-                  <Ruler className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-xs font-semibold leading-tight">Surveyor</span>
+                  <Ruler className="w-5 h-5 text-emerald-600" />
+                  <span className="text-xs font-bold leading-tight">Surveyor</span>
                   <span className="text-[9px] text-slate-400 font-medium">Acres & Gaj</span>
                 </button>
               </div>
@@ -1603,8 +1615,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
             {/* Section 2: Map Base Layers */}
             <div>
-              <div className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-                Map View Style
+              <div className="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2">
+                Map Base Layers
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {[
@@ -1621,8 +1633,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     }}
                     className={`p-2.5 rounded-xl border text-left transition-colors flex flex-col ${
                       activeMapTypeId === layer.id
-                        ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-700 dark:text-blue-300 font-bold'
-                        : 'bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 font-medium'
+                        ? 'bg-blue-50 border-blue-500 text-blue-700 font-bold'
+                        : 'bg-slate-50 hover:bg-slate-100 border-slate-200 text-slate-700 font-medium'
                     }`}
                   >
                     <span className="text-xs font-bold">{layer.name}</span>
@@ -1633,23 +1645,23 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
             </div>
 
             {/* Section 3: Extra Toggles */}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div className="pt-2 border-t border-slate-100 space-y-2">
               <button
                 onClick={() => {
                   setShowTransitLayer(!showTransitLayer);
                 }}
-                className={`w-full p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-between transition-colors ${
+                className={`w-full p-3 rounded-xl border text-xs font-bold flex items-center justify-between transition-colors ${
                   showTransitLayer
-                    ? 'bg-emerald-50 dark:bg-emerald-950/60 border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300'
-                    : 'bg-slate-50 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  <Navigation className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <Navigation className="w-4 h-4 text-blue-600" />
                   <span>Metro & Transit Lines</span>
                 </span>
-                <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                  showTransitLayer ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
+                <span className={`text-[10px] px-2 py-0.5 rounded font-extrabold ${
+                  showTransitLayer ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-200 text-slate-600'
                 }`}>
                   {showTransitLayer ? 'ON' : 'OFF'}
                 </span>
@@ -1660,11 +1672,11 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                   handleResetOrientation();
                   setIsMobileToolsOpen(false);
                 }}
-                className="w-full p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between transition-colors"
+                className="w-full p-3 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 text-xs font-bold text-slate-700 flex items-center justify-between transition-colors"
               >
                 <span className="flex items-center gap-2">
-                  <Navigation className="w-4 h-4 text-slate-500" />
-                  <span>Reset North Orientation</span>
+                  <Navigation className="w-4 h-4 text-slate-600" />
+                  <span>Reset Compass / North Orientation</span>
                 </span>
                 <span className="text-[10px] text-slate-400">0° Tilt</span>
               </button>

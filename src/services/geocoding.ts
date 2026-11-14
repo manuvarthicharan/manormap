@@ -47,6 +47,83 @@ const INDIAN_LOCATIONS: SearchResult[] = [
     type: 'area'
   },
   {
+    id: 'hyd-kokapet',
+    title: 'Kokapet, Hyderabad',
+    subTitle: 'Neopolis & Golden Mile, Telangana (PIN: 500075)',
+    coordinates: [78.3245, 17.3980],
+    type: 'area'
+  },
+  {
+    id: 'hyd-tellapur',
+    title: 'Tellapur, Hyderabad',
+    subTitle: 'Near ORR Exit 2, Telangana (PIN: 502032)',
+    coordinates: [78.2834, 17.4690],
+    type: 'area'
+  },
+  {
+    id: 'hyd-nanakramguda',
+    title: 'Nanakramguda, Hyderabad',
+    subTitle: 'Financial District & WaveRock, Telangana (PIN: 500032)',
+    coordinates: [78.3412, 17.4190],
+    type: 'neighborhood'
+  },
+  {
+    id: 'hyd-manikonda',
+    title: 'Manikonda, Hyderabad',
+    subTitle: 'Puppalguda & Lanco Hills, Telangana (PIN: 500089)',
+    coordinates: [78.3812, 17.3990],
+    type: 'area'
+  },
+  {
+    id: 'hyd-kukatpally',
+    title: 'Kukatpally, Hyderabad',
+    subTitle: 'KPHB Colony & JNTU, Telangana (PIN: 500072)',
+    coordinates: [78.4111, 17.4933],
+    type: 'area'
+  },
+  {
+    id: 'hyd-miyapur',
+    title: 'Miyapur, Hyderabad',
+    subTitle: 'Metro Terminal & Allwyn X Roads, Telangana (PIN: 500049)',
+    coordinates: [78.3572, 17.4968],
+    type: 'area'
+  },
+  {
+    id: 'hyd-shamshabad',
+    title: 'Shamshabad, Hyderabad',
+    subTitle: 'RGIA Airport Corridor & Agricultural Land, Telangana (PIN: 501218)',
+    coordinates: [78.4294, 17.2600],
+    type: 'area'
+  },
+  {
+    id: 'hyd-shankarpally',
+    title: 'Shankarpally, Hyderabad',
+    subTitle: 'Farmland & Green Belt Corridor, Telangana (PIN: 501203)',
+    coordinates: [78.1794, 17.4520],
+    type: 'area'
+  },
+  {
+    id: 'hyd-shadnagar',
+    title: 'Shadnagar, Hyderabad',
+    subTitle: 'Bangalore Highway Industrial & Farmland, Telangana (PIN: 509216)',
+    coordinates: [78.2045, 17.0678],
+    type: 'area'
+  },
+  {
+    id: 'hyd-kompally',
+    title: 'Kompally, Hyderabad',
+    subTitle: 'Medchal Highway & Suchitra, Telangana (PIN: 500100)',
+    coordinates: [78.4878, 17.5385],
+    type: 'area'
+  },
+  {
+    id: 'hyd-adibatla',
+    title: 'Adibatla, Hyderabad',
+    subTitle: 'TCS Aerospace SEZ & Outer Ring Road, Telangana (PIN: 501510)',
+    coordinates: [78.5833, 17.2333],
+    type: 'area'
+  },
+  {
     id: 'blr-metro',
     title: 'Bengaluru (Bangalore)',
     subTitle: 'Karnataka, India',
@@ -264,38 +341,100 @@ const DEFAULT_CONFIG: GeocodingConfig = {
   userAgent: 'IndiaPropMapDiscovery/1.0 (map-first real estate)'
 };
 
+// Fast Google Maps Geocoder Resolver (works on all Indian localities, cities & PIN codes)
+async function searchGoogleGeocoder(query: string): Promise<SearchResult[]> {
+  const gMaps = typeof window !== 'undefined' ? (window as any).google?.maps : undefined;
+  if (!gMaps || !gMaps.Geocoder) {
+    return [];
+  }
+
+  return new Promise<SearchResult[]>((resolve) => {
+    try {
+      const geocoder = new gMaps.Geocoder();
+      geocoder.geocode(
+        {
+          address: query,
+          componentRestrictions: { country: 'IN' }
+        },
+        (results: any[] | null, status: string) => {
+          if (status === 'OK' && results && results.length > 0) {
+            const mapped: SearchResult[] = results.slice(0, 6).map((r: any, i: number) => {
+              const loc = r.geometry?.location;
+              const formatted = r.formatted_address || query;
+              const parts = formatted.split(',').map((s: string) => s.trim());
+              const title = parts[0] || query;
+              const subTitle = parts.slice(1, 4).join(', ');
+              const types = r.types || [];
+              const isCity = types.includes('locality') || types.includes('administrative_area_level_2');
+              const isPincode = types.includes('postal_code');
+              const isNeighborhood = types.includes('sublocality') || types.includes('neighborhood');
+              const lng = loc ? (typeof loc.lng === 'function' ? loc.lng() : loc.lng) : 0;
+              const lat = loc ? (typeof loc.lat === 'function' ? loc.lat() : loc.lat) : 0;
+              return {
+                id: `google-${r.place_id || i}`,
+                title: title,
+                subTitle: subTitle,
+                coordinates: [lng, lat],
+                type: isCity ? 'city' : isPincode ? 'pincode' : isNeighborhood ? 'neighborhood' : 'area'
+              };
+            });
+            resolve(mapped);
+          } else {
+            resolve([]);
+          }
+        }
+      );
+    } catch (_) {
+      resolve([]);
+    }
+  });
+}
+
 export async function searchLocations(query: string): Promise<SearchResult[]> {
   const cleanQuery = query.trim().toLowerCase();
   if (!cleanQuery || cleanQuery.length < 2) {
     return [];
   }
 
-  // 1. Check local pre-indexed high-accuracy Indian locations first (instant)
-  const localMatches = INDIAN_LOCATIONS.filter(item => {
+  // 1. Check local pre-indexed high-accuracy Indian locations first (instant 0ms)
+  const localMatches = INDIAN_LOCATIONS.filter((item) => {
     return (
       item.title.toLowerCase().includes(cleanQuery) ||
       (item.subTitle && item.subTitle.toLowerCase().includes(cleanQuery))
     );
   });
 
-  // If we have high confidence local results, return them immediately
-  if (localMatches.length >= 3) {
-    return localMatches.slice(0, 6);
-  }
-
   // 2. Check query cache
   if (queryCache.has(cleanQuery)) {
     const cached = queryCache.get(cleanQuery)!;
-    // Combine unique
     return mergeUniqueResults(localMatches, cached);
   }
 
-  // 3. Fallback to configurable Nominatim/OSM endpoint with strict rate limiting
+  // 3. Try Google Maps Geocoder (highest accuracy, zero rate limits)
+  try {
+    const googlePromise = searchGoogleGeocoder(query);
+    const googleTimeout = new Promise<SearchResult[]>((r) => setTimeout(() => r([]), 1600));
+    const googleResults = await Promise.race([googlePromise, googleTimeout]);
+
+    if (googleResults && googleResults.length > 0) {
+      queryCache.set(cleanQuery, googleResults);
+      return mergeUniqueResults(localMatches, googleResults);
+    }
+  } catch (err) {
+    console.warn('Google Maps geocoder error, falling back', err);
+  }
+
+  // If we have high confidence local results (>= 2), return them
+  if (localMatches.length >= 2) {
+    return localMatches.slice(0, 6);
+  }
+
+  // 4. Fallback to Nominatim/OSM endpoint with strict rate limiting
   try {
     const now = Date.now();
     const timeSinceLast = now - lastApiCallTime;
     if (timeSinceLast < MIN_API_INTERVAL_MS) {
-      await new Promise(r => setTimeout(r, MIN_API_INTERVAL_MS - timeSinceLast));
+      await new Promise((r) => setTimeout(r, MIN_API_INTERVAL_MS - timeSinceLast));
     }
     lastApiCallTime = Date.now();
 
@@ -309,7 +448,7 @@ export async function searchLocations(query: string): Promise<SearchResult[]> {
 
     const response = await fetch(`${DEFAULT_CONFIG.endpoint}?${params.toString()}`, {
       headers: {
-        'Accept': 'application/json'
+        Accept: 'application/json'
       }
     });
 
@@ -329,7 +468,6 @@ export async function searchLocations(query: string): Promise<SearchResult[]> {
     queryCache.set(cleanQuery, remoteResults);
     return mergeUniqueResults(localMatches, remoteResults);
   } catch (err) {
-    console.warn('Geocoding service unavailable or rate limited, falling back to local dataset', err);
     return localMatches;
   }
 }
