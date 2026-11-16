@@ -60,23 +60,72 @@ body,
   text-decoration: underline !important;
 }
 
-/* Custom Interactive Price Markers */
+/* Custom Interactive Price Markers & Collision Staggering */
+.prop-marker-wrapper {
+  position: absolute;
+  pointer-events: none;
+  transition: z-index 0.15s ease;
+}
+
 .prop-marker {
   cursor: pointer;
   transform: translate(-50%, -100%);
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease;
-  will-change: transform;
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.2s ease, left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, left, top;
+}
+
+.prop-marker.displaced {
+  transform: translate(-50%, -50%);
 }
 
 .prop-marker:hover,
 .prop-marker.hovered {
-  transform: translate(-50%, -108%) scale(1.1);
-  z-index: 120 !important;
+  transform: translate(-50%, -108%) scale(1.08);
+  z-index: 200 !important;
+}
+
+.prop-marker.displaced:hover,
+.prop-marker.displaced.hovered {
+  transform: translate(-50%, -50%) scale(1.08);
+  z-index: 200 !important;
 }
 
 .prop-marker.selected {
-  transform: translate(-50%, -112%) scale(1.16);
-  z-index: 140 !important;
+  transform: translate(-50%, -112%) scale(1.12);
+  z-index: 220 !important;
+}
+
+.prop-marker.displaced.selected {
+  transform: translate(-50%, -50%) scale(1.12);
+  z-index: 220 !important;
+}
+
+/* Ground Anchor Dot */
+.pin-anchor-dot {
+  pointer-events: none;
+  animation: anchor-pulse 2s infinite ease-in-out;
+}
+
+@keyframes anchor-pulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.25);
+  }
+}
+
+/* Leader Connector Line */
+.pin-leader-stem {
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.prop-marker-wrapper:hover .pin-leader-stem line {
+  stroke: #2563eb !important;
+  stroke-width: 2 !important;
+  stroke-dasharray: none !important;
+  opacity: 1 !important;
 }
 
 /* Custom marker pill */

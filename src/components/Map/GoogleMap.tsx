@@ -8,8 +8,7 @@ import {
 } from '../../types';
 import { loadGoogleMaps } from '../../services/googleMapsLoader';
 import { CustomOverlayMarker } from './CustomOverlayMarker';
-import { ClusterOverlayMarker } from './ClusterOverlayMarker';
-import { clusterProperties } from './mapClustering';
+import { computeDisplacedPinLayout } from './pinDeconfliction';
 import { calculateLandParcelMetrics, computeLandSurveyMetrics } from '../../services/propertyService';
 import { LandBoundarySurveyorHUD, SurveyDrawMode } from './LandBoundarySurveyorHUD';
 import { mapActionBridge } from '../../services/mapActionBridge';
@@ -115,7 +114,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<Map<string, CustomOverlayMarker>>(new Map());
-  const clusterMarkersRef = useRef<ClusterOverlayMarker[]>([]);
   const userMarkerRef = useRef<google.maps.Marker | null>(null);
 
   // Overlay Objects
@@ -316,8 +314,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       mapActionBridge.unregister();
       markersRef.current.forEach((marker) => marker.remove());
       markersRef.current.clear();
-      clusterMarkersRef.current.forEach((c) => c.remove());
-      clusterMarkersRef.current = [];
       if (maskedPolygonOverlayRef.current) {
         maskedPolygonOverlayRef.current.setMap(null);
         maskedPolygonOverlayRef.current = null;
@@ -327,38 +323,40 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     };
   }, []);
 
-  // Dynamically compute Clusters and Individual Markers with intelligent collision avoidance
-  const { clusters, individualProperties } = useMemo(() => {
-    return clusterProperties(properties, currentZoom, selectedProperty?.id);
+  // Compute collision-free layout for all individual property pins directly on map
+  const pinLayouts = useMemo(() => {
+    return computeDisplacedPinLayout(properties, currentZoom, selectedProperty?.id);
   }, [properties, currentZoom, selectedProperty?.id]);
 
-  // Synchronize Individual Markers & AI Highlights
+  // Synchronize Individual Markers with collision-free staggering
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
 
     const currentMarkerIds = new Set<string>();
 
-    individualProperties.forEach((prop) => {
-      currentMarkerIds.add(prop.id);
-      const isSelected = selectedProperty?.id === prop.id;
-      const isHighlighted = highlightedPropertyIds.includes(prop.id);
+    pinLayouts.forEach(({ property, dx, dy, isDisplaced, zoomMode }) => {
+      currentMarkerIds.add(property.id);
+      const isSelected = selectedProperty?.id === property.id;
+      const isHighlighted = highlightedPropertyIds.includes(property.id);
 
-      let marker = markersRef.current.get(prop.id);
+      let marker = markersRef.current.get(property.id);
 
       if (!marker) {
-        marker = new CustomOverlayMarker(prop, map, isSelected, (clickedProp) => {
+        marker = new CustomOverlayMarker(property, map, isSelected, (clickedProp) => {
           onSelectProperty(clickedProp);
 
           const [lng, lat] = clickedProp.coordinates;
           map.panTo(new google.maps.LatLng(lat, lng));
         });
 
-        markersRef.current.set(prop.id, marker);
+        markersRef.current.set(property.id, marker);
       } else {
         marker.setSelected(isSelected);
         marker.setHighlighted(isHighlighted);
       }
+
+      marker.setLayoutOffset(dx, dy, isDisplaced, zoomMode);
     });
 
     // Remove markers no longer active
@@ -368,48 +366,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         markersRef.current.delete(id);
       }
     });
-  }, [individualProperties, selectedProperty, highlightedPropertyIds, mapLoaded, onSelectProperty]);
-
-  // Synchronize Cluster Markers
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
-
-    clusterMarkersRef.current.forEach((c) => c.remove());
-    clusterMarkersRef.current = [];
-
-    clusters.forEach((cl) => {
-      const clusterMarker = new ClusterOverlayMarker(cl, map, (clickedCluster) => {
-        const bounds = new google.maps.LatLngBounds();
-        clickedCluster.properties.forEach((p) => {
-          bounds.extend(new google.maps.LatLng(p.coordinates[1], p.coordinates[0]));
-        });
-
-        const ne = bounds.getNorthEast();
-        const sw = bounds.getSouthWest();
-        const isSingleLocation =
-          Math.abs(ne.lat() - sw.lat()) < 0.0001 &&
-          Math.abs(ne.lng() - sw.lng()) < 0.0001;
-
-        if (isSingleLocation || (map.getZoom() || 13) >= 17) {
-          map.panTo(new google.maps.LatLng(clickedCluster.coordinates[1], clickedCluster.coordinates[0]));
-          if ((map.getZoom() || 13) < 17) {
-            map.setZoom(17);
-          }
-          onSelectProperty(clickedCluster.properties[0]);
-        } else {
-          // Smoothly fit all cluster items inside viewport with comfortable padding
-          map.fitBounds(bounds, {
-            top: 80,
-            right: 80,
-            bottom: 80,
-            left: 80
-          });
-        }
-      });
-      clusterMarkersRef.current.push(clusterMarker);
-    });
-  }, [clusters, mapLoaded, onSelectProperty]);
+  }, [pinLayouts, selectedProperty, highlightedPropertyIds, mapLoaded, onSelectProperty]);
 
   // Synchronize hovered property
   useEffect(() => {
