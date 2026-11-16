@@ -149,6 +149,29 @@ body,
   border-top-color: #059669;
 }
 
+/* Custom Cluster Markers & Hover Tooltip */
+.prop-cluster-marker {
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  will-change: transform;
+}
+
+.prop-cluster-marker:hover {
+  z-index: 150 !important;
+}
+
+.cluster-tooltip {
+  pointer-events: none;
+  filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.15));
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  transform: translate(-50%, 4px);
+}
+
+.prop-cluster-marker:hover .cluster-tooltip {
+  transform: translate(-50%, 0);
+}
+
 /* Pulse animation for current location dot */
 @keyframes user-pulse {
   0% {

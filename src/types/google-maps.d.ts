@@ -62,6 +62,7 @@ declare namespace google {
       constructor(sw?: LatLng | LatLngLiteral, ne?: LatLng | LatLngLiteral);
       getSouthWest(): LatLng;
       getNorthEast(): LatLng;
+      getCenter(): LatLng;
       contains(latLng: LatLng | LatLngLiteral): boolean;
       extend(point: LatLng | LatLngLiteral): LatLngBounds;
     }

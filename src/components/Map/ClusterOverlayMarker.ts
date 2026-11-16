@@ -1,14 +1,7 @@
-import { Property } from '../../types';
+import { PropertyCluster } from './mapClustering';
 import { formatIndianCurrency } from '../../services/propertyService';
 
-export interface PropertyCluster {
-  id: string;
-  coordinates: [number, number]; // [lng, lat]
-  properties: Property[];
-  minPrice: number;
-  maxPrice: number;
-  type: 'sale' | 'rent' | 'mixed';
-}
+export type { PropertyCluster };
 
 export class ClusterOverlayMarker {
   private overlay: google.maps.OverlayView;
@@ -28,11 +21,11 @@ export class ClusterOverlayMarker {
 
     overlay.onAdd = () => {
       const div = document.createElement('div');
-      div.className = 'prop-cluster-marker';
+      div.className = 'prop-cluster-marker group';
       div.style.position = 'absolute';
       div.style.cursor = 'pointer';
       div.style.transform = 'translate(-50%, -50%)';
-      div.style.zIndex = '120';
+      div.style.zIndex = '110';
       div.style.pointerEvents = 'auto';
       div.style.visibility = 'hidden';
 
@@ -41,12 +34,81 @@ export class ClusterOverlayMarker {
       const maxP = formatIndianCurrency(cluster.maxPrice, cluster.type === 'rent' ? 'rent' : 'sale');
       const priceText = minP === maxP ? minP : `${minP} – ${maxP}`;
 
-      div.innerHTML = `
-        <div class="flex items-center gap-1.5 bg-white hover:bg-blue-600 text-slate-800 hover:text-white pl-2 pr-2.5 py-1.5 rounded-full shadow-lg border border-slate-200 transition-all hover:scale-105 active:scale-95">
-          <span class="w-5 h-5 rounded-full bg-blue-500 text-[11px] font-black flex items-center justify-center text-white shadow-inner">${count}</span>
-          <span class="text-xs font-bold tracking-tight">${priceText}</span>
-        </div>
-      `;
+      const isAgriMajority = cluster.hasAgricultural && cluster.properties.filter(
+        (p) => p.category === 'Agricultural Land' || p.category === 'Plot'
+      ).length >= Math.ceil(count / 2);
+
+      const isLowZoom = cluster.zoom <= 10;
+
+      // Construct category summary breakdown
+      const typeCounts = new Map<string, number>();
+      cluster.properties.forEach((p) => {
+        const cat = p.category || (p.type === 'rent' ? 'Rental' : 'Property');
+        typeCounts.set(cat, (typeCounts.get(cat) || 0) + 1);
+      });
+      const breakdownText = Array.from(typeCounts.entries())
+        .map(([cat, n]) => `${n} ${cat}${n > 1 && !cat.endsWith('s') ? 's' : ''}`)
+        .slice(0, 2)
+        .join(', ');
+
+      if (isLowZoom) {
+        // Ultra-compact circular cluster bubble for national/regional zoomed out view
+        div.innerHTML = `
+          <div class="relative flex items-center justify-center">
+            <div class="w-9 h-9 rounded-full bg-white text-slate-800 shadow-xl border-2 ${
+              isAgriMajority ? 'border-emerald-500 text-emerald-800' : 'border-blue-600 text-blue-800'
+            } font-black text-xs flex items-center justify-center transition-transform duration-200 group-hover:scale-110 active:scale-95">
+              ${count}
+            </div>
+
+            <!-- Light Themed Tooltip on Hover -->
+            <div class="cluster-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-52 p-2.5 bg-white rounded-xl shadow-2xl border border-slate-200 text-left pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                <span class="text-xs font-black text-slate-800">${count} Properties</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  isAgriMajority ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+                }">${cluster.areaHint || 'Area'}</span>
+              </div>
+              <div class="mt-1.5 text-xs font-extrabold text-blue-600">${priceText}</div>
+              <div class="mt-0.5 text-[10px] text-slate-500 font-medium">${breakdownText}</div>
+              <div class="mt-1 text-[9px] text-slate-400 font-semibold">Click to zoom in</div>
+            </div>
+          </div>
+        `;
+      } else {
+        // Crisp interactive pill with badge + price range for neighborhood and locality view
+        const labelText = isAgriMajority
+          ? `🌾 ${count} Lands • ${priceText}`
+          : priceText;
+
+        div.innerHTML = `
+          <div class="relative flex items-center">
+            <div class="flex items-center gap-1.5 bg-white text-slate-800 pl-1.5 pr-3 py-1 rounded-full shadow-lg border border-slate-200/90 group-hover:border-blue-400 group-hover:shadow-xl transition-all duration-200 group-hover:scale-105 active:scale-95">
+              <span class="w-5 h-5 rounded-full ${
+                isAgriMajority ? 'bg-emerald-600' : 'bg-blue-600'
+              } text-[11px] font-black flex items-center justify-center text-white shadow-inner flex-shrink-0">
+                ${count}
+              </span>
+              <span class="text-xs font-bold tracking-tight text-slate-800 whitespace-nowrap">
+                ${labelText}
+              </span>
+            </div>
+
+            <!-- Light Themed Tooltip on Hover -->
+            <div class="cluster-tooltip absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-2.5 bg-white rounded-xl shadow-2xl border border-slate-200 text-left pointer-events-none opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div class="flex items-center justify-between pb-1 border-b border-slate-100">
+                <span class="text-xs font-black text-slate-800">${count} Properties in ${cluster.areaHint || 'Area'}</span>
+                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                  isAgriMajority ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'
+                }">${isAgriMajority ? '🌾 Land Zone' : 'Cluster'}</span>
+              </div>
+              <div class="mt-1.5 text-xs font-extrabold text-blue-600">${priceText}</div>
+              <div class="mt-0.5 text-[10px] text-slate-500 font-medium">${breakdownText}</div>
+              <div class="mt-1 text-[9px] text-slate-400 font-semibold">Click to expand cluster</div>
+            </div>
+          </div>
+        `;
+      }
 
       const handleTrigger = (e: Event) => {
         e.preventDefault();
@@ -98,4 +160,3 @@ export class ClusterOverlayMarker {
     this.overlay.setMap(null);
   }
 }
-

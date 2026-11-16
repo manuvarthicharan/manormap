@@ -8,7 +8,8 @@ import {
 } from '../../types';
 import { loadGoogleMaps } from '../../services/googleMapsLoader';
 import { CustomOverlayMarker } from './CustomOverlayMarker';
-import { ClusterOverlayMarker, PropertyCluster } from './ClusterOverlayMarker';
+import { ClusterOverlayMarker } from './ClusterOverlayMarker';
+import { clusterProperties } from './mapClustering';
 import { calculateLandParcelMetrics, computeLandSurveyMetrics } from '../../services/propertyService';
 import { LandBoundarySurveyorHUD, SurveyDrawMode } from './LandBoundarySurveyorHUD';
 import { mapActionBridge } from '../../services/mapActionBridge';
@@ -236,14 +237,18 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           }
         });
 
-        // Track zoom level
-        map.addListener('zoom_changed', () => {
-          const z = map.getZoom() || 13;
-          setCurrentZoom(z);
-        });
+        // Track zoom level actively on both zoom_changed and idle
+        const handleZoomChange = () => {
+          const z = map.getZoom();
+          if (typeof z === 'number' && !isNaN(z)) {
+            setCurrentZoom(z);
+          }
+        };
+        map.addListener('zoom_changed', handleZoomChange);
 
         // Debounced bounds & center change on idle
         map.addListener('idle', () => {
+          handleZoomChange();
           const b = map.getBounds();
           if (b && onBoundsChangeRef.current) {
             const sw = b.getSouthWest();
@@ -322,62 +327,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     };
   }, []);
 
-  // Compute Clusters or Individual Markers depending on zoom level
+  // Dynamically compute Clusters and Individual Markers with intelligent collision avoidance
   const { clusters, individualProperties } = useMemo(() => {
-    // If zoom >= 13, show all individual markers
-    if (currentZoom >= 13 || properties.length <= 3) {
-      return { clusters: [], individualProperties: properties };
-    }
-
-    // Grid-based clustering at lower zooms (zoom < 13)
-    const gridSize = currentZoom <= 10 ? 0.15 : currentZoom <= 11 ? 0.08 : 0.04;
-    const grid = new Map<string, Property[]>();
-
-    properties.forEach((p) => {
-      const gridX = Math.floor(p.coordinates[0] / gridSize);
-      const gridY = Math.floor(p.coordinates[1] / gridSize);
-      const key = `${gridX}:${gridY}`;
-      const list = grid.get(key) || [];
-      list.push(p);
-      grid.set(key, list);
-    });
-
-    const computedClusters: PropertyCluster[] = [];
-    const singles: Property[] = [];
-
-    grid.forEach((group, key) => {
-      if (group.length === 1) {
-        singles.push(group[0]);
-      } else {
-        let totalLng = 0;
-        let totalLat = 0;
-        let minPrice = Infinity;
-        let maxPrice = -Infinity;
-        let hasSale = false;
-        let hasRent = false;
-
-        group.forEach((p) => {
-          totalLng += p.coordinates[0];
-          totalLat += p.coordinates[1];
-          if (p.price < minPrice) minPrice = p.price;
-          if (p.price > maxPrice) maxPrice = p.price;
-          if (p.type === 'sale') hasSale = true;
-          if (p.type === 'rent') hasRent = true;
-        });
-
-        computedClusters.push({
-          id: `cluster-${key}`,
-          coordinates: [totalLng / group.length, totalLat / group.length],
-          properties: group,
-          minPrice,
-          maxPrice,
-          type: hasSale && hasRent ? 'mixed' : hasRent ? 'rent' : 'sale'
-        });
-      }
-    });
-
-    return { clusters: computedClusters, individualProperties: singles };
-  }, [properties, currentZoom]);
+    return clusterProperties(properties, currentZoom, selectedProperty?.id);
+  }, [properties, currentZoom, selectedProperty?.id]);
 
   // Synchronize Individual Markers & AI Highlights
   useEffect(() => {
@@ -427,13 +380,36 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
     clusters.forEach((cl) => {
       const clusterMarker = new ClusterOverlayMarker(cl, map, (clickedCluster) => {
-        const [lng, lat] = clickedCluster.coordinates;
-        map.panTo(new google.maps.LatLng(lat, lng));
-        map.setZoom(Math.min(18, (map.getZoom() || 12) + 2));
+        const bounds = new google.maps.LatLngBounds();
+        clickedCluster.properties.forEach((p) => {
+          bounds.extend(new google.maps.LatLng(p.coordinates[1], p.coordinates[0]));
+        });
+
+        const ne = bounds.getNorthEast();
+        const sw = bounds.getSouthWest();
+        const isSingleLocation =
+          Math.abs(ne.lat() - sw.lat()) < 0.0001 &&
+          Math.abs(ne.lng() - sw.lng()) < 0.0001;
+
+        if (isSingleLocation || (map.getZoom() || 13) >= 17) {
+          map.panTo(new google.maps.LatLng(clickedCluster.coordinates[1], clickedCluster.coordinates[0]));
+          if ((map.getZoom() || 13) < 17) {
+            map.setZoom(17);
+          }
+          onSelectProperty(clickedCluster.properties[0]);
+        } else {
+          // Smoothly fit all cluster items inside viewport with comfortable padding
+          map.fitBounds(bounds, {
+            top: 80,
+            right: 80,
+            bottom: 80,
+            left: 80
+          });
+        }
       });
       clusterMarkersRef.current.push(clusterMarker);
     });
-  }, [clusters, mapLoaded]);
+  }, [clusters, mapLoaded, onSelectProperty]);
 
   // Synchronize hovered property
   useEffect(() => {
