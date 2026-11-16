@@ -42,7 +42,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
       {/* Mobile: Bottom Sheet | Desktop: Floating Card near bottom left */}
       <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md w-full animate-in slide-in-from-bottom duration-200 ease-out z-30">
         <div className="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto">
-          
+
           {/* Mobile Drag Indicator */}
           <div className="sm:hidden w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2.5" />
 
@@ -56,13 +56,12 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 className="w-full h-full object-cover"
                 loading="lazy"
               />
-              
+
               {/* Rent / Sale Badge */}
               <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${
-                    property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
-                  }`}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
+                    }`}
                 >
                   {property.type === 'sale' ? 'For Sale' : 'For Rent'}
                 </span>
@@ -223,11 +222,11 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
               </div>
 
               {/* Exact-Fit Action Buttons: View Details & Loan EMI */}
-              <div className="pt-3 mt-2 border-t border-slate-100 dark:border-slate-800 grid grid-cols-2 gap-2">
+              <div className="pt-3 mt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => onViewDetails(property, 'overview')}
-                  className="h-9 px-3 bg-slate-900 hover:bg-slate-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
+                  className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98] shadow-xs"
                 >
                   <span>View Details</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -236,9 +235,9 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 <button
                   type="button"
                   onClick={() => onViewDetails(property, 'emi')}
-                  className="h-9 px-3 border border-slate-300 dark:border-slate-700 hover:border-slate-400 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-200 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
+                  className="h-9 px-3 border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
                 >
-                  <Calculator className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <Calculator className="w-3.5 h-3.5 text-blue-600" />
                   <span>Loan EMI</span>
                 </button>
               </div>

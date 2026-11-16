@@ -475,7 +475,7 @@ export async function searchLocations(query: string): Promise<SearchResult[]> {
 function mergeUniqueResults(a: SearchResult[], b: SearchResult[]): SearchResult[] {
   const seen = new Set<string>();
   const merged: SearchResult[] = [];
-  
+
   for (const item of [...a, ...b]) {
     const key = `${item.title}-${item.coordinates[0].toFixed(3)}-${item.coordinates[1].toFixed(3)}`;
     if (!seen.has(key)) {
@@ -514,7 +514,7 @@ export async function reverseGeocodeLocation(lng: number, lat: number): Promise<
     const parts = closestItem.title.split(',').map(s => s.trim());
     const areaName = parts[0] || 'Prime Area';
     const cityName = parts[1] || closestItem.subTitle?.split(',')[0] || 'Hyderabad';
-    
+
     // Extract PIN if present in subtitle
     const pinMatch = closestItem.subTitle?.match(/\b(\d{6})\b/);
     const pin = pinMatch ? pinMatch[1] : '500081';

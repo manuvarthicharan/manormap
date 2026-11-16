@@ -88,31 +88,14 @@ export const App: React.FC = () => {
     perimeterMeters: 0
   });
 
-  // Theme state (Dark Mode / Light Mode with localStorage persistence)
-  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('app_theme') as 'dark' | 'light') || (localStorage.getItem('manormap_theme') as 'dark' | 'light') || 'light';
-  });
-
-  const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next = prev === 'dark' ? 'light' : 'dark';
-      localStorage.setItem('app_theme', next);
-      if (next === 'dark') {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
-      return next;
-    });
-  }, []);
-
+  // Enforce permanent clean light theme and clear any legacy theme overrides
   useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+    try {
+      localStorage.removeItem('app_theme');
+      localStorage.removeItem('manormap_theme');
+    } catch (_) {}
+    document.documentElement.classList.remove('dark');
+  }, []);
 
   // AI Agent Visual Overlays
   const [highlightedPropertyIds, setHighlightedPropertyIds] = useState<string[]>([]);
@@ -297,7 +280,7 @@ export const App: React.FC = () => {
     setIsLoadingLocationInfo(true);
     reverseGeocodeLocation(currentMapCenter[0], currentMapCenter[1])
       .then((info) => setDroppedLocationInfo(info))
-      .catch(() => {})
+      .catch(() => { })
       .finally(() => setIsLoadingLocationInfo(false));
   };
 
@@ -648,7 +631,7 @@ export const App: React.FC = () => {
   ]);
 
   return (
-    <main className="relative w-full h-[100dvh] overflow-hidden bg-slate-900">
+    <main className="relative w-full h-[100dvh] overflow-hidden bg-slate-50">
       {/* 
         1. THE FIRST SCREEN MUST BE THE MAP (GOOGLE MAPS POWERED)
         Occupies 100% of the available viewport.
@@ -681,7 +664,6 @@ export const App: React.FC = () => {
         landSurvey={landSurvey}
         onLandSurveyChange={setLandSurvey}
         onListThisLand={handleListFromSurvey}
-        theme={theme}
         highlightedPropertyIds={highlightedPropertyIds}
         aiPolygon={aiPolygon}
         onClearAIPolygon={() => setAiPolygon(null)}
@@ -722,8 +704,6 @@ export const App: React.FC = () => {
           comparedCount={comparedPropertyIds.length}
           onOpenCompare={() => setIsComparisonModalOpen(true)}
           onOpenAIAdvisor={() => handleOpenAIAdvisor()}
-          theme={theme}
-          onToggleTheme={toggleTheme}
         />
       )}
 
@@ -731,7 +711,7 @@ export const App: React.FC = () => {
         MOBILE FLOATING BOTTOM NAVIGATION BAR (Thumb-friendly, sleek, uncluttered)
       */}
       {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && (
-        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-slate-900/95 backdrop-blur-md text-white rounded-2xl shadow-2xl border border-slate-800 p-1.5 animate-in slide-in-from-bottom duration-200">
+        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-white/95 backdrop-blur-md text-slate-800 rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-1.5 animate-in slide-in-from-bottom duration-200">
           {/* Map / Recenter */}
           <button
             onClick={() => {
@@ -739,18 +719,18 @@ export const App: React.FC = () => {
                 mapInstance.panTo(new google.maps.LatLng(currentMapCenter[1], currentMapCenter[0]));
               }
             }}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95"
           >
-            <MapIcon className="w-5 h-5 text-blue-400" />
+            <MapIcon className="w-5 h-5 text-blue-600" />
             <span className="text-[10px] font-bold mt-0.5">Explore</span>
           </button>
 
           {/* AI Advisor */}
           <button
             onClick={() => handleOpenAIAdvisor()}
-            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95"
           >
-            <Sparkles className="w-5 h-5 text-emerald-400" />
+            <Sparkles className="w-5 h-5 text-emerald-600" />
             <span className="text-[10px] font-bold mt-0.5">AI Advisor</span>
           </button>
 
@@ -758,9 +738,9 @@ export const App: React.FC = () => {
           {comparedPropertyIds.length > 0 ? (
             <button
               onClick={() => setIsComparisonModalOpen(true)}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-300 hover:text-white transition-colors active:scale-95 relative"
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-600 hover:text-indigo-800 transition-colors active:scale-95 relative"
             >
-              <Scale className="w-5 h-5 text-indigo-400" />
+              <Scale className="w-5 h-5 text-indigo-600" />
               <span className="text-[10px] font-bold mt-0.5">Compare</span>
               <span className="absolute -top-1 right-2 bg-indigo-600 text-white text-[9px] font-extrabold px-1.5 py-0.2 rounded-full shadow-xs">
                 {comparedPropertyIds.length}
@@ -770,9 +750,9 @@ export const App: React.FC = () => {
             /* List Property */
             <button
               onClick={handleOpenAddProperty}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-300 hover:text-white transition-colors active:scale-95"
+              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95"
             >
-              <Plus className="w-5 h-5 text-amber-400" />
+              <Plus className="w-5 h-5 text-amber-500" />
               <span className="text-[10px] font-bold mt-0.5">List Prop</span>
             </button>
           )}
@@ -802,8 +782,6 @@ export const App: React.FC = () => {
           ).length
         }
         favoritesCount={favorites.length}
-        theme={theme}
-        onToggleTheme={toggleTheme}
       />
 
       {/* 

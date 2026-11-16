@@ -23,18 +23,18 @@ export const PinDropOverlay: React.FC<PinDropOverlayProps> = ({
     <div className="fixed inset-0 pointer-events-none z-30 select-none">
       {/* Top Banner with Instruction */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-auto max-w-md w-full px-4 animate-in slide-in-from-top duration-200">
-        <div className="bg-slate-900 text-white rounded-xl p-3.5 shadow-xl border border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center flex-shrink-0">
+        <div className="bg-white/95 text-slate-900 rounded-2xl p-3.5 shadow-xl shadow-slate-900/10 border border-slate-200 backdrop-blur-md flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0">
             <MapPin className="w-5 h-5 stroke-[2.2]" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-xs font-bold text-white flex items-center gap-1.5">
+            <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
               <span>Position Exact Property Rooftop</span>
             </div>
-            <div className="text-[11px] text-slate-300 truncate mt-0.5">
+            <div className="text-[11px] text-slate-500 truncate mt-0.5">
               {isLoadingLocation ? (
-                <span className="flex items-center gap-1.5 text-blue-300">
-                  <span className="w-2.5 h-2.5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin" />
+                <span className="flex items-center gap-1.5 text-blue-600">
+                  <span className="w-2.5 h-2.5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                   Resolving street address...
                 </span>
               ) : locationInfo ? (

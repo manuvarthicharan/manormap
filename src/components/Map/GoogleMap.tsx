@@ -30,72 +30,6 @@ import {
   RotateCcw
 } from 'lucide-react';
 
-const GOOGLE_MAPS_DARK_STYLE: google.maps.MapTypeStyle[] = [
-  { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#0f172a' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-  {
-    featureType: 'administrative.locality',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#cbd5e1' }]
-  },
-  {
-    featureType: 'poi',
-    elementType: 'labels',
-    stylers: [{ visibility: 'off' }]
-  },
-  {
-    featureType: 'poi.park',
-    elementType: 'geometry',
-    stylers: [{ color: '#132838' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#1e293b' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#0f172a' }]
-  },
-  {
-    featureType: 'road',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#64748b' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry',
-    stylers: [{ color: '#334155' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#1e293b' }]
-  },
-  {
-    featureType: 'road.highway',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#94a3b8' }]
-  },
-  {
-    featureType: 'transit',
-    elementType: 'labels',
-    stylers: [{ visibility: 'off' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#031738' }]
-  },
-  {
-    featureType: 'water',
-    elementType: 'labels.text.fill',
-    stylers: [{ color: '#38bdf8' }]
-  }
-];
-
 const CLEAN_LIGHT_STYLE: google.maps.MapTypeStyle[] = [
   {
     featureType: 'poi',
@@ -136,8 +70,6 @@ interface GoogleMapProps {
   landSurvey?: LandSurveyState;
   onLandSurveyChange?: (state: LandSurveyState) => void;
   onListThisLand?: (survey: LandSurveyState) => void;
-  // Theme
-  theme?: 'dark' | 'light';
   // AI Bridge Overlays
   highlightedPropertyIds?: string[];
   aiPolygon?: { coordinates: [number, number][]; color?: string; label?: string } | null;
@@ -175,7 +107,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   },
   onLandSurveyChange,
   onListThisLand,
-  theme = 'light',
   highlightedPropertyIds = [],
   aiPolygon = null,
   onClearAIPolygon
@@ -282,8 +213,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           maxZoom: 20,
           disableDefaultUI: true,
           gestureHandling: 'greedy',
-          styles: theme === 'dark' ? GOOGLE_MAPS_DARK_STYLE : cleanStyle,
-          backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc'
+          styles: cleanStyle,
+          backgroundColor: '#f8fafc'
         });
 
         mapRef.current = map;
@@ -691,15 +622,15 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     }
   }, [aiPolygon, mapLoaded]);
 
-  // Synchronize Google Maps styling with Dark / Light Theme
+  // Enforce permanent clean light styling for Google Maps
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || !window.google?.maps) return;
     (map as any).setOptions({
-      styles: theme === 'dark' ? GOOGLE_MAPS_DARK_STYLE : CLEAN_LIGHT_STYLE,
-      backgroundColor: theme === 'dark' ? '#0f172a' : '#f8fafc'
+      styles: CLEAN_LIGHT_STYLE,
+      backgroundColor: '#f8fafc'
     });
-  }, [theme, mapLoaded]);
+  }, [mapLoaded]);
 
   // Permanent Land Parcel Boundary Overlays for ALL Agricultural Land and Plots
   useEffect(() => {
@@ -1142,15 +1073,15 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* Selected Property Cadastral Land Boundary Indicator */}
       {selectedProperty?.boundaryPolygon && selectedProperty.boundaryPolygon.length >= 3 && !isDroppingPin && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-slate-900/95 text-white backdrop-blur-md rounded-2xl shadow-xl border border-emerald-500/80 px-4 py-2 flex items-center gap-2.5 animate-in fade-in">
-          <Ruler className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-white/95 text-slate-900 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-900/10 border border-emerald-500/50 px-4 py-2 flex items-center gap-2.5 animate-in fade-in">
+          <Ruler className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <div className="flex items-center gap-2 text-xs">
-            <span className="font-bold text-white">Shaded Land Boundary:</span>
-            <span className="font-extrabold text-emerald-400">
+            <span className="font-bold text-slate-800">Shaded Land Boundary:</span>
+            <span className="font-extrabold text-emerald-700">
               {selectedProperty.landMetrics?.areaAcres ? `${selectedProperty.landMetrics.areaAcres.toFixed(2)} Acres` : 'Shaded Land Parcel'}
             </span>
             {selectedProperty.landMetrics?.areaGunthas ? (
-              <span className="text-slate-400">({selectedProperty.landMetrics.areaGunthas.toFixed(1)} Gunthas)</span>
+              <span className="text-slate-500">({selectedProperty.landMetrics.areaGunthas.toFixed(1)} Gunthas)</span>
             ) : null}
           </div>
         </div>
@@ -1158,9 +1089,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* AI POLYGON OVERLAY BANNER */}
       {aiPolygon && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-blue-900/90 text-white backdrop-blur-md rounded-2xl shadow-xl border border-blue-600 p-2.5 flex items-center justify-between sm:justify-start gap-2 animate-in fade-in">
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-blue-50/95 text-blue-950 backdrop-blur-md rounded-2xl shadow-xl shadow-blue-900/5 border border-blue-200 p-2.5 flex items-center justify-between sm:justify-start gap-2 animate-in fade-in">
           <div className="flex items-center gap-2 min-w-0">
-            <Sparkles className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+            <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             <span className="text-xs font-bold truncate">
               AI Highlighted Zone: {aiPolygon.label || 'Selected Locality'}
             </span>
@@ -1168,7 +1099,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           {onClearAIPolygon && (
             <button
               onClick={onClearAIPolygon}
-              className="p-1 hover:bg-blue-800 rounded-lg text-slate-300 hover:text-white flex-shrink-0"
+              className="p-1 hover:bg-blue-100 rounded-lg text-slate-500 hover:text-slate-800 flex-shrink-0"
               title="Clear Highlight"
             >
               <X className="w-3.5 h-3.5" />
@@ -1314,7 +1245,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           className={`w-10 h-10 rounded-xl shadow-md flex items-center justify-center border transition-all active:scale-95 ${
             radiusSearch.active
               ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/25 ring-2 ring-blue-400/50'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Radius search"
         >
@@ -1334,7 +1265,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           className={`w-10 h-10 rounded-xl shadow-md flex items-center justify-center border transition-all active:scale-95 ${
             polygonSearch.active
               ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/25 ring-2 ring-blue-400/50'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Draw to search"
         >
@@ -1356,7 +1287,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           className={`w-10 h-10 rounded-xl shadow-md flex items-center justify-center border transition-all active:scale-95 ${
             landSurvey?.active
               ? 'bg-emerald-600 text-white border-emerald-600 shadow-emerald-500/25 ring-2 ring-emerald-400/50'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800'
+              : 'bg-white text-slate-700 hover:text-slate-900 hover:bg-slate-50 border-slate-200'
           }`}
           aria-label="Land boundary surveyor"
         >
@@ -1368,15 +1299,15 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           <button
             onClick={() => setIsLayerMenuOpen(!isLayerMenuOpen)}
             title="Switch Google Map Layer"
-            className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all active:scale-95"
+            className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-all active:scale-95"
             aria-label="Map layers"
           >
             <Layers className="w-5 h-5" />
           </button>
 
           {isLayerMenuOpen && (
-            <div className="absolute right-12 bottom-0 w-64 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 p-2 z-30 animate-in fade-in">
-              <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider px-3 py-1">
+            <div className="absolute right-12 bottom-0 w-64 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 z-30 animate-in fade-in">
+              <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider px-3 py-1">
                 Google Map Layer
               </div>
               <div className="space-y-1 mt-1">
@@ -1391,33 +1322,33 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     onClick={() => handleSetMapType(layer.id)}
                     className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors flex flex-col ${
                       activeMapTypeId === layer.id
-                        ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-bold'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 font-medium'
+                        ? 'bg-blue-50 text-blue-700 font-bold'
+                        : 'text-slate-700 hover:bg-slate-50 font-medium'
                     }`}
                   >
                     <span>{layer.name}</span>
-                    <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">{layer.desc}</span>
+                    <span className="text-[10px] text-slate-400 mt-0.5">{layer.desc}</span>
                   </button>
                 ))}
               </div>
 
               {/* Overlays & Specialized Layers */}
-              <div className="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800 px-1 space-y-1">
+              <div className="pt-2 mt-2 border-t border-slate-100 px-1 space-y-1">
                 {/* Transit & Metro Lines */}
                 <button
                   onClick={() => setShowTransitLayer(!showTransitLayer)}
                   className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
                     showTransitLayer
-                      ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-emerald-50 text-emerald-800'
+                      : 'text-slate-700 hover:bg-slate-50'
                   }`}
                 >
                   <span className="flex items-center gap-2">
-                    <Navigation className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                    <Navigation className="w-3.5 h-3.5 text-blue-600" />
                     <span>Metro & Transit Lines</span>
                   </span>
                   <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                    showTransitLayer ? 'bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                    showTransitLayer ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'
                   }`}>
                     {showTransitLayer ? 'ON' : 'OFF'}
                   </span>
@@ -1431,7 +1362,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleLocateMe}
           title="Current Location"
-          className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all active:scale-95"
+          className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-all active:scale-95"
           aria-label="Current Location"
         >
           <Locate className="w-5 h-5" />
@@ -1441,18 +1372,18 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleResetOrientation}
           title="Reset Orientation"
-          className="w-10 h-10 bg-white dark:bg-slate-900 rounded-xl shadow-md flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800 transition-all active:scale-95"
+          className="w-10 h-10 bg-white rounded-xl shadow-md flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 border border-slate-200 transition-all active:scale-95"
           aria-label="Reset orientation"
         >
           <Navigation className="w-4 h-4" />
         </button>
 
         {/* Zoom Controls group */}
-        <div className="w-10 bg-white dark:bg-slate-900 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 overflow-hidden flex flex-col">
+        <div className="w-10 bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden flex flex-col">
           <button
             onClick={handleZoomIn}
             title="Zoom in"
-            className="w-10 h-10 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors border-b border-slate-100 dark:border-slate-800"
+            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors border-b border-slate-100"
             aria-label="Zoom in"
           >
             <ZoomIn className="w-5 h-5" />
@@ -1460,7 +1391,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           <button
             onClick={handleZoomOut}
             title="Zoom out"
-            className="w-10 h-10 flex items-center justify-center text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-50 active:bg-slate-100 transition-colors"
             aria-label="Zoom out"
           >
             <ZoomOut className="w-5 h-5" />
@@ -1477,7 +1408,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           className={`w-10 h-10 rounded-xl shadow-md border flex items-center justify-center transition-all active:scale-95 relative ${
             isAnyToolActive
               ? 'bg-blue-600 text-white border-blue-600 shadow-blue-500/25 ring-2 ring-blue-400/50'
-              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
           }`}
           aria-label="Map tools and layers"
         >
@@ -1491,7 +1422,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleLocateMe}
           title="Locate Me"
-          className="w-10 h-10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all"
+          className="w-10 h-10 bg-white text-slate-700 rounded-xl shadow-md border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
           aria-label="Locate me"
         >
           <Locate className="w-4 h-4" />
@@ -1501,7 +1432,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         <button
           onClick={handleResetOrientation}
           title="Reset Orientation"
-          className="w-10 h-10 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-xl shadow-md border border-slate-200 dark:border-slate-800 flex items-center justify-center hover:bg-slate-50 dark:hover:bg-slate-800 active:scale-95 transition-all"
+          className="w-10 h-10 bg-white text-slate-700 rounded-xl shadow-md border border-slate-200 flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all"
           aria-label="Reset orientation"
         >
           <Navigation className="w-4 h-4" />
