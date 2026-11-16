@@ -108,7 +108,7 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -479,7 +479,7 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                     <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2">
                       <button
                         onClick={handleGoogleSignIn}
-                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs hover:shadow transition-all flex items-center justify-center gap-2"
+                        className="w-full sm:w-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs hover:shadow transition-all flex items-center justify-center gap-2"
                       >
                         <GoogleIcon className="w-4 h-4" />
                         <span>Continue with Google</span>

@@ -242,7 +242,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -336,7 +336,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
             {/* Photo Gallery Showcase with Lightbox Trigger */}
             {property.images && property.images.length > 0 && (
               <div className="space-y-3">
-                <div className="relative w-full h-64 sm:h-96 rounded-2xl overflow-hidden bg-slate-900 shadow-sm border border-slate-200 group">
+                <div className="relative w-full h-64 sm:h-96 rounded-2xl overflow-hidden bg-slate-100 shadow-sm border border-slate-200 group">
                   <img
                     src={property.images[selectedImageIndex] || property.images[0]}
                     alt={property.title}
@@ -563,8 +563,8 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-extrabold text-sm text-white">Live Institutional Audit</span>
-                        <span className="text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
-                          <span className="w-1.5 h-1.5 rounded-full bg-slate-950 animate-ping" />
+                        <span className="text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-900 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                          <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-ping" />
                           Google Gemini 2.5 Flash
                         </span>
                       </div>
@@ -697,15 +697,15 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 </div>
 
                 {/* Investment Verdict Box */}
-                <div className="p-4 rounded-2xl bg-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200/90 text-slate-900 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
                   <div>
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-800">
                       Institutional Investment Verdict
                     </div>
-                    <div className="text-sm sm:text-base font-black text-white mt-0.5">
+                    <div className="text-sm sm:text-base font-black text-slate-900 mt-0.5">
                       {geminiAudit?.investmentVerdict || aiAnalysis.investmentVerdict}
                     </div>
-                    <p className="text-[11px] text-slate-300 mt-1 max-w-lg">
+                    <p className="text-[11px] text-slate-600 mt-1 max-w-lg">
                       {geminiAudit?.priceAssessment || aiAnalysis.priceFairness}
                     </p>
                   </div>
@@ -787,40 +787,40 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
             {/* TAB CONTENT 3: MORTGAGE LOAN EMI CALCULATOR */}
             {activeTab === 'emi' && (
-              <div className="p-5 rounded-2xl bg-slate-900 text-white space-y-5 animate-in fade-in duration-150">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800">
+              <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 text-slate-900 space-y-5 animate-in fade-in duration-150">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
                       <Calculator className="w-5 h-5" />
                     </div>
                     <div>
-                      <div className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                      <div className="text-xs font-bold uppercase tracking-wider text-slate-600">
                         Home Loan EMI Estimator
                       </div>
-                      <div className="text-[11px] text-slate-400">Competitive bank rates starting at 8.5% p.a.</div>
+                      <div className="text-[11px] text-slate-500">Competitive bank rates starting at 8.5% p.a.</div>
                     </div>
                   </div>
                   <div className="text-left sm:text-right">
-                    <div className="text-[11px] text-slate-400 uppercase font-semibold">Estimated Monthly EMI</div>
-                    <div className="text-2xl font-black text-emerald-400 tracking-tight">
-                      ₹{monthlyEmi.toLocaleString('en-IN')}<span className="text-xs text-slate-300 font-normal">/month</span>
+                    <div className="text-[11px] text-slate-500 uppercase font-semibold">Estimated Monthly EMI</div>
+                    <div className="text-2xl font-black text-emerald-700 tracking-tight">
+                      ₹{monthlyEmi.toLocaleString('en-IN')}<span className="text-xs text-slate-500 font-normal">/month</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Progress Bar of Principal vs Interest */}
                 <div>
-                  <div className="flex justify-between text-xs font-semibold text-slate-300 mb-2">
+                  <div className="flex justify-between text-xs font-semibold text-slate-600 mb-2">
                     <span>Principal: ₹{(loanAmount / 100000).toFixed(1)} L ({principalPercentage}%)</span>
                     <span>Total Interest: ₹{(totalInterest / 100000).toFixed(1)} L</span>
                   </div>
-                  <div className="w-full h-3 rounded-full bg-slate-800 overflow-hidden flex">
+                  <div className="w-full h-3 rounded-full bg-slate-200 overflow-hidden flex">
                     <div
-                      className="bg-blue-500 h-full transition-all duration-200"
+                      className="bg-blue-600 h-full transition-all duration-200"
                       style={{ width: `${principalPercentage}%` }}
                     />
                     <div
-                      className="bg-emerald-400 h-full transition-all duration-200"
+                      className="bg-emerald-500 h-full transition-all duration-200"
                       style={{ width: `${100 - principalPercentage}%` }}
                     />
                   </div>
@@ -828,10 +828,10 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
                 {/* Interactive Controls */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1 text-xs">
-                  <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80">
-                    <div className="text-slate-300 flex justify-between mb-2">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-xs">
+                    <div className="text-slate-600 flex justify-between mb-2">
                       <span className="font-semibold">Loan Amount (₹)</span>
-                      <span className="font-bold text-white">₹{(loanAmount / 100000).toFixed(1)} L</span>
+                      <span className="font-bold text-slate-900">₹{(loanAmount / 100000).toFixed(1)} L</span>
                     </div>
                     <input
                       type="range"
@@ -840,14 +840,14 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                       step={100000}
                       value={loanAmount}
                       onChange={(e) => setLoanAmount(Number(e.target.value))}
-                      className="w-full accent-emerald-400 cursor-pointer"
+                      className="w-full accent-emerald-600 cursor-pointer"
                     />
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80">
-                    <div className="text-slate-300 flex justify-between mb-2">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-xs">
+                    <div className="text-slate-600 flex justify-between mb-2">
                       <span className="font-semibold">Interest Rate (% p.a.)</span>
-                      <span className="font-bold text-white">{interestRate}%</span>
+                      <span className="font-bold text-slate-900">{interestRate}%</span>
                     </div>
                     <input
                       type="range"
@@ -856,14 +856,14 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                       step={0.1}
                       value={interestRate}
                       onChange={(e) => setInterestRate(Number(e.target.value))}
-                      className="w-full accent-emerald-400 cursor-pointer"
+                      className="w-full accent-emerald-600 cursor-pointer"
                     />
                   </div>
 
-                  <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700/80">
-                    <div className="text-slate-300 flex justify-between mb-2">
+                  <div className="p-3 rounded-xl bg-white border border-slate-200 shadow-xs">
+                    <div className="text-slate-600 flex justify-between mb-2">
                       <span className="font-semibold">Loan Tenure</span>
-                      <span className="font-bold text-white">{loanTenureYears} Years</span>
+                      <span className="font-bold text-slate-900">{loanTenureYears} Years</span>
                     </div>
                     <input
                       type="range"
@@ -872,7 +872,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                       step={1}
                       value={loanTenureYears}
                       onChange={(e) => setLoanTenureYears(Number(e.target.value))}
-                      className="w-full accent-emerald-400 cursor-pointer"
+                      className="w-full accent-emerald-600 cursor-pointer"
                     />
                   </div>
                 </div>
@@ -1076,7 +1076,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
                   <button
                     type="submit"
-                    className="w-full h-10 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs flex items-center justify-center gap-1.5 active:scale-[0.98]"
                   >
                     <Clock className="w-3.5 h-3.5" />
                     <span>Confirm {tourType === 'in-person' ? 'Site Visit' : 'Video Tour'} on {tourDate} at {tourTime}</span>
@@ -1110,7 +1110,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <a
                   href={`tel:${cleanPhone}`}
-                  className="flex-1 sm:flex-initial h-11 px-5 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-2 active:scale-[0.98]"
+                  className="flex-1 sm:flex-initial h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-xs transition-colors flex items-center justify-center gap-2 active:scale-[0.98]"
                 >
                   <Phone className="w-3.5 h-3.5" />
                   <span>Call Lister</span>

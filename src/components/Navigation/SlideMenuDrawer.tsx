@@ -81,19 +81,19 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop (closes on click) */}
       <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs transition-opacity duration-300 ease-out animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs transition-opacity duration-300 ease-out animate-in fade-in"
         onClick={onClose}
       />
 
       {/* Slide-out Drawer Panel */}
-      <div className="fixed inset-y-0 left-0 w-[85vw] max-w-xs sm:max-w-sm bg-white dark:bg-slate-900 shadow-2xl flex flex-col h-[100dvh] z-50 transform transition duration-300 ease-out animate-in slide-in-from-left border-r border-slate-200/80 dark:border-slate-800">
+      <div className="fixed inset-y-0 left-0 w-[85vw] max-w-xs sm:max-w-sm bg-white shadow-2xl flex flex-col h-[100dvh] z-50 transform transition duration-300 ease-out animate-in slide-in-from-left border-r border-slate-200/80">
         {/* Sticky Top Header Bar */}
-        <div className="p-4 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 flex-shrink-0 bg-white dark:bg-slate-900">
+        <div className="p-4 flex items-center justify-between border-b border-slate-100 flex-shrink-0 bg-white">
           <Logo size="md" />
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors active:scale-95"
+            className="w-9 h-9 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors active:scale-95"
             aria-label="Close menu"
           >
             <X className="w-5 h-5" />
@@ -109,9 +109,9 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
           <div className="space-y-2">
             <div
               onClick={() => handleAction('profile')}
-              className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100/80 dark:hover:bg-slate-800 cursor-pointer border border-slate-100 dark:border-slate-700/60 transition-colors flex items-center gap-3 group"
+              className="p-3 rounded-2xl bg-slate-50 hover:bg-slate-100/80 cursor-pointer border border-slate-100 transition-colors flex items-center gap-3 group"
             >
-              <div className="w-11 h-11 rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-800 ring-2 ring-blue-500/20 shadow-sm flex-shrink-0 relative">
+              <div className="w-11 h-11 rounded-2xl overflow-hidden bg-slate-100 ring-2 ring-blue-500/20 shadow-sm flex-shrink-0 relative">
                 <img
                   src={userProfile.avatarUrl}
                   alt={userProfile.name}
@@ -125,12 +125,12 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                  <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                     {userProfile.name}
                   </span>
-                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                <div className="text-[11px] text-slate-500 truncate">
                   {userProfile.email}
                 </div>
               </div>
@@ -139,15 +139,15 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
 
             {/* Supabase Google Auth Action Button */}
             {userProfile.authProvider === 'google' && userProfile.isAuthenticated ? (
-              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-100 dark:border-emerald-800 text-[11px]">
-                <div className="flex items-center gap-1.5 text-emerald-800 dark:text-emerald-300 font-bold">
+              <div className="flex items-center justify-between px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-[11px]">
+                <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
                   <GoogleIcon className="w-3.5 h-3.5" />
                   <span>Google Cloud Synced</span>
                 </div>
                 <button
                   onClick={handleSignOut}
                   title="Sign Out"
-                  className="text-[10px] font-bold text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-white dark:hover:bg-slate-800 transition-colors"
+                  className="text-[10px] font-bold text-slate-600 hover:text-rose-600 flex items-center gap-1 px-2 py-0.5 rounded-md hover:bg-white transition-colors"
                 >
                   <LogOut className="w-3 h-3" />
                   <span>Sign Out</span>
@@ -156,7 +156,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
             ) : (
               <button
                 onClick={handleGoogleSignIn}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-bold rounded-xl border border-slate-200/90 dark:border-slate-700 shadow-2xs hover:shadow-xs transition-all active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold rounded-xl border border-slate-200/90 shadow-2xs hover:shadow-xs transition-all active:scale-[0.98]"
               >
                 <GoogleIcon className="w-4 h-4" />
                 <span>Sign In with Google</span>
@@ -164,13 +164,13 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
             )}
 
             {/* Supabase Database Architecture Status Pill */}
-            <div className="px-2.5 py-1 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 flex items-center justify-between text-[10px] text-slate-600 dark:text-slate-400 font-medium">
+            <div className="px-2.5 py-1 rounded-lg bg-slate-100/80 flex items-center justify-between text-[10px] text-slate-600 font-medium">
               <div className="flex items-center gap-1.5">
-                <Database className="w-3 h-3 text-blue-600 dark:text-blue-400" />
+                <Database className="w-3 h-3 text-blue-600" />
                 <span>Supabase PostGIS</span>
               </div>
               <span className={`font-bold flex items-center gap-1 ${
-                supabaseOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'
+                supabaseOnline ? 'text-emerald-600' : 'text-blue-600'
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full ${
                   supabaseOnline ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'
@@ -314,9 +314,9 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
         </div>
 
         {/* Sticky Bottom Attribution Footer */}
-        <div className="p-3.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/90 flex-shrink-0 text-center">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 space-y-0.5">
-            <div className="font-bold text-slate-700 dark:text-slate-200">ManorMap Real Estate Engine</div>
+        <div className="p-3.5 border-t border-slate-100 bg-slate-50 flex-shrink-0 text-center">
+          <div className="text-[11px] text-slate-500 space-y-0.5">
+            <div className="font-bold text-slate-700">ManorMap Real Estate Engine</div>
             <div>Google Maps JavaScript API &bull; PostGIS Spatial Engine</div>
           </div>
         </div>

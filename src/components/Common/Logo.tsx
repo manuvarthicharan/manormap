@@ -32,7 +32,7 @@ export const Logo: React.FC<LogoProps> = ({
           className={`w-auto object-contain transition-transform duration-200 group-hover:scale-105 filter drop-shadow-xs ${sizeClasses}`}
         />
       ) : (
-        <div className="h-10 px-3.5 bg-slate-900 rounded-xl flex items-center justify-center text-white font-black text-sm">
+        <div className="h-10 px-3.5 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-sm">
           Radar
         </div>
       )}

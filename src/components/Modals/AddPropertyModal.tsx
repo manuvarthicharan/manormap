@@ -312,7 +312,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -886,7 +886,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   <button
                     type="button"
                     onClick={handleAddPhotoUrl}
-                    className="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 flex-shrink-0"
+                    className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-colors flex items-center gap-1.5 active:scale-95 flex-shrink-0"
                   >
                     <Plus className="w-4 h-4 stroke-[3]" />
                     <span>Add Link</span>

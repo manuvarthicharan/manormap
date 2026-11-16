@@ -153,7 +153,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -284,7 +284,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
                     </button>
                     <button
                       onClick={() => handleFly(compareData.localityB)}
-                      className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
                     >
                       <Navigation className="w-3.5 h-3.5" />
                       <span>Fly {compareData.localityB.name}</span>

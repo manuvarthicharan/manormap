@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -102,16 +104,16 @@ body,
 }
 
 .prop-marker.selected .marker-pill {
-  background-color: #0f172a;
+  background-color: #2563eb;
   color: #ffffff;
-  border-color: #3b82f6;
-  box-shadow: 0 10px 28px -3px rgba(37, 99, 235, 0.45), 0 4px 10px -2px rgba(15, 23, 42, 0.3);
+  border-color: #ffffff;
+  box-shadow: 0 10px 28px -3px rgba(37, 99, 235, 0.5), 0 4px 10px -2px rgba(37, 99, 235, 0.3);
 }
 
 .prop-marker.highlighted .marker-pill {
-  background-color: #0f172a;
+  background-color: #059669;
   color: #ffffff;
-  border-color: #10b981;
+  border-color: #ffffff;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.45), 0 10px 28px -3px rgba(16, 185, 129, 0.5);
   animation: marker-glow 1.6s infinite alternate;
 }
@@ -140,7 +142,11 @@ body,
 }
 
 .prop-marker.selected .marker-tip {
-  border-top-color: #0f172a;
+  border-top-color: #2563eb;
+}
+
+.prop-marker.highlighted .marker-tip {
+  border-top-color: #059669;
 }
 
 /* Pulse animation for current location dot */

@@ -31,18 +31,18 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="w-full h-full min-h-screen flex items-center justify-center bg-slate-900 p-4 text-white">
-          <div className="max-w-md w-full bg-slate-800/90 border border-slate-700 rounded-3xl p-6 text-center space-y-4 shadow-2xl backdrop-blur-md">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto">
+        <div className="w-full h-full min-h-screen flex items-center justify-center bg-slate-50 p-4 text-slate-900">
+          <div className="max-w-md w-full bg-white border border-slate-200 rounded-3xl p-6 text-center space-y-4 shadow-2xl backdrop-blur-md">
+            <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-7 h-7" />
             </div>
-            <h2 className="text-lg font-bold text-white">Something went wrong</h2>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <h2 className="text-lg font-bold text-slate-900">Something went wrong</h2>
+            <p className="text-xs text-slate-500 leading-relaxed">
               {this.state.error?.message || 'An unexpected rendering error occurred. You can reload the application.'}
             </p>
             <button
               onClick={this.handleReload}
-              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 mx-auto active:scale-95"
+              className="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 mx-auto active:scale-95"
             >
               <RefreshCw className="w-4 h-4" />
               <span>Reload Application</span>

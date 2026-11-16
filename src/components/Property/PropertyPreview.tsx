@@ -41,15 +41,15 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
     <div className="z-30 pointer-events-auto">
       {/* Mobile: Bottom Sheet | Desktop: Floating Card near bottom left */}
       <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md w-full animate-in slide-in-from-bottom duration-200 ease-out z-30">
-        <div className="bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto">
+        <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto">
 
           {/* Mobile Drag Indicator */}
-          <div className="sm:hidden w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2.5" />
+          <div className="sm:hidden w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-2.5" />
 
           {/* Card Layout */}
           <div className="p-4 flex flex-col sm:flex-row gap-3.5 items-stretch">
             {/* Property Image & Badges */}
-            <div className="relative w-full sm:w-40 h-40 sm:h-36 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100 dark:bg-slate-800">
+            <div className="relative w-full sm:w-40 h-40 sm:h-36 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">
               <img
                 src={property.images[0]}
                 alt={property.title}
@@ -60,12 +60,13 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
               {/* Rent / Sale Badge */}
               <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
-                    }`}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${
+                    property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
+                  }`}
                 >
                   {property.type === 'sale' ? 'For Sale' : 'For Rent'}
                 </span>
-                <span className="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-900/80 backdrop-blur-sm text-white">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/95 backdrop-blur-sm text-slate-800 border border-slate-200/90 shadow-xs">
                   {property.category}
                 </span>
               </div>
@@ -73,7 +74,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
               {/* Close Button on Image for Mobile */}
               <button
                 onClick={onClose}
-                className="sm:hidden absolute top-2 right-2 w-7 h-7 rounded-full bg-slate-900/70 text-white flex items-center justify-center backdrop-blur-sm"
+                className="sm:hidden absolute top-2 right-2 w-7 h-7 rounded-full bg-white/95 text-slate-700 hover:text-slate-900 flex items-center justify-center backdrop-blur-sm shadow-md border border-slate-200"
                 aria-label="Dismiss preview"
               >
                 <X className="w-4 h-4" />
@@ -86,12 +87,12 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 {/* Desktop Top Row with Price, Compare, AI, Favorite & Close */}
                 <div className="hidden sm:flex items-center justify-between gap-1.5 mb-1">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                    <span className="text-xl font-black text-slate-900 tracking-tight">
                       {property.priceDisplay}
                     </span>
                     {property.verified && (
                       <span title="Verified Listing" className="flex items-center">
-                        <ShieldCheck className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <ShieldCheck className="w-4 h-4 text-blue-600" />
                       </span>
                     )}
                   </div>
@@ -101,8 +102,8 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                         onClick={() => onToggleCompare(property)}
                         className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                           isCompared
-                            ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800'
-                            : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'
+                            ? 'text-indigo-600 bg-indigo-50 border border-indigo-200'
+                            : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
                         }`}
                         title={isCompared ? 'In Comparison' : 'Add to Compare'}
                       >
@@ -112,7 +113,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     {onOpenAIAdvisor && (
                       <button
                         onClick={() => onOpenAIAdvisor(property)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition-colors"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"
                         title="Analyze with AI Agent"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
@@ -122,33 +123,33 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                       onClick={() => onToggleFavorite(property.id)}
                       className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                         isFavorite
-                          ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60'
-                          : 'text-slate-400 hover:text-rose-600 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          ? 'text-rose-600 bg-rose-50'
+                          : 'text-slate-400 hover:text-rose-600 hover:bg-slate-100'
                       }`}
-                      aria-label="Save property"
+                      title={isFavorite ? 'Remove Favorite' : 'Save Property'}
                     >
                       <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-600' : ''}`} />
                     </button>
                     <button
                       onClick={onClose}
-                      className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors"
-                      aria-label="Close preview"
+                      className="w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center transition-colors"
+                      aria-label="Close"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                {/* Mobile Price Row */}
-                <div className="sm:hidden flex items-center justify-between mb-1">
-                  <span className="text-xl font-black text-slate-900 dark:text-white">
+                {/* Mobile Top Row Price & Action Icons */}
+                <div className="sm:hidden flex items-center justify-between gap-1 mb-1">
+                  <span className="text-xl font-black text-slate-900">
                     {property.priceDisplay}
                   </span>
                   <div className="flex items-center gap-1">
                     {onToggleCompare && (
                       <button
                         onClick={() => onToggleCompare(property)}
-                        className={`p-1.5 rounded-lg ${isCompared ? 'text-indigo-600 bg-indigo-50 dark:bg-indigo-950/60' : 'text-slate-400 bg-slate-100 dark:bg-slate-800'}`}
+                        className={`p-1.5 rounded-lg ${isCompared ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400 bg-slate-100'}`}
                       >
                         <Scale className="w-4 h-4" />
                       </button>
@@ -156,7 +157,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     <button
                       onClick={() => onToggleFavorite(property.id)}
                       className={`p-1.5 rounded-lg ${
-                        isFavorite ? 'text-rose-600 bg-rose-50 dark:bg-rose-950/60' : 'text-slate-400 bg-slate-100 dark:bg-slate-800'
+                        isFavorite ? 'text-rose-600 bg-rose-50' : 'text-slate-400 bg-slate-100'
                       }`}
                     >
                       <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-600' : ''}`} />
@@ -164,51 +165,43 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                   </div>
                 </div>
 
-                {/* Title */}
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white line-clamp-1 mb-1">
+                {/* Property Title */}
+                <h3 className="text-xs sm:text-sm font-bold text-slate-900 line-clamp-1 mb-1">
                   {property.title}
                 </h3>
 
-                {/* Location */}
-                <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400 mb-2">
-                  <MapPin className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                {/* Locality & Address */}
+                <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
+                  <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                   <span className="truncate">
-                    {property.area}, {property.city}
+                    {property.area || property.address}, {property.city}
                   </span>
                 </div>
 
-                {/* Specs / Agricultural Metrics */}
+                {/* Key Spec Badges */}
                 {property.category === 'Agricultural Land' || property.category === 'Plot' ? (
-                  <div className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-semibold flex-wrap">
-                    <div className="flex items-center gap-1 text-emerald-700 dark:text-emerald-400">
-                      <span className="text-xs">🌾</span>
-                      <span className="font-extrabold">
-                        {property.landMetrics?.areaAcres
-                          ? `${property.landMetrics.areaAcres.toFixed(2)} Acres`
-                          : `${(property.areaSqFt / 43560).toFixed(2)} Acres`}
+                  <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold flex-wrap">
+                    <div className="flex items-center gap-1 text-emerald-700">
+                      🌾 <span>{property.landMetrics?.areaAcres ? `${property.landMetrics.areaAcres.toFixed(2)} Acres` : `${property.areaSqFt} sqft`}</span>
+                      {property.landMetrics?.areaGunthas ? (
+                        <span className="text-slate-500 font-medium">({property.landMetrics.areaGunthas.toFixed(1)} Gunthas)</span>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center gap-1 text-slate-500">
+                      <span>•</span>
+                      <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                        {(property.landMetrics as any)?.soilType || 'Agricultural Zone'}
                       </span>
                     </div>
-                    {property.landMetrics?.areaGunthas && (
-                      <span className="text-slate-500 dark:text-slate-400 font-medium">
-                        ({property.landMetrics.areaGunthas.toFixed(1)} Gunthas)
-                      </span>
-                    )}
-                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                      <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{property.areaSqFt.toLocaleString('en-IN')} sqft</span>
-                    </div>
-                    {property.boundaryPolygon && property.boundaryPolygon.length >= 3 && (
-                      <span className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-                        Shaded Land Parcel
-                      </span>
-                    )}
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-300 font-medium">
-                    <div className="flex items-center gap-1">
-                      <BedDouble className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{property.bhk} BHK</span>
-                    </div>
+                  <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium">
+                    {property.bhk && (
+                      <div className="flex items-center gap-1">
+                        <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                        <span>{property.bhk} BHK</span>
+                      </div>
+                    )}
                     <div className="flex items-center gap-1">
                       <Bath className="w-3.5 h-3.5 text-slate-400" />
                       <span>{property.bathrooms} Baths</span>

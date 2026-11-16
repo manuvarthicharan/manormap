@@ -138,7 +138,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
   return (
     <>
       <div
-        className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs z-50 transition-opacity"
+        className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 transition-opacity"
         onClick={onClose}
       />
       <div className="fixed inset-y-0 right-0 z-50 w-full sm:w-[480px] bg-white shadow-2xl flex flex-col justify-between border-l border-slate-200 animate-in slide-in-from-right duration-200">
@@ -150,8 +150,8 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
           <div>
             <div className="flex items-center gap-1.5">
               <h3 className="font-extrabold text-xs tracking-tight text-white uppercase">Intelligence Agent</h3>
-              <span className="text-[9px] font-bold bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 px-1.5 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs">
-                <span className="w-1 h-1 rounded-full bg-slate-950 animate-ping" />
+              <span className="text-[9px] font-bold bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-900 px-1.5 py-0.5 rounded uppercase flex items-center gap-1 shadow-xs">
+                <span className="w-1 h-1 rounded-full bg-slate-900 animate-ping" />
                 Gemini 2.5 Flash
               </span>
             </div>

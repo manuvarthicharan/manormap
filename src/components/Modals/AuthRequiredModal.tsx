@@ -40,7 +40,7 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity animate-in fade-in"
         onClick={onClose}
       />
 
@@ -112,11 +112,11 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
           <div className="space-y-2.5 pt-1">
             <button
               onClick={handleGoogleSignIn}
-              className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
+              className="w-full flex items-center justify-center gap-3 px-5 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-xs sm:text-sm shadow-md hover:shadow-lg transition-all active:scale-[0.98]"
             >
               <GoogleIcon className="w-4 h-4" />
               <span>Continue with Google</span>
-              <ArrowRight className="w-4 h-4 ml-auto text-slate-400" />
+              <ArrowRight className="w-4 h-4 ml-auto text-blue-200" />
             </button>
 
             <button

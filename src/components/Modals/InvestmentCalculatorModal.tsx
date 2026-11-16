@@ -62,8 +62,8 @@ export const InvestmentCalculatorModal: React.FC<InvestmentCalculatorModalProps>
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+      <div
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -211,11 +211,10 @@ export const InvestmentCalculatorModal: React.FC<InvestmentCalculatorModalProps>
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id as any)}
-                  className={`flex-1 py-2 rounded-lg transition-all text-center ${
-                    activeTab === tab.id
+                  className={`flex-1 py-2 rounded-lg transition-all text-center ${activeTab === tab.id
                       ? 'bg-white text-slate-900 shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
@@ -358,11 +357,10 @@ export const InvestmentCalculatorModal: React.FC<InvestmentCalculatorModalProps>
                   {roi.scenarios.map((sc, idx) => (
                     <div
                       key={idx}
-                      className={`p-4 rounded-2xl border transition-all ${
-                        idx === 1
+                      className={`p-4 rounded-2xl border transition-all ${idx === 1
                           ? 'border-blue-600 bg-blue-50/30 ring-2 ring-blue-500/20'
                           : 'border-slate-200 bg-white'
-                      }`}
+                        }`}
                     >
                       <div className="text-xs font-extrabold text-slate-900 mb-2">{sc.name}</div>
                       <div className="space-y-2 text-[11px] text-slate-600">

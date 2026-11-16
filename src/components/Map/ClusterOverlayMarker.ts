@@ -42,7 +42,7 @@ export class ClusterOverlayMarker {
       const priceText = minP === maxP ? minP : `${minP} – ${maxP}`;
 
       div.innerHTML = `
-        <div class="flex items-center gap-1.5 bg-slate-900/95 hover:bg-blue-600 text-white pl-2 pr-2.5 py-1.5 rounded-full shadow-lg border border-white/20 transition-all hover:scale-105 active:scale-95">
+        <div class="flex items-center gap-1.5 bg-white hover:bg-blue-600 text-slate-800 hover:text-white pl-2 pr-2.5 py-1.5 rounded-full shadow-lg border border-slate-200 transition-all hover:scale-105 active:scale-95">
           <span class="w-5 h-5 rounded-full bg-blue-500 text-[11px] font-black flex items-center justify-center text-white shadow-inner">${count}</span>
           <span class="text-xs font-bold tracking-tight">${priceText}</span>
         </div>

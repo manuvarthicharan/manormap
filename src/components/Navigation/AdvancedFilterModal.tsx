@@ -89,8 +89,8 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
-        className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm transition-opacity"
+      <div
+        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
 
@@ -150,11 +150,10 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => setDraft({ ...draft, type: opt.id as any })}
-                    className={`h-10 rounded-xl font-bold transition-all border text-xs flex items-center justify-center ${
-                      draft.type === opt.id
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`h-10 rounded-xl font-bold transition-all border text-xs flex items-center justify-center ${draft.type === opt.id
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -179,11 +178,10 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => setDraft({ ...draft, bhk: opt.id as any })}
-                    className={`h-10 rounded-xl font-bold transition-all border text-xs flex items-center justify-center ${
-                      draft.bhk === opt.id
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`h-10 rounded-xl font-bold transition-all border text-xs flex items-center justify-center ${draft.bhk === opt.id
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -210,11 +208,10 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   <button
                     key={cat}
                     onClick={() => setDraft({ ...draft, category: cat as any })}
-                    className={`h-10 px-3 rounded-xl font-semibold transition-all border text-xs flex items-center justify-center truncate ${
-                      draft.category === cat
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`h-10 px-3 rounded-xl font-semibold transition-all border text-xs flex items-center justify-center truncate ${draft.category === cat
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     {cat === 'all' ? 'All Types' : cat}
                   </button>
@@ -239,11 +236,10 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   <button
                     key={idx}
                     onClick={() => setDraft({ ...draft, maxPrice: opt.value })}
-                    className={`h-9 px-2 rounded-xl text-xs font-semibold transition-all border flex items-center justify-center truncate ${
-                      draft.maxPrice === opt.value
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`h-9 px-2 rounded-xl text-xs font-semibold transition-all border flex items-center justify-center truncate ${draft.maxPrice === opt.value
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -266,11 +262,10 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   <button
                     key={opt.id}
                     onClick={() => setDraft({ ...draft, furnishing: opt.id as any })}
-                    className={`h-10 rounded-xl font-semibold transition-all border text-xs flex items-center justify-center ${
-                      draft.furnishing === opt.id
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`h-10 rounded-xl font-semibold transition-all border text-xs flex items-center justify-center ${draft.furnishing === opt.id
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     {opt.label}
                   </button>
@@ -288,11 +283,10 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                   <button
                     key={f}
                     onClick={() => setDraft({ ...draft, facing: f as any })}
-                    className={`h-9 rounded-xl font-semibold transition-all border text-xs flex items-center justify-center ${
-                      draft.facing === f
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
-                        : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`h-9 rounded-xl font-semibold transition-all border text-xs flex items-center justify-center ${draft.facing === f
+                      ? 'bg-blue-600 text-white border-blue-600 shadow-sm'
+                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     {f === 'all' ? 'Any' : f}
                   </button>
@@ -315,9 +309,8 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                     <div className="text-[11px] text-slate-500">Exclude under-construction or delayed possession</div>
                   </div>
                 </div>
-                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                  draft.readyToMove ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
-                }`}>
+                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${draft.readyToMove ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
+                  }`}>
                   {draft.readyToMove && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
               </label>
@@ -335,9 +328,8 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
                     <div className="text-[11px] text-slate-500">Show only government RERA registered & identity-verified sellers</div>
                   </div>
                 </div>
-                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                  draft.verifiedOnly ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
-                }`}>
+                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${draft.verifiedOnly ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'
+                  }`}>
                   {draft.verifiedOnly && <Check className="w-3.5 h-3.5 stroke-[3]" />}
                 </div>
               </label>
