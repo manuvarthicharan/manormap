@@ -13,6 +13,8 @@ export class CustomOverlayMarker {
   private isHovered: boolean = false;
   private isHighlighted: boolean = false;
   private displayMode: PinDisplayMode = 'full';
+  private dx: number = 0;
+  private dy: number = 0;
   private zoomMode: 'full' | 'compact' | 'mini' = 'full';
   private onClick: (property: Property) => void;
 
@@ -45,10 +47,10 @@ export class CustomOverlayMarker {
       pillWrap.style.position = 'absolute';
       pillWrap.style.cursor = 'pointer';
       pillWrap.style.pointerEvents = 'auto';
-      pillWrap.style.left = '0px';
-      pillWrap.style.top = '0px';
+      pillWrap.style.left = `${this.dx}px`;
+      pillWrap.style.top = `${this.dy}px`;
       pillWrap.style.transform = 'translate(-50%, -100%)';
-      pillWrap.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease';
+      pillWrap.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, left 0.2s ease, top 0.2s ease';
 
       const pillEl = document.createElement('div');
       pillWrap.appendChild(pillEl);
@@ -80,7 +82,7 @@ export class CustomOverlayMarker {
 
       this.container = div;
 
-      // Render initial pill text
+      // Render initial pill text & layout
       this.renderPillContent();
 
       const panes = overlay.getPanes();
@@ -118,7 +120,23 @@ export class CustomOverlayMarker {
   }
 
   /**
-   * Updates Google Maps style Level of Detail mode
+   * Sets display mode and micro-stagger offset
+   */
+  public setLayout(
+    displayMode: PinDisplayMode,
+    dx: number = 0,
+    dy: number = 0,
+    zoomMode: 'full' | 'compact' | 'mini' = 'full'
+  ) {
+    this.displayMode = displayMode;
+    this.dx = dx;
+    this.dy = dy;
+    this.zoomMode = zoomMode;
+    this.renderPillContent();
+  }
+
+  /**
+   * Updates display mode
    */
   public setDisplayMode(mode: PinDisplayMode, zoomMode: 'full' | 'compact' | 'mini' = 'full') {
     this.displayMode = mode;
@@ -130,11 +148,13 @@ export class CustomOverlayMarker {
    * Backwards-compatible layout offset method
    */
   public setLayoutOffset(
-    _dx: number,
-    _dy: number,
+    dx: number,
+    dy: number,
     _isDisplaced: boolean,
     zoomMode: 'full' | 'compact' | 'mini' = 'full'
   ) {
+    this.dx = dx;
+    this.dy = dy;
     this.zoomMode = zoomMode;
     this.renderPillContent();
   }
@@ -184,6 +204,10 @@ export class CustomOverlayMarker {
   private renderPillContent() {
     if (!this.pill || !this.container || !this.pillWrapper) return;
 
+    // Apply micro-offset if staggering
+    this.pillWrapper.style.left = `${this.dx}px`;
+    this.pillWrapper.style.top = `${this.dy}px`;
+
     const isAgri =
       this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
     const dotColor = isAgri
@@ -195,37 +219,30 @@ export class CustomOverlayMarker {
     // Must show as full pill if selected, hovered, or highlighted
     const forceFull = this.isSelected || this.isHovered || this.isHighlighted;
 
-    // 1. HIDDEN STATE (Zoomed far out, fades completely)
-    if (this.displayMode === 'hidden' && !forceFull) {
-      this.container.style.opacity = '0';
-      this.container.style.pointerEvents = 'none';
-      this.container.style.transform = 'scale(0.5)';
-      return;
-    }
-
-    // 2. MICRO-DOT STATE (Dense / overlapping area in Google Maps style)
+    // 1. MICRO-DOT STATE (Clean, non-overlapping location dot when zoomed out)
     if (this.displayMode === 'dot' && !forceFull) {
-      this.container.style.opacity = '0.92';
+      this.container.style.opacity = '0.95';
       this.container.style.pointerEvents = 'auto';
       this.container.style.transform = 'scale(1)';
 
       this.pillWrapper.style.transform = 'translate(-50%, -50%)';
+      this.pillWrapper.setAttribute('title', `${this.property.title} • ${this.property.priceDisplay}`);
       if (this.tip) this.tip.style.display = 'none';
 
       this.pill.innerHTML = '';
       this.pill.className = 'marker-dot';
-      this.pill.style.width = '10px';
-      this.pill.style.height = '10px';
+      this.pill.style.width = '11px';
+      this.pill.style.height = '11px';
       this.pill.style.borderRadius = '9999px';
       this.pill.style.backgroundColor = dotColor;
       this.pill.style.border = '2px solid #ffffff';
-      this.pill.style.boxShadow = '0 1px 4px rgba(0,0,0,0.35)';
+      this.pill.style.boxShadow = '0 1.5px 5px rgba(0,0,0,0.35)';
       this.pill.style.cursor = 'pointer';
       this.pill.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
       return;
     }
 
-    // 3. FULL / COMPACT PILL STATE (Prominent or hovered/selected)
+    // 2. FULL / COMPACT PILL STATE (Locality view or hovered/selected)
     this.container.style.opacity = '1';
     this.container.style.pointerEvents = 'auto';
     this.container.style.transform = 'scale(1)';
@@ -235,6 +252,8 @@ export class CustomOverlayMarker {
       : this.isSelected
       ? 'translate(-50%, -112%) scale(1.12)'
       : 'translate(-50%, -100%)';
+
+    this.pillWrapper.setAttribute('title', `${this.property.title} • ${this.property.priceDisplay}`);
 
     if (this.tip) this.tip.style.display = 'block';
 

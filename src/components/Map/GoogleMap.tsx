@@ -341,7 +341,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
     const currentMarkerIds = new Set<string>();
 
-    pinLayouts.forEach(({ property, displayMode, zoomMode }) => {
+    pinLayouts.forEach(({ property, displayMode, dx, dy, zoomMode }) => {
       currentMarkerIds.add(property.id);
       const isSelected = selectedProperty?.id === property.id;
       const isHighlighted = highlightedPropertyIds.includes(property.id);
@@ -363,7 +363,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       marker.setSelected(isSelected);
       marker.setHighlighted(isHighlighted);
       marker.setHovered(isHovered);
-      marker.setDisplayMode(displayMode, zoomMode);
+      marker.setLayout(displayMode, dx, dy, zoomMode);
     });
 
     // Remove markers no longer active

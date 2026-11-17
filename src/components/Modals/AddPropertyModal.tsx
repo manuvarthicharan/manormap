@@ -732,8 +732,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       photoUrls.length > 0
         ? photoUrls
         : isAgri
-        ? ['https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80']
-        : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'];
+          ? ['https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80']
+          : ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80'];
 
     // Determine square feet area
     let calculatedAreaSqFt = builtUpAreaSqFt;
@@ -804,11 +804,11 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       boundaryPolygon: drawnLandBorders && drawnLandBorders.length >= 3 ? drawnLandBorders : undefined,
       landMetrics: isAgri
         ? {
-            areaAcres: landAcres,
-            areaGunthas: landGunthas,
-            areaSqYards: Math.round(landAcres * 4840 + landGunthas * 121),
-            perimeterMeters: landMetrics?.perimeterMeters || 420
-          }
+          areaAcres: landAcres,
+          areaGunthas: landGunthas,
+          areaSqYards: Math.round(landAcres * 4840 + landGunthas * 121),
+          perimeterMeters: landMetrics?.perimeterMeters || 420
+        }
         : undefined
     };
 
@@ -832,7 +832,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
 
       <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center">
         <div className="relative w-full max-w-3xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden border border-slate-200/90 max-h-[94dvh] sm:max-h-[88vh] flex flex-col transition-all">
-          
+
           {/* TOAST FEEDBACK */}
           {draftToast && (
             <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-full shadow-xl flex items-center gap-2 border border-slate-700 animate-in fade-in duration-200">
@@ -925,17 +925,15 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   key={step.num}
                   type="button"
                   onClick={() => handleJumpToStep(step.num)}
-                  className={`flex-shrink-0 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${
-                    isActive
+                  className={`flex-shrink-0 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${isActive
                       ? 'bg-blue-600 text-white font-bold shadow-xs'
                       : isPassed
-                      ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                      : 'hover:bg-slate-200/60 text-slate-600'
-                  }`}
+                        ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                        : 'hover:bg-slate-200/60 text-slate-600'
+                    }`}
                 >
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
-                    isActive ? 'bg-white/20 text-white' : isPassed ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'
-                  }`}>
+                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isActive ? 'bg-white/20 text-white' : isPassed ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'
+                    }`}>
                     {isPassed ? '✓' : step.num}
                   </span>
                   <span>{step.label}</span>
@@ -949,7 +947,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             key={currentStep}
             className={`p-4 sm:p-6 flex-1 overflow-y-auto ${slideDirection === 'forward' ? 'step-transition-forward' : 'step-transition-backward'}`}
           >
-            
+
             {/* ================= STEP 1: USER DETAILS ================= */}
             {currentStep === 1 && (
               <div className="space-y-6">
@@ -981,15 +979,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                           key={item.role}
                           type="button"
                           onClick={() => setUserRole(item.role as any)}
-                          className={`p-3.5 rounded-2xl border-2 text-left transition-all duration-200 active:scale-95 flex flex-col justify-between ${
-                            isSelected
+                          className={`p-3.5 rounded-2xl border-2 text-left transition-all duration-200 active:scale-95 flex flex-col justify-between ${isSelected
                               ? 'border-blue-600 bg-blue-50/70 text-blue-950 shadow-sm ring-2 ring-blue-500/20'
                               : 'border-slate-200 bg-white hover:border-slate-300 text-slate-800 hover:bg-slate-50'
-                          }`}
+                            }`}
                         >
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold mb-2 ${
-                            isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center font-bold mb-2 ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                            }`}>
                             <Icon className="w-4 h-4" />
                           </div>
                           <div>
@@ -1080,23 +1076,20 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       <div
                         key={item.id}
                         onClick={() => setPurpose(item.id as ListingType)}
-                        className={`p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3.5 active:scale-[0.98] ${
-                          isSelected
+                        className={`p-4 sm:p-5 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3.5 active:scale-[0.98] ${isSelected
                             ? 'border-blue-600 bg-blue-50/70 text-blue-950 shadow-md ring-2 ring-blue-500/20'
                             : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-slate-50 text-slate-800'
-                        }`}
+                          }`}
                       >
-                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold ${
-                          isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
-                        }`}>
+                        <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 font-extrabold ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600'
+                          }`}>
                           <item.icon className="w-5 h-5" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <span className="font-extrabold text-base">{item.title}</span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              isSelected ? 'bg-blue-200/80 text-blue-900' : 'bg-slate-100 text-slate-600'
-                            }`}>
+                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isSelected ? 'bg-blue-200/80 text-blue-900' : 'bg-slate-100 text-slate-600'
+                              }`}>
                               {item.badge}
                             </span>
                           </div>
@@ -1143,11 +1136,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                           else if (cat.id === 'Agricultural') setPropertyType('Agricultural Land');
                           else if (cat.id === 'Industrial') setPropertyType('Warehouse');
                         }}
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3.5 active:scale-[0.98] ${
-                          isSelected
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex items-start gap-3.5 active:scale-[0.98] ${isSelected
                             ? 'border-blue-600 bg-blue-50/70 text-blue-950 shadow-md ring-2 ring-blue-500/20'
                             : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 text-slate-800'
-                        }`}
+                          }`}
                       >
                         <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center flex-shrink-0 text-xl">
                           {cat.icon}
@@ -1155,9 +1147,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         <div className="flex-1">
                           <div className="flex items-center justify-between">
                             <span className="font-extrabold text-sm">{cat.title}</span>
-                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                              isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
-                            }`}>{cat.badge}</span>
+                            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isSelected ? 'bg-blue-100 text-blue-800' : 'bg-slate-100 text-slate-600'
+                              }`}>{cat.badge}</span>
                           </div>
                           <p className="text-xs text-slate-500 mt-1 leading-snug">{cat.desc}</p>
                         </div>
@@ -1198,11 +1189,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         key={p.id}
                         type="button"
                         onClick={() => setPropertyType(p.id as PropertyCategory)}
-                        className={`p-3.5 rounded-2xl border-2 text-left transition-all duration-200 active:scale-95 flex flex-col justify-between relative ${
-                          isSelected
+                        className={`p-3.5 rounded-2xl border-2 text-left transition-all duration-200 active:scale-95 flex flex-col justify-between relative ${isSelected
                             ? 'border-blue-600 bg-blue-50/70 text-blue-950 shadow-sm ring-2 ring-blue-500/20'
                             : 'border-slate-200 bg-white hover:border-slate-300 text-slate-800 hover:bg-slate-50'
-                        }`}
+                          }`}
                       >
                         {isRecommended && (
                           <span className="absolute top-2 right-2 text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-800">
@@ -1251,11 +1241,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                             key={num}
                             type="button"
                             onClick={() => setBhk(num)}
-                            className={`py-2 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 active:scale-95 ${
-                              bhk === num
+                            className={`py-2 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 active:scale-95 ${bhk === num
                                 ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                                 : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-                            }`}
+                              }`}
                           >
                             {num === 0 ? '0 / Studio' : num === 6 ? '6+ BHK' : `${num} BHK`}
                           </button>
@@ -1275,11 +1264,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={b}
                               type="button"
                               onClick={() => setBathrooms(b)}
-                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
-                                bathrooms === b
+                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${bathrooms === b
                                   ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                              }`}
+                                }`}
                             >
                               {b === 5 ? '5+' : b}
                             </button>
@@ -1297,11 +1285,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={balc}
                               type="button"
                               onClick={() => setBalconies(balc)}
-                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
-                                balconies === balc
+                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${balconies === balc
                                   ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                              }`}
+                                }`}
                             >
                               {balc === 5 ? '5+' : balc}
                             </button>
@@ -1376,11 +1363,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={f}
                               type="button"
                               onClick={() => setFurnishing(f as any)}
-                              className={`py-2 px-1 text-center rounded-xl border font-bold text-[11px] truncate ${
-                                furnishing === f
+                              className={`py-2 px-1 text-center rounded-xl border font-bold text-[11px] truncate ${furnishing === f
                                   ? 'border-blue-600 bg-blue-50 text-blue-900'
                                   : 'border-slate-200 bg-white text-slate-700'
-                              }`}
+                                }`}
                             >
                               {f}
                             </button>
@@ -1412,11 +1398,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                             key={p}
                             type="button"
                             onClick={() => setParking(p)}
-                            className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold truncate transition-all duration-150 active:scale-95 ${
-                              parking === p
+                            className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold truncate transition-all duration-150 active:scale-95 ${parking === p
                                 ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                                 : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                            }`}
+                              }`}
                           >
                             {p}
                           </button>
@@ -1440,11 +1425,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={num}
                               type="button"
                               onClick={() => setVillaBedrooms(num)}
-                              className={`py-2 rounded-lg border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
-                                villaBedrooms === num
+                              className={`py-2 rounded-lg border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${villaBedrooms === num
                                   ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                              }`}
+                                }`}
                             >
                               {num === 0 ? '0' : num === 6 ? '6+' : `${num}`}
                             </button>
@@ -1462,11 +1446,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={b}
                               type="button"
                               onClick={() => setVillaBathrooms(b)}
-                              className={`py-2 rounded-lg border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
-                                villaBathrooms === b
+                              className={`py-2 rounded-lg border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${villaBathrooms === b
                                   ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                              }`}
+                                }`}
                             >
                               {b === 6 ? '6+' : b}
                             </button>
@@ -1528,9 +1511,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={p}
                               type="button"
                               onClick={() => setVillaParking(p)}
-                              className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold truncate transition-all duration-150 active:scale-95 ${
-                                villaParking === p ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                              }`}
+                              className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold truncate transition-all duration-150 active:scale-95 ${villaParking === p ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                                }`}
                             >
                               {p}
                             </button>
@@ -1884,15 +1866,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                               key={src}
                               type="button"
                               onClick={() => toggleWaterSource(src)}
-                              className={`p-2.5 rounded-xl border text-left font-medium text-xs flex items-center gap-2 transition-all ${
-                                isChecked
+                              className={`p-2.5 rounded-xl border text-left font-medium text-xs flex items-center gap-2 transition-all ${isChecked
                                   ? 'border-emerald-600 bg-emerald-50 text-emerald-950 font-bold'
                                   : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                              }`}
+                                }`}
                             >
-                              <div className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${
-                                isChecked ? 'bg-emerald-600 text-white' : 'border border-slate-300'
-                              }`}>
+                              <div className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${isChecked ? 'bg-emerald-600 text-white' : 'border border-slate-300'
+                                }`}>
                                 {isChecked && '✓'}
                               </div>
                               <span>{src}</span>
@@ -2136,10 +2116,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       {purpose === 'sale'
                         ? 'Expected Selling Price (₹)'
                         : purpose === 'rent'
-                        ? 'Expected Monthly Rent (₹)'
-                        : purpose === 'lease'
-                        ? 'Total Lease Consideration (₹)'
-                        : 'Monthly Bed / Room Rent (₹)'}
+                          ? 'Expected Monthly Rent (₹)'
+                          : purpose === 'lease'
+                            ? 'Total Lease Consideration (₹)'
+                            : 'Monthly Bed / Room Rent (₹)'}
                       <span className="text-red-500">*</span>
                     </label>
                     <span className="text-xs font-black text-blue-800 bg-blue-100 px-2.5 py-0.5 rounded-full">
@@ -2237,11 +2217,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsNegotiable(true)}
-                      className={`py-3 rounded-xl border-2 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
-                        isNegotiable
+                      className={`py-3 rounded-xl border-2 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${isNegotiable
                           ? 'border-emerald-600 bg-emerald-50 text-emerald-900 shadow-xs'
                           : 'border-slate-200 bg-white text-slate-700'
-                      }`}
+                        }`}
                     >
                       <Check className="w-4 h-4 text-emerald-600" />
                       <span>Yes, Negotiable</span>
@@ -2250,11 +2229,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsNegotiable(false)}
-                      className={`py-3 rounded-xl border-2 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${
-                        !isNegotiable
+                      className={`py-3 rounded-xl border-2 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all ${!isNegotiable
                           ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
                           : 'border-slate-200 bg-white text-slate-700'
-                      }`}
+                        }`}
                     >
                       <span>Fixed Price</span>
                     </button>
@@ -2279,8 +2257,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   {(propertyType === 'Agricultural Land'
                     ? AGRICULTURAL_AMENITIES
                     : propertyType === 'Commercial' || propertyType === 'Office' || propertyType === 'Warehouse'
-                    ? COMMERCIAL_AMENITIES
-                    : RESIDENTIAL_AMENITIES
+                      ? COMMERCIAL_AMENITIES
+                      : RESIDENTIAL_AMENITIES
                   ).map((amenity) => {
                     const isSelected = selectedAmenities.includes(amenity);
                     return (
@@ -2288,15 +2266,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         key={amenity}
                         type="button"
                         onClick={() => toggleAmenity(amenity)}
-                        className={`p-3 rounded-xl border text-left font-semibold text-xs flex items-center gap-2.5 transition-all active:scale-[0.98] ${
-                          isSelected
+                        className={`p-3 rounded-xl border text-left font-semibold text-xs flex items-center gap-2.5 transition-all active:scale-[0.98] ${isSelected
                             ? 'border-blue-600 bg-blue-50/80 text-blue-950 font-bold shadow-xs'
                             : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                        }`}
+                          }`}
                       >
-                        <div className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${
-                          isSelected ? 'bg-blue-600 text-white' : 'border border-slate-300 bg-white'
-                        }`}>
+                        <div className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${isSelected ? 'bg-blue-600 text-white' : 'border border-slate-300 bg-white'
+                          }`}>
                           {isSelected && '✓'}
                         </div>
                         <span className="truncate">{amenity}</span>
@@ -2575,15 +2551,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                           key={doc}
                           type="button"
                           onClick={() => toggleProofDoc(doc)}
-                          className={`p-3 rounded-xl border text-left font-semibold text-xs flex items-center gap-2.5 transition-all ${
-                            isChecked
+                          className={`p-3 rounded-xl border text-left font-semibold text-xs flex items-center gap-2.5 transition-all ${isChecked
                               ? 'border-emerald-600 bg-emerald-50/80 text-emerald-950 font-bold shadow-xs'
                               : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
-                          }`}
+                            }`}
                         >
-                          <div className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${
-                            isChecked ? 'bg-emerald-600 text-white' : 'border border-slate-300 bg-white'
-                          }`}>
+                          <div className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${isChecked ? 'bg-emerald-600 text-white' : 'border border-slate-300 bg-white'
+                            }`}>
                             {isChecked && '✓'}
                           </div>
                           <span>{doc}</span>
