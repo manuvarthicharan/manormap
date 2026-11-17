@@ -151,25 +151,25 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
 
   // 5. Property Details (dynamic by property type)
   // Apartment specifics
-  const [bhk, setBhk] = useState<number>(3);
-  const [bathrooms, setBathrooms] = useState<number>(3);
-  const [balconies, setBalconies] = useState<number>(2);
-  const [floorNumber, setFloorNumber] = useState<number>(8);
-  const [totalFloors, setTotalFloors] = useState<number>(18);
+  const [bhk, setBhk] = useState<number>(2);
+  const [bathrooms, setBathrooms] = useState<number>(2);
+  const [balconies, setBalconies] = useState<number>(1);
+  const [floorNumber, setFloorNumber] = useState<number>(5);
+  const [totalFloors, setTotalFloors] = useState<number>(14);
   const [furnishing, setFurnishing] = useState<'Unfurnished' | 'Semi-Furnished' | 'Fully Furnished'>('Semi-Furnished');
-  const [carpetAreaSqFt, setCarpetAreaSqFt] = useState<number>(1780);
-  const [builtUpAreaSqFt, setBuiltUpAreaSqFt] = useState<number>(2150);
+  const [carpetAreaSqFt, setCarpetAreaSqFt] = useState<number>(1450);
+  const [builtUpAreaSqFt, setBuiltUpAreaSqFt] = useState<number>(1800);
   const [facing, setFacing] = useState('East (Vastu Compliant)');
-  const [parking, setParking] = useState('2 Covered');
+  const [parking, setParking] = useState('1 Covered');
   const [readyToMove, setReadyToMove] = useState(true);
 
   // House / Villa specifics
-  const [villaBedrooms, setVillaBedrooms] = useState<number>(4);
-  const [villaBathrooms, setVillaBathrooms] = useState<number>(4);
+  const [villaBedrooms, setVillaBedrooms] = useState<number>(3);
+  const [villaBathrooms, setVillaBathrooms] = useState<number>(3);
   const [villaFloors, setVillaFloors] = useState<string>('G+1 (Duplex)');
-  const [villaPlotArea, setVillaPlotArea] = useState<number>(267); // sq yds
-  const [villaBuiltUpArea, setVillaBuiltUpArea] = useState<number>(3400); // sq ft
-  const [villaParking, setVillaParking] = useState<string>('2 Covered Cars');
+  const [villaPlotArea, setVillaPlotArea] = useState<number>(200); // sq yds
+  const [villaBuiltUpArea, setVillaBuiltUpArea] = useState<number>(2500); // sq ft
+  const [villaParking, setVillaParking] = useState<string>('1 Covered Car');
 
   // Open Plot specifics
   const [plotArea, setPlotArea] = useState<number>(300); // sq.yds
@@ -334,13 +334,17 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
     const purposeStr = purpose === 'sale' ? 'Sale' : purpose === 'rent' ? 'Rent' : purpose === 'lease' ? 'Lease' : 'PG';
 
     if (propertyType === 'Apartment') {
-      const autoTitle = `${bhk} BHK Luxury ${propertyType} in ${projectOrSociety || locStr}`;
-      const autoDesc = `Spacious ${bhk} BHK luxury apartment situated on floor ${floorNumber} of ${totalFloors} floors with ${builtUpAreaSqFt} sq.ft built-up area (${carpetAreaSqFt} sq.ft carpet). Vastu compliant facing ${facing}, ${furnishing}, with ${parking} parking spaces. Located in a prime gated community with ${selectedAmenities.slice(0, 4).join(', ')}. Excellent connectivity to major IT corridors and transit.`;
+      const bhkStr = bhk === 0 ? 'Studio / 1 RK' : `${bhk} BHK`;
+      const autoTitle = `${bhkStr} Luxury ${propertyType} in ${projectOrSociety || locStr}`;
+      const bathStr = bathrooms === 0 ? 'common washrooms' : `${bathrooms} bathrooms`;
+      const balcStr = balconies === 0 ? 'no attached balcony' : `${balconies} balconies`;
+      const autoDesc = `Spacious ${bhkStr} luxury apartment situated on floor ${floorNumber} of ${totalFloors} floors with ${builtUpAreaSqFt} sq.ft built-up area (${carpetAreaSqFt} sq.ft carpet), ${bathStr}, and ${balcStr}. Vastu compliant facing ${facing}, ${furnishing}, with ${parking} parking spaces. Located in a prime gated community with ${selectedAmenities.slice(0, 4).join(', ')}. Excellent connectivity to major IT corridors and transit.`;
       setPropertyTitle(autoTitle);
       setDescription(autoDesc);
     } else if (propertyType === 'Villa' || propertyType === 'Independent House') {
-      const autoTitle = `${villaBedrooms} BHK Gated ${propertyType} in ${projectOrSociety || locStr}`;
-      const autoDesc = `Magnificent ${villaBedrooms} BHK ${propertyType} (${villaFloors}) spanning ${villaBuiltUpArea} sq.ft built-up on a prime ${villaPlotArea} sq.yds plot. Features ${villaBathrooms} bathrooms, ${villaParking}, facing ${facing}, with luxury private landscaping and world-class society amenities including ${selectedAmenities.slice(0, 4).join(', ')}.`;
+      const bedStr = villaBedrooms === 0 ? 'Studio / Open Layout' : `${villaBedrooms} BHK`;
+      const autoTitle = `${bedStr} Gated ${propertyType} in ${projectOrSociety || locStr}`;
+      const autoDesc = `Magnificent ${bedStr} ${propertyType} (${villaFloors}) spanning ${villaBuiltUpArea} sq.ft built-up on a prime ${villaPlotArea} sq.yds plot. Features ${villaBathrooms} bathrooms, ${villaParking}, facing ${facing}, with luxury private landscaping and world-class society amenities including ${selectedAmenities.slice(0, 4).join(', ')}.`;
       setPropertyTitle(autoTitle);
       setDescription(autoDesc);
     } else if (propertyType === 'Open Plot') {
@@ -827,7 +831,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
       />
 
       <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center">
-        <div className="relative w-full max-w-3xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden border border-slate-200/90 max-h-[96dvh] sm:max-h-[92vh] flex flex-col transition-all">
+        <div className="relative w-full max-w-3xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden border border-slate-200/90 max-h-[94dvh] sm:max-h-[88vh] flex flex-col transition-all">
           
           {/* TOAST FEEDBACK */}
           {draftToast && (
@@ -941,7 +945,10 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
           </div>
 
           {/* 2. STEP CONTAINER (ANIMATED SLIDE PER STEP) */}
-          <div className={`p-4 sm:p-7 flex-1 overflow-y-auto ${slideDirection === 'forward' ? 'animate-in fade-in slide-in-from-right-3 duration-200' : 'animate-in fade-in slide-in-from-left-3 duration-200'}`}>
+          <div
+            key={currentStep}
+            className={`p-4 sm:p-6 flex-1 overflow-y-auto ${slideDirection === 'forward' ? 'step-transition-forward' : 'step-transition-backward'}`}
+          >
             
             {/* ================= STEP 1: USER DETAILS ================= */}
             {currentStep === 1 && (
@@ -1238,19 +1245,19 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
                         BHK Configuration
                       </label>
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                        {[1, 2, 3, 4, 5, 6].map((num) => (
+                      <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
+                        {[0, 1, 2, 3, 4, 5, 6].map((num) => (
                           <button
                             key={num}
                             type="button"
                             onClick={() => setBhk(num)}
-                            className={`py-2.5 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all ${
+                            className={`py-2 rounded-xl border-2 font-bold text-xs sm:text-sm transition-all duration-150 active:scale-95 ${
                               bhk === num
                                 ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
-                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
                             }`}
                           >
-                            {num} BHK
+                            {num === 0 ? '0 / Studio' : num === 6 ? '6+ BHK' : `${num} BHK`}
                           </button>
                         ))}
                       </div>
@@ -1262,19 +1269,19 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
                           Bathrooms
                         </label>
-                        <div className="flex gap-2">
-                          {[1, 2, 3, 4, 5].map((b) => (
+                        <div className="flex gap-1.5">
+                          {[0, 1, 2, 3, 4, 5].map((b) => (
                             <button
                               key={b}
                               type="button"
                               onClick={() => setBathrooms(b)}
-                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs ${
+                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
                                 bathrooms === b
-                                  ? 'border-blue-600 bg-blue-50 text-blue-900'
-                                  : 'border-slate-200 bg-white text-slate-700'
+                                  ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                               }`}
                             >
-                              {b}
+                              {b === 5 ? '5+' : b}
                             </button>
                           ))}
                         </div>
@@ -1284,19 +1291,19 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
                           Balconies
                         </label>
-                        <div className="flex gap-2">
-                          {[0, 1, 2, 3, 4].map((balc) => (
+                        <div className="flex gap-1.5">
+                          {[0, 1, 2, 3, 4, 5].map((balc) => (
                             <button
                               key={balc}
                               type="button"
                               onClick={() => setBalconies(balc)}
-                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs ${
+                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
                                 balconies === balc
-                                  ? 'border-blue-600 bg-blue-50 text-blue-900'
-                                  : 'border-slate-200 bg-white text-slate-700'
+                                  ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                               }`}
                             >
-                              {balc}
+                              {balc === 5 ? '5+' : balc}
                             </button>
                           ))}
                         </div>
@@ -1394,30 +1401,52 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         />
                       </div>
                     </div>
+
+                    <div>
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
+                        Car Parking
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5">
+                        {['0 (None)', '1 Covered', '2 Covered', '3+ Covered', 'Open Parking'].map((p) => (
+                          <button
+                            key={p}
+                            type="button"
+                            onClick={() => setParking(p)}
+                            className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold truncate transition-all duration-150 active:scale-95 ${
+                              parking === p
+                                ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
+                                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {/* 5B: HOUSE / VILLA SPECIFICS */}
                 {(propertyType === 'Villa' || propertyType === 'Independent House') && (
                   <div className="space-y-4">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
                           Bedrooms
                         </label>
-                        <div className="flex gap-2">
-                          {[3, 4, 5, 6].map((num) => (
+                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-1">
+                          {[0, 1, 2, 3, 4, 5, 6].map((num) => (
                             <button
                               key={num}
                               type="button"
                               onClick={() => setVillaBedrooms(num)}
-                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs ${
+                              className={`py-2 rounded-lg border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
                                 villaBedrooms === num
-                                  ? 'border-blue-600 bg-blue-50 text-blue-900'
-                                  : 'border-slate-200 bg-white text-slate-700'
+                                  ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                               }`}
                             >
-                              {num} BHK
+                              {num === 0 ? '0' : num === 6 ? '6+' : `${num}`}
                             </button>
                           ))}
                         </div>
@@ -1427,19 +1456,19 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
                           Bathrooms
                         </label>
-                        <div className="flex gap-2">
-                          {[3, 4, 5, 6].map((b) => (
+                        <div className="grid grid-cols-4 sm:grid-cols-7 gap-1">
+                          {[0, 1, 2, 3, 4, 5, 6].map((b) => (
                             <button
                               key={b}
                               type="button"
                               onClick={() => setVillaBathrooms(b)}
-                              className={`flex-1 py-2 rounded-xl border-2 font-bold text-xs ${
+                              className={`py-2 rounded-lg border-2 font-bold text-xs transition-all duration-150 active:scale-95 ${
                                 villaBathrooms === b
-                                  ? 'border-blue-600 bg-blue-50 text-blue-900'
-                                  : 'border-slate-200 bg-white text-slate-700'
+                                  ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs'
+                                  : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
                               }`}
                             >
-                              {b}
+                              {b === 6 ? '6+' : b}
                             </button>
                           ))}
                         </div>
@@ -1493,12 +1522,20 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5 block">
                           Car Parking Spaces
                         </label>
-                        <input
-                          type="text"
-                          value={villaParking}
-                          onChange={(e) => setVillaParking(e.target.value)}
-                          className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:border-blue-600 outline-none text-sm font-semibold text-slate-900 bg-white"
-                        />
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                          {['0 (Street)', '1 Covered', '2 Covered', '3+ Covered'].map((p) => (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => setVillaParking(p)}
+                              className={`py-2 px-1 text-center rounded-xl border text-[11px] font-bold truncate transition-all duration-150 active:scale-95 ${
+                                villaParking === p ? 'border-blue-600 bg-blue-50 text-blue-900 shadow-xs' : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300'
+                              }`}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                        </div>
                       </div>
 
                       <div>
@@ -2799,12 +2836,12 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                         <div className="text-slate-800 font-semibold space-y-0.5">
                           {propertyType === 'Apartment' && (
                             <div>
-                              {bhk} BHK • {carpetAreaSqFt} sq.ft carpet ({builtUpAreaSqFt} sq.ft built-up) • Floor {floorNumber} of {totalFloors} • {furnishing} • Facing {facing}
+                              {bhk === 0 ? 'Studio / 0 BHK' : `${bhk} BHK`} • {carpetAreaSqFt} sq.ft carpet ({builtUpAreaSqFt} sq.ft built-up) • Floor {floorNumber} of {totalFloors} • {furnishing} • Facing {facing}
                             </div>
                           )}
                           {(propertyType === 'Villa' || propertyType === 'Independent House') && (
                             <div>
-                              {villaBedrooms} BHK • {villaPlotArea} sq.yds plot • {villaBuiltUpArea} sq.ft built-up • {villaFloors} • {villaParking}
+                              {villaBedrooms === 0 ? 'Studio / Open Layout' : `${villaBedrooms} BHK`} • {villaPlotArea} sq.yds plot • {villaBuiltUpArea} sq.ft built-up • {villaFloors} • {villaParking}
                             </div>
                           )}
                           {propertyType === 'Open Plot' && (

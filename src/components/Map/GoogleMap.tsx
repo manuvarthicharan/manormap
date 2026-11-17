@@ -323,22 +323,29 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     };
   }, []);
 
-  // Compute collision-free layout for all individual property pins directly on map
+  // Compute Google Maps style LOD layout for all individual property pins directly on map
   const pinLayouts = useMemo(() => {
-    return computeDisplacedPinLayout(properties, currentZoom, selectedProperty?.id);
-  }, [properties, currentZoom, selectedProperty?.id]);
+    return computeDisplacedPinLayout(
+      properties,
+      currentZoom,
+      selectedProperty?.id,
+      highlightedPropertyIds,
+      hoveredPropertyId
+    );
+  }, [properties, currentZoom, selectedProperty?.id, highlightedPropertyIds, hoveredPropertyId]);
 
-  // Synchronize Individual Markers with collision-free staggering
+  // Synchronize Individual Markers with Google Maps Level-of-Detail & Density Culling
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !mapLoaded || typeof window === 'undefined' || !window.google?.maps) return;
 
     const currentMarkerIds = new Set<string>();
 
-    pinLayouts.forEach(({ property, dx, dy, isDisplaced, zoomMode }) => {
+    pinLayouts.forEach(({ property, displayMode, zoomMode }) => {
       currentMarkerIds.add(property.id);
       const isSelected = selectedProperty?.id === property.id;
       const isHighlighted = highlightedPropertyIds.includes(property.id);
+      const isHovered = hoveredPropertyId === property.id;
 
       let marker = markersRef.current.get(property.id);
 
@@ -351,12 +358,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         });
 
         markersRef.current.set(property.id, marker);
-      } else {
-        marker.setSelected(isSelected);
-        marker.setHighlighted(isHighlighted);
       }
 
-      marker.setLayoutOffset(dx, dy, isDisplaced, zoomMode);
+      marker.setSelected(isSelected);
+      marker.setHighlighted(isHighlighted);
+      marker.setHovered(isHovered);
+      marker.setDisplayMode(displayMode, zoomMode);
     });
 
     // Remove markers no longer active
@@ -366,7 +373,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         markersRef.current.delete(id);
       }
     });
-  }, [pinLayouts, selectedProperty, highlightedPropertyIds, mapLoaded, onSelectProperty]);
+  }, [pinLayouts, selectedProperty, highlightedPropertyIds, hoveredPropertyId, mapLoaded, onSelectProperty]);
 
   // Synchronize hovered property
   useEffect(() => {

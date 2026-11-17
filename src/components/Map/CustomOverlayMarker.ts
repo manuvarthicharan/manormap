@@ -1,11 +1,9 @@
 import { Property } from '../../types';
+import { PinDisplayMode } from './pinDeconfliction';
 
 export class CustomOverlayMarker {
   private overlay: google.maps.OverlayView;
   private container: HTMLDivElement | null = null;
-  private anchorDot: HTMLDivElement | null = null;
-  private svgLine: SVGSVGElement | null = null;
-  private lineElement: SVGLineElement | null = null;
   private pillWrapper: HTMLDivElement | null = null;
   private pill: HTMLDivElement | null = null;
   private tip: HTMLDivElement | null = null;
@@ -14,12 +12,9 @@ export class CustomOverlayMarker {
   private isSelected: boolean = false;
   private isHovered: boolean = false;
   private isHighlighted: boolean = false;
-  private onClick: (property: Property) => void;
-
-  private dx: number = 0;
-  private dy: number = 0;
-  private isDisplaced: boolean = false;
+  private displayMode: PinDisplayMode = 'full';
   private zoomMode: 'full' | 'compact' | 'mini' = 'full';
+  private onClick: (property: Property) => void;
 
   constructor(
     property: Property,
@@ -34,73 +29,28 @@ export class CustomOverlayMarker {
     const overlay = new google.maps.OverlayView();
 
     overlay.onAdd = () => {
-      const isAgri =
-        this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
-      const themeColor = isAgri ? '#059669' : '#2563eb';
-
       // Outer wrapper placed at exact ground coordinates
       const div = document.createElement('div');
       div.className = 'prop-marker-wrapper';
       div.style.position = 'absolute';
       div.style.pointerEvents = 'none';
-      div.style.zIndex = this.isSelected ? '180' : '20';
+      div.style.zIndex = this.isSelected ? '220' : '20';
       div.style.visibility = 'hidden';
+      div.style.transition = 'opacity 0.25s ease-out, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
       div.setAttribute('data-property-id', this.property.id);
 
-      // 1. Ground Anchor Dot (visible when displaced)
-      const dot = document.createElement('div');
-      dot.className = 'pin-anchor-dot';
-      dot.style.position = 'absolute';
-      dot.style.left = '0px';
-      dot.style.top = '0px';
-      dot.style.transform = 'translate(-50%, -50%)';
-      dot.style.width = '8px';
-      dot.style.height = '8px';
-      dot.style.borderRadius = '9999px';
-      dot.style.backgroundColor = themeColor;
-      dot.style.border = '2px solid #ffffff';
-      dot.style.boxShadow = '0 1px 4px rgba(0,0,0,0.35)';
-      dot.style.display = 'none';
-      div.appendChild(dot);
-      this.anchorDot = dot;
-
-      // 2. Leader Connector Stem SVG (visible when displaced)
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.setAttribute('class', 'pin-leader-stem');
-      svg.style.position = 'absolute';
-      svg.style.overflow = 'visible';
-      svg.style.left = '0px';
-      svg.style.top = '0px';
-      svg.style.pointerEvents = 'none';
-      svg.style.display = 'none';
-
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', '0');
-      line.setAttribute('y1', '0');
-      line.setAttribute('x2', '0');
-      line.setAttribute('y2', '0');
-      line.setAttribute('stroke', '#94a3b8');
-      line.setAttribute('stroke-width', '1.5');
-      line.setAttribute('stroke-dasharray', '2,2');
-      line.setAttribute('opacity', '0.85');
-      svg.appendChild(line);
-      div.appendChild(svg);
-      this.svgLine = svg;
-      this.lineElement = line;
-
-      // 3. Interactive Price Pill
+      // Interactive Price Pill / Dot Wrapper
       const pillWrap = document.createElement('div');
       pillWrap.className = `prop-marker ${this.isSelected ? 'selected' : ''}`;
       pillWrap.style.position = 'absolute';
       pillWrap.style.cursor = 'pointer';
       pillWrap.style.pointerEvents = 'auto';
-      pillWrap.style.transform = 'translate(-50%, -100%)';
       pillWrap.style.left = '0px';
       pillWrap.style.top = '0px';
-      pillWrap.style.transition = 'transform 0.2s ease, left 0.25s cubic-bezier(0.16, 1, 0.3, 1), top 0.25s cubic-bezier(0.16, 1, 0.3, 1)';
+      pillWrap.style.transform = 'translate(-50%, -100%)';
+      pillWrap.style.transition = 'transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease';
 
       const pillEl = document.createElement('div');
-      pillEl.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''}`;
       pillWrap.appendChild(pillEl);
       this.pill = pillEl;
 
@@ -111,10 +61,6 @@ export class CustomOverlayMarker {
 
       div.appendChild(pillWrap);
       this.pillWrapper = pillWrap;
-
-      // Render initial pill text
-      this.renderPillContent();
-      this.applyLayout();
 
       // Click & Touch Handlers
       const handleTrigger = (e: Event) => {
@@ -128,11 +74,14 @@ export class CustomOverlayMarker {
       pillWrap.addEventListener('mousedown', (e) => e.stopPropagation());
       pillWrap.addEventListener('dblclick', (e) => e.stopPropagation());
 
-      // Hover Handlers
+      // Hover Handlers (Instant expansion of micro-dots into full tags)
       pillWrap.addEventListener('mouseenter', () => this.setHovered(true));
       pillWrap.addEventListener('mouseleave', () => this.setHovered(false));
 
       this.container = div;
+
+      // Render initial pill text
+      this.renderPillContent();
 
       const panes = overlay.getPanes();
       if (panes && panes.overlayMouseTarget) {
@@ -169,92 +118,25 @@ export class CustomOverlayMarker {
   }
 
   /**
-   * Sets dynamic offset & zoom representation calculated by the de-confliction engine
+   * Updates Google Maps style Level of Detail mode
    */
-  public setLayoutOffset(
-    dx: number,
-    dy: number,
-    isDisplaced: boolean,
-    zoomMode: 'full' | 'compact' | 'mini'
-  ) {
-    this.dx = dx;
-    this.dy = dy;
-    this.isDisplaced = isDisplaced;
+  public setDisplayMode(mode: PinDisplayMode, zoomMode: 'full' | 'compact' | 'mini' = 'full') {
+    this.displayMode = mode;
     this.zoomMode = zoomMode;
     this.renderPillContent();
-    this.applyLayout();
   }
 
-  private renderPillContent() {
-    if (!this.pill) return;
-
-    const isAgri =
-      this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
-    const dotColor = isAgri
-      ? '#10b981'
-      : this.property.type === 'sale'
-      ? '#2563eb'
-      : '#059669';
-
-    if (this.zoomMode === 'full') {
-      const acresDisplay =
-        isAgri && this.property.landMetrics?.areaAcres
-          ? `<span class="agri-tag font-extrabold text-[10px] text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-md mr-1 border border-emerald-300/60">🌾 ${this.property.landMetrics.areaAcres.toFixed(1)} Ac</span>`
-          : isAgri
-          ? '<span class="mr-1 text-[11px]">🌾</span>'
-          : `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>`;
-
-      this.pill.innerHTML = `
-        ${acresDisplay}
-        <span class="price-text font-bold text-xs tracking-tight">${this.property.priceDisplay}</span>
-      `;
-      this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-2.5 py-1`;
-    } else if (this.zoomMode === 'compact') {
-      const tagDisplay = isAgri
-        ? '<span class="mr-1 text-[10px]">🌾</span>'
-        : `<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 mr-0.5" style="background-color: ${dotColor};"></span>`;
-
-      this.pill.innerHTML = `
-        ${tagDisplay}
-        <span class="price-text font-bold text-[11.5px] tracking-tight">${this.property.priceDisplay}</span>
-      `;
-      this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-2 py-0.5 text-xs`;
-    } else {
-      // Mini pill mode for zoomed-out view
-      const tagDisplay = isAgri
-        ? '<span class="mr-0.5 text-[9px]">🌾</span>'
-        : '';
-
-      this.pill.innerHTML = `
-        ${tagDisplay}
-        <span class="price-text font-extrabold text-[10.5px] tracking-tight">${this.property.priceDisplay}</span>
-      `;
-      this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-1.5 py-0.5 text-[11px]`;
-    }
-  }
-
-  private applyLayout() {
-    if (!this.pillWrapper) return;
-
-    this.pillWrapper.classList.toggle('displaced', this.isDisplaced);
-
-    if (this.isDisplaced) {
-      if (this.anchorDot) this.anchorDot.style.display = 'block';
-      if (this.svgLine) this.svgLine.style.display = 'block';
-      if (this.lineElement) {
-        this.lineElement.setAttribute('x2', String(this.dx));
-        this.lineElement.setAttribute('y2', String(this.dy));
-      }
-      this.pillWrapper.style.left = `${this.dx}px`;
-      this.pillWrapper.style.top = `${this.dy}px`;
-      if (this.tip) this.tip.style.display = 'none';
-    } else {
-      if (this.anchorDot) this.anchorDot.style.display = 'none';
-      if (this.svgLine) this.svgLine.style.display = 'none';
-      this.pillWrapper.style.left = '0px';
-      this.pillWrapper.style.top = '0px';
-      if (this.tip) this.tip.style.display = 'block';
-    }
+  /**
+   * Backwards-compatible layout offset method
+   */
+  public setLayoutOffset(
+    _dx: number,
+    _dy: number,
+    _isDisplaced: boolean,
+    zoomMode: 'full' | 'compact' | 'mini' = 'full'
+  ) {
+    this.zoomMode = zoomMode;
+    this.renderPillContent();
   }
 
   public setSelected(selected: boolean) {
@@ -263,22 +145,11 @@ export class CustomOverlayMarker {
       if (selected) {
         this.pillWrapper.classList.add('selected');
         this.container.style.zIndex = '220';
-        if (this.lineElement) {
-          this.lineElement.setAttribute('stroke', '#2563eb');
-          this.lineElement.setAttribute('stroke-width', '2');
-          this.lineElement.removeAttribute('stroke-dasharray');
-          this.lineElement.setAttribute('opacity', '1');
-        }
       } else {
         this.pillWrapper.classList.remove('selected');
         this.container.style.zIndex = this.isHighlighted ? '190' : this.isHovered ? '200' : '20';
-        if (this.lineElement && !this.isHovered) {
-          this.lineElement.setAttribute('stroke', '#94a3b8');
-          this.lineElement.setAttribute('stroke-width', '1.5');
-          this.lineElement.setAttribute('stroke-dasharray', '2,2');
-          this.lineElement.setAttribute('opacity', '0.85');
-        }
       }
+      this.renderPillContent();
     }
   }
 
@@ -292,6 +163,7 @@ export class CustomOverlayMarker {
         this.pillWrapper.classList.remove('highlighted');
         this.container.style.zIndex = this.isSelected ? '220' : this.isHovered ? '200' : '20';
       }
+      this.renderPillContent();
     }
   }
 
@@ -300,24 +172,107 @@ export class CustomOverlayMarker {
     if (this.container && this.pillWrapper) {
       if (hovered) {
         this.pillWrapper.classList.add('hovered');
-        this.container.style.zIndex = '200';
-        if (this.lineElement) {
-          this.lineElement.setAttribute('stroke', '#2563eb');
-          this.lineElement.setAttribute('stroke-width', '2');
-          this.lineElement.removeAttribute('stroke-dasharray');
-          this.lineElement.setAttribute('opacity', '1');
-        }
+        this.container.style.zIndex = '300';
       } else {
         this.pillWrapper.classList.remove('hovered');
         this.container.style.zIndex = this.isSelected ? '220' : this.isHighlighted ? '210' : '20';
-        if (this.lineElement && !this.isSelected) {
-          this.lineElement.setAttribute('stroke', '#94a3b8');
-          this.lineElement.setAttribute('stroke-width', '1.5');
-          this.lineElement.setAttribute('stroke-dasharray', '2,2');
-          this.lineElement.setAttribute('opacity', '0.85');
-        }
       }
+      this.renderPillContent();
     }
+  }
+
+  private renderPillContent() {
+    if (!this.pill || !this.container || !this.pillWrapper) return;
+
+    const isAgri =
+      this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
+    const dotColor = isAgri
+      ? '#10b981'
+      : this.property.type === 'sale'
+      ? '#2563eb'
+      : '#059669';
+
+    // Must show as full pill if selected, hovered, or highlighted
+    const forceFull = this.isSelected || this.isHovered || this.isHighlighted;
+
+    // 1. HIDDEN STATE (Zoomed far out, fades completely)
+    if (this.displayMode === 'hidden' && !forceFull) {
+      this.container.style.opacity = '0';
+      this.container.style.pointerEvents = 'none';
+      this.container.style.transform = 'scale(0.5)';
+      return;
+    }
+
+    // 2. MICRO-DOT STATE (Dense / overlapping area in Google Maps style)
+    if (this.displayMode === 'dot' && !forceFull) {
+      this.container.style.opacity = '0.92';
+      this.container.style.pointerEvents = 'auto';
+      this.container.style.transform = 'scale(1)';
+
+      this.pillWrapper.style.transform = 'translate(-50%, -50%)';
+      if (this.tip) this.tip.style.display = 'none';
+
+      this.pill.innerHTML = '';
+      this.pill.className = 'marker-dot';
+      this.pill.style.width = '10px';
+      this.pill.style.height = '10px';
+      this.pill.style.borderRadius = '9999px';
+      this.pill.style.backgroundColor = dotColor;
+      this.pill.style.border = '2px solid #ffffff';
+      this.pill.style.boxShadow = '0 1px 4px rgba(0,0,0,0.35)';
+      this.pill.style.cursor = 'pointer';
+      this.pill.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
+      return;
+    }
+
+    // 3. FULL / COMPACT PILL STATE (Prominent or hovered/selected)
+    this.container.style.opacity = '1';
+    this.container.style.pointerEvents = 'auto';
+    this.container.style.transform = 'scale(1)';
+
+    this.pillWrapper.style.transform = this.isHovered
+      ? 'translate(-50%, -108%) scale(1.08)'
+      : this.isSelected
+      ? 'translate(-50%, -112%) scale(1.12)'
+      : 'translate(-50%, -100%)';
+
+    if (this.tip) this.tip.style.display = 'block';
+
+    const isCompact = this.displayMode === 'compact' && !forceFull;
+
+    if (!isCompact && this.zoomMode === 'full') {
+      const acresDisplay =
+        isAgri && this.property.landMetrics?.areaAcres
+          ? `<span class="agri-tag font-extrabold text-[10px] text-emerald-800 bg-emerald-100/90 px-1.5 py-0.5 rounded-md mr-1 border border-emerald-300/60">🌾 ${this.property.landMetrics.areaAcres.toFixed(1)} Ac</span>`
+          : isAgri
+          ? '<span class="mr-1 text-[11px]">🌾</span>'
+          : `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>`;
+
+      this.pill.innerHTML = `
+        ${acresDisplay}
+        <span class="price-text font-bold text-xs tracking-tight">${this.property.priceDisplay}</span>
+      `;
+      this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-2.5 py-1`;
+    } else {
+      // Compact pill mode
+      const tagDisplay = isAgri
+        ? '<span class="mr-1 text-[10px]">🌾</span>'
+        : `<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 mr-0.5" style="background-color: ${dotColor};"></span>`;
+
+      this.pill.innerHTML = `
+        ${tagDisplay}
+        <span class="price-text font-bold text-[11.5px] tracking-tight">${this.property.priceDisplay}</span>
+      `;
+      this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-2 py-0.5 text-xs`;
+    }
+
+    // Reset explicit dot inline styles
+    this.pill.style.width = '';
+    this.pill.style.height = '';
+    this.pill.style.borderRadius = '';
+    this.pill.style.backgroundColor = '';
+    this.pill.style.border = '';
+    this.pill.style.boxShadow = '';
   }
 
   public forceRedraw() {
