@@ -115,6 +115,56 @@ export interface Property {
   };
   nearbyPOIs?: NearbyPOI[];
   aiAnalysis?: AIAnalysisResult;
+  bhuDhaarId?: string; // Telangana 11-digit Bhu-dhaar / Land ID
+  layoutApprovalNo?: string; // HMDA / DTCP / BMRDA Layout Permission (LP) number
+  verifiedDaysAgo?: number; // Freshness badge: e.g. 2 (Verified 2 days ago)
+  isDirectOwner?: boolean;
+}
+
+export type AreaUnit = 'sqft' | 'sqyard' | 'acre_gunta';
+
+export interface VenturePlot {
+  id: string;
+  plotNumber: string;
+  areaSqYards: number;
+  dimensions: string; // e.g. "40 x 50 ft"
+  facing: string; // "East", "West", "North-East", etc.
+  status: 'available' | 'hold' | 'sold';
+  pricePerSqYd: number;
+  totalPrice: number;
+  surveyNo?: string;
+  coordinates: [number, number][]; // Polygon vertices [lng, lat]
+  center: [number, number]; // [lng, lat]
+}
+
+export interface VentureLayout {
+  id: string;
+  name: string;
+  developerName: string;
+  authority: 'HMDA' | 'DTCP' | 'BMRDA' | 'PMRDA' | 'RERA';
+  lpNumber: string; // Layout Permission Number e.g. "LP No. 000142/LO/Plg/HMDA/2024"
+  reraId: string;
+  totalPlots: number;
+  availablePlots: number;
+  center: [number, number];
+  bounds?: [[number, number], [number, number]];
+  plots: VenturePlot[];
+  contactPhone: string;
+}
+
+export interface AllInCostBreakdown {
+  basePrice: number;
+  stampDutyRate: number; // e.g. 6.0%
+  stampDutyAmount: number;
+  registrationRate: number; // e.g. 0.5%
+  registrationAmount: number;
+  gstRate: number; // 0% or 5%
+  gstAmount: number;
+  corpusDeposit: number;
+  advanceMaintenance: number;
+  legalAndAdminCharges: number;
+  totalLandingCost: number;
+  extraOverheadPercentage: number;
 }
 
 export interface MapBounds {

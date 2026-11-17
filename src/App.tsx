@@ -7,7 +7,8 @@ import {
   RadiusSearchState,
   PolygonSearchState,
   LandSurveyState,
-  MapContextSnapshot
+  MapContextSnapshot,
+  AreaUnit
 } from './types';
 import {
   getAllProperties,
@@ -24,12 +25,14 @@ import { mapActionBridge } from './services/mapActionBridge';
 import { isSupabaseConfigured, onAuthStateChange } from './services/supabaseClient';
 import { syncProfileFromSupabaseUser, getUserProfile } from './services/userService';
 import { fetchSupabaseFavorites, toggleSupabaseFavorite } from './services/supabasePropertyService';
+import { getStoredAreaUnit, setStoredAreaUnit } from './services/areaUnitService';
 import { GoogleMap } from './components/Map/GoogleMap';
 import { PinDropOverlay } from './components/Map/PinDropOverlay';
 import { FloatingHeader } from './components/Navigation/FloatingHeader';
 import { SlideMenuDrawer } from './components/Navigation/SlideMenuDrawer';
 import { PropertyPreview } from './components/Property/PropertyPreview';
 import { PropertyDetailModal } from './components/Property/PropertyDetailModal';
+import { MobileListingSheet } from './components/Property/MobileListingSheet';
 import { AddPropertyModal } from './components/Modals/AddPropertyModal';
 import { AuthRequiredModal } from './components/Modals/AuthRequiredModal';
 import { SettingsModal } from './components/Modals/SettingsModal';
@@ -49,9 +52,10 @@ export const App: React.FC = () => {
 
   // Selected & Hovered property for live marker feedback
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-  const [hoveredPropertyId] = useState<string | null>(null);
+  const [hoveredPropertyId, setHoveredPropertyId] = useState<string | null>(null);
+  const [areaUnit, setAreaUnit] = useState<AreaUnit>(getStoredAreaUnit);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-  const [detailModalTab, setDetailModalTab] = useState<'overview' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby'>('overview');
+  const [detailModalTab, setDetailModalTab] = useState<'overview' | 'approvals' | 'commute' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby'>('overview');
 
   // Advanced Filter state & modal
   const [filterState, setFilterState] = useState<FilterState>({
@@ -606,7 +610,7 @@ export const App: React.FC = () => {
   // Open full property details (Requires sign in per Requirement 1)
   const handleOpenDetails = (
     prop: Property,
-    tab: 'overview' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby' = 'overview'
+    tab: 'overview' | 'approvals' | 'commute' | 'amenities' | 'emi' | 'locality' | 'ai-risk' | 'nearby' = 'overview'
   ) => {
     const profile = getUserProfile();
     if (!profile.isAuthenticated) {
@@ -768,6 +772,37 @@ export const App: React.FC = () => {
           onOpenCompare={() => setIsComparisonModalOpen(true)}
           onOpenAIAdvisor={() => handleOpenAIAdvisor()}
           activeMapTypeId={activeMapTypeId}
+          areaUnit={areaUnit}
+          onAreaUnitChange={(unit) => {
+            setAreaUnit(unit);
+            setStoredAreaUnit(unit);
+          }}
+        />
+      )}
+
+      {/* 
+        3. MOBILE 3-STATE BOTTOM SHEET (Peek / 50% split / Full list)
+      */}
+      {!isDroppingPin && !isAnyGeospatialToolActive && (
+        <MobileListingSheet
+          properties={visibleProperties}
+          selectedProperty={selectedProperty}
+          onSelectProperty={(prop) => {
+            setSelectedProperty(prop);
+            if (prop && mapInstance && typeof window !== 'undefined' && window.google?.maps) {
+              const [lng, lat] = prop.coordinates;
+              mapInstance.panTo(new google.maps.LatLng(lat, lng));
+              const currentZoom = mapInstance.getZoom() || 14;
+              if (currentZoom < 16) {
+                mapInstance.setZoom(16);
+              }
+            }
+          }}
+          hoveredPropertyId={hoveredPropertyId}
+          onHoverProperty={setHoveredPropertyId}
+          areaUnit={areaUnit}
+          localityName={currentLocalityName}
+          cityName={currentCityName}
         />
       )}
 
@@ -861,6 +896,7 @@ export const App: React.FC = () => {
           onToggleCompare={handleToggleCompare}
           isCompared={selectedProperty ? comparedPropertyIds.includes(selectedProperty.id) : false}
           onOpenAIAdvisor={() => handleOpenAIAdvisor(selectedProperty!)}
+          areaUnit={areaUnit}
         />
       )}
 
@@ -878,6 +914,7 @@ export const App: React.FC = () => {
         isCompared={selectedProperty ? comparedPropertyIds.includes(selectedProperty.id) : false}
         onOpenAIAdvisor={() => handleOpenAIAdvisor(selectedProperty!)}
         onOpenRoiCalculator={handleOpenRoiCalculator}
+        areaUnit={areaUnit}
       />
 
       {/* 

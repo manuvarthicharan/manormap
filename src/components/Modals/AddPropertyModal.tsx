@@ -102,19 +102,11 @@ const COMMERCIAL_AMENITIES = [
   'Conference & Meeting Rooms'
 ];
 
-const STEPS_NAV = [
-  { num: 1, label: 'User Details' },
-  { num: 2, label: 'Purpose' },
-  { num: 3, label: 'Category' },
-  { num: 4, label: 'Property Type' },
-  { num: 5, label: 'Specifications' },
-  { num: 6, label: 'Location' },
-  { num: 7, label: 'Pricing' },
-  { num: 8, label: 'Amenities' },
-  { num: 9, label: 'Photos & AI' },
-  { num: 10, label: 'Documents' },
-  { num: 11, label: 'Verification' },
-  { num: 12, label: 'Review & Submit' }
+const MILESTONES = [
+  { num: 1, label: 'Role & Location', sub: 'Identity, Category & Map Pin' },
+  { num: 2, label: 'Specs & Amenities', sub: 'Dimensions, Layout & Features' },
+  { num: 3, label: 'Pricing & Media', sub: 'Price, Photos & AI Description' },
+  { num: 4, label: 'Legal & Submit', sub: 'RERA, Bhu-dhaar & Review' }
 ];
 
 export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
@@ -128,11 +120,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
   landMetrics = null,
   selectedLocation
 }) => {
-  // Stepper state: 1 to 12
+  // Stepper state: 1 to 4 milestones
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [isQuickListMode, setIsQuickListMode] = useState<boolean>(false);
   const [slideDirection, setSlideDirection] = useState<'forward' | 'backward'>('forward');
   const [hasDraft, setHasDraft] = useState<boolean>(false);
   const [draftToast, setDraftToast] = useState<string>('');
+  const [autoSavedTimestamp, setAutoSavedTimestamp] = useState<string>('');
 
   // 1. User Details
   const [userRole, setUserRole] = useState<'Owner' | 'Agent' | 'Builder' | 'Company'>('Owner');
@@ -571,10 +565,48 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
     setTimeout(() => setDraftToast(''), 2500);
   };
 
-  // Step Navigation Handlers
+  // Continuous background auto-draft save
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        const draft = {
+          userRole, fullName, userPhone, userEmail, purpose, categoryGroup, propertyType,
+          bhk, bathrooms, balconies, floorNumber, totalFloors, furnishing, carpetAreaSqFt, builtUpAreaSqFt,
+          facing, parking, readyToMove, villaBedrooms, villaBathrooms, villaFloors, villaPlotArea, villaBuiltUpArea, villaParking,
+          plotArea, plotUnit, plotLength, plotWidth, plotFacing, roadWidthFt, plotNumber, plotSurveyNumber, isPlotFenced,
+          commercialUsage, commercialSuperArea, commercialCarpetArea, commercialFloor, commercialTotalFloors, commercialParking, commercialPower, commercialWashrooms,
+          landAcres, landGunthas, agriSurveyNumber, waterSources, soilType, roadAccess, isAgriFenced,
+          stateName, district, city, locality, streetAddress, projectOrSociety, pinCode,
+          price, securityDeposit, leaseAmount, maintenanceMonthly, brokerage, isNegotiable,
+          selectedAmenities, photoUrls, videoTourUrl, floorPlanUrl, propertyTitle, description, nearbyLandmarks,
+          ownerName, ownershipType, proofChecklist, reraId, approvalAuthority, otherDocsInfo,
+          contactPersonName, contactMobileNumber, isPhoneVerified, isSameWhatsApp, customWhatsApp
+        };
+        localStorage.setItem(LOCAL_STORAGE_DRAFT_KEY, JSON.stringify(draft));
+        const now = new Date();
+        setAutoSavedTimestamp(now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }));
+        setHasDraft(true);
+      } catch {}
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, [
+    userRole, fullName, userPhone, userEmail, purpose, categoryGroup, propertyType,
+    bhk, bathrooms, balconies, floorNumber, totalFloors, furnishing, carpetAreaSqFt, builtUpAreaSqFt,
+    facing, parking, readyToMove, villaBedrooms, villaBathrooms, villaFloors, villaPlotArea, villaBuiltUpArea, villaParking,
+    plotArea, plotUnit, plotLength, plotWidth, plotFacing, roadWidthFt, plotNumber, plotSurveyNumber, isPlotFenced,
+    commercialUsage, commercialSuperArea, commercialCarpetArea, commercialFloor, commercialTotalFloors, commercialParking, commercialPower, commercialWashrooms,
+    landAcres, landGunthas, agriSurveyNumber, waterSources, soilType, roadAccess, isAgriFenced,
+    stateName, district, city, locality, streetAddress, projectOrSociety, pinCode,
+    price, securityDeposit, leaseAmount, maintenanceMonthly, brokerage, isNegotiable,
+    selectedAmenities, photoUrls, videoTourUrl, floorPlanUrl, propertyTitle, description, nearbyLandmarks,
+    ownerName, ownershipType, proofChecklist, reraId, approvalAuthority, otherDocsInfo,
+    contactPersonName, contactMobileNumber, isPhoneVerified, isSameWhatsApp, customWhatsApp
+  ]);
+
+  // Milestone Navigation Handlers (1 to 4)
   const handleNextStep = () => {
     setSlideDirection('forward');
-    setCurrentStep((prev) => Math.min(prev + 1, 12));
+    setCurrentStep((prev) => Math.min(prev + 1, 4));
   };
 
   const handlePrevStep = () => {
@@ -848,11 +880,16 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
-                    Step {currentStep} of 12
+                    {isQuickListMode ? 'Quick Mode' : `Stage ${currentStep} of 4`}
                   </span>
                   <span className="text-xs font-bold text-slate-700 hidden sm:inline">
-                    {STEPS_NAV.find((s) => s.num === currentStep)?.label}
+                    {isQuickListMode ? '60-Second Essentials' : MILESTONES.find((s) => s.num === currentStep)?.label}
                   </span>
+                  {autoSavedTimestamp && (
+                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full hidden md:inline">
+                      ✓ Draft auto-saved {autoSavedTimestamp}
+                    </span>
+                  )}
                 </div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight mt-0.5">
                   List Property on ManorMap
@@ -861,6 +898,20 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             </div>
 
             <div className="flex items-center gap-2">
+              {/* 60-Second Quick List Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsQuickListMode(!isQuickListMode)}
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 ${
+                  isQuickListMode
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'bg-amber-50 border border-amber-200 text-amber-900 hover:bg-amber-100'
+                }`}
+                title="Toggle between 60-second quick list and 4-stage wizard"
+              >
+                <span>{isQuickListMode ? '⚡ Exit Quick List' : '⚡ 60-Sec Quick List'}</span>
+              </button>
+
               <button
                 type="button"
                 onClick={handleSaveDraft}
@@ -868,7 +919,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                 title="Save current progress as draft"
               >
                 <Save className="w-3.5 h-3.5 text-blue-600" />
-                <span>Save Draft</span>
+                <span>Save</span>
               </button>
 
               <button
@@ -882,7 +933,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
           </div>
 
           {/* DRAFT RESUME BANNER */}
-          {hasDraft && currentStep === 1 && (
+          {hasDraft && currentStep === 1 && !isQuickListMode && (
             <div className="bg-amber-50 border-b border-amber-200/70 px-4 py-2 flex items-center justify-between text-xs text-amber-900 font-medium">
               <div className="flex items-center gap-2">
                 <RotateCcw className="w-3.5 h-3.5 text-amber-700" />
@@ -908,55 +959,223 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
           )}
 
           {/* MICRO PROGRESS BAR */}
-          <div className="w-full bg-slate-100 h-1.5 overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 transition-all duration-300 ease-out"
-              style={{ width: `${(currentStep / 12) * 100}%` }}
-            />
-          </div>
+          {!isQuickListMode && (
+            <div className="w-full bg-slate-100 h-1.5 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 transition-all duration-300 ease-out"
+                style={{ width: `${(currentStep / 4) * 100}%` }}
+              />
+            </div>
+          )}
 
           {/* HORIZONTAL STEP CHIPS FOR EASY NAVIGATION */}
-          <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] font-semibold text-slate-500">
-            {STEPS_NAV.map((step) => {
-              const isActive = step.num === currentStep;
-              const isPassed = step.num < currentStep;
-              return (
-                <button
-                  key={step.num}
-                  type="button"
-                  onClick={() => handleJumpToStep(step.num)}
-                  className={`flex-shrink-0 px-2.5 py-1 rounded-lg flex items-center gap-1.5 transition-all ${isActive
-                      ? 'bg-blue-600 text-white font-bold shadow-xs'
-                      : isPassed
-                        ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
-                        : 'hover:bg-slate-200/60 text-slate-600'
+          {!isQuickListMode && (
+            <div className="border-b border-slate-100 bg-slate-50/70 px-3 py-2 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px] font-semibold text-slate-500">
+              {MILESTONES.map((step) => {
+                const isActive = step.num === currentStep;
+                const isPassed = step.num < currentStep;
+                return (
+                  <button
+                    key={step.num}
+                    type="button"
+                    onClick={() => handleJumpToStep(step.num)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-xl flex items-center gap-2 transition-all ${
+                      isActive
+                        ? 'bg-blue-600 text-white font-bold shadow-xs'
+                        : isPassed
+                          ? 'bg-blue-50 text-blue-700 hover:bg-blue-100'
+                          : 'hover:bg-slate-200/60 text-slate-600'
                     }`}
-                >
-                  <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${isActive ? 'bg-white/20 text-white' : isPassed ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'
+                  >
+                    <span className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      isActive ? 'bg-white/20 text-white' : isPassed ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'
                     }`}>
-                    {isPassed ? '✓' : step.num}
-                  </span>
-                  <span>{step.label}</span>
-                </button>
-              );
-            })}
-          </div>
+                      {isPassed ? '✓' : step.num}
+                    </span>
+                    <span>{step.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
 
           {/* 2. STEP CONTAINER (ANIMATED SLIDE PER STEP) */}
           <div
-            key={currentStep}
+            key={isQuickListMode ? 'quick-list' : currentStep}
             className={`p-4 sm:p-6 flex-1 overflow-y-auto ${slideDirection === 'forward' ? 'step-transition-forward' : 'step-transition-backward'}`}
           >
 
-            {/* ================= STEP 1: USER DETAILS ================= */}
-            {currentStep === 1 && (
+            {/* QUICK LIST MODE: 60-SECOND ESSENTIALS */}
+            {isQuickListMode && (
+              <div className="space-y-5 animate-in fade-in duration-150">
+                <div className="p-4 rounded-2xl bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100 border border-amber-300 flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-base font-black text-amber-950">⚡ 60-Second Quick Publish</span>
+                      <span className="text-[10px] font-extrabold uppercase bg-amber-600 text-white px-2 py-0.5 rounded-full">
+                        Broker & Owner Mode
+                      </span>
+                    </div>
+                    <p className="text-xs text-amber-900 mt-1">
+                      Fill just 5 essential fields to list your property live on the map immediately. You can enrich RERA, amenities, and floor plans anytime later!
+                    </p>
+                  </div>
+                </div>
+
+                {/* 1. Title / Project Name */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1">
+                    <span>1. Property Title or Society Name</span>
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={propertyTitle}
+                    onChange={(e) => setPropertyTitle(e.target.value)}
+                    placeholder="e.g. 3 BHK Luxury Flat in Aparna Sarovar, or 200 Sq. Yd HMDA Plot"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-semibold text-slate-900"
+                  />
+                </div>
+
+                {/* 2. Category & Core Spec */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-1">
+                      2. Property Category
+                    </label>
+                    <select
+                      value={propertyType}
+                      onChange={(e) => setPropertyType(e.target.value as any)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800 bg-white"
+                    >
+                      <option value="Apartment">Apartment / Flat</option>
+                      <option value="Villa">Villa / Independent House</option>
+                      <option value="Open Plot">Open Plot / Land</option>
+                      <option value="Agricultural Land">Agricultural Farmland</option>
+                      <option value="Commercial">Commercial Office / Shop</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-1">
+                      {propertyType === 'Apartment' || propertyType === 'Villa' ? 'BHK / Bedrooms' : 'Total Area (Sq.Ft / Sq.Yd)'}
+                    </label>
+                    {propertyType === 'Apartment' || propertyType === 'Villa' ? (
+                      <div className="flex gap-2">
+                        {[1, 2, 3, 4, 5].map((count) => (
+                          <button
+                            key={count}
+                            type="button"
+                            onClick={() => { setBhk(count); setVillaBedrooms(count); }}
+                            className={`flex-1 py-2 rounded-xl text-xs font-bold border transition-all ${
+                              bhk === count ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-slate-50 border-slate-200 text-slate-700'
+                            }`}
+                          >
+                            {count} BHK
+                          </button>
+                        ))}
+                      </div>
+                    ) : (
+                      <input
+                        type="number"
+                        value={builtUpAreaSqFt}
+                        onChange={(e) => setBuiltUpAreaSqFt(Number(e.target.value))}
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold text-slate-800"
+                        placeholder="e.g. 1800"
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* 3. Locality, City & Map Pin */}
+                <div className="space-y-2">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block">
+                    3. Property Location
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <input
+                      type="text"
+                      value={locality}
+                      onChange={(e) => setLocality(e.target.value)}
+                      placeholder="Locality (e.g. Kokapet)"
+                      className="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold"
+                    />
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="City (e.g. Hyderabad)"
+                      className="px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => { onClose(); onStartDropPin(); }}
+                      className="col-span-2 sm:col-span-1 px-3 py-2.5 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-blue-100 transition-colors"
+                    >
+                      <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Pin on Map</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4. Expected Price */}
+                <div className="space-y-1">
+                  <div className="flex justify-between items-center">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      4. Expected Price (₹)
+                    </label>
+                    <span className="text-xs font-black text-emerald-700">
+                      {getFormattedWords(price)}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(Number(e.target.value))}
+                    className="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-bold text-slate-900"
+                    placeholder="e.g. 15000000"
+                  />
+                </div>
+
+                {/* 5. Contact Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-1">
+                      5. Your Name
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold"
+                      placeholder="e.g. Rohith / Owner"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700 block mb-1">
+                      Mobile Number (for Inquiries)
+                    </label>
+                    <input
+                      type="tel"
+                      value={userPhone}
+                      onChange={(e) => setUserPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm font-semibold"
+                      placeholder="+91 98490 12345"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ================= MILESTONE 1: ROLE, CATEGORY & LOCATION ================= */}
+            {!isQuickListMode && currentStep === 1 && (
               <div className="space-y-6">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                    1. Tell us about yourself
+                    Stage 1: Role, Category & Location
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Who is listing this property? We prioritize direct owners and verified agents.
+                    Who is listing, what property category, and where is it located on the map?
                   </p>
                 </div>
 
@@ -1053,8 +1272,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 2: LISTING PURPOSE ================= */}
-            {currentStep === 2 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 1 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     2. Select Listing Purpose
@@ -1105,8 +1324,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 3: PROPERTY CATEGORY ================= */}
-            {currentStep === 3 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 1 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     3. Select Property Category
@@ -1160,8 +1379,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 4: SELECT PROPERTY TYPE ================= */}
-            {currentStep === 4 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 1 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     4. Select Property Type
@@ -1210,9 +1429,17 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
               </div>
             )}
 
-            {/* ================= STEP 5: PROPERTY DETAILS (DYNAMIC BY TYPE) ================= */}
-            {currentStep === 5 && (
+            {/* ================= MILESTONE 2: SPECIFICATIONS & AMENITIES ================= */}
+            {!isQuickListMode && currentStep === 2 && (
               <div className="space-y-6">
+                <div>
+                  <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
+                    Stage 2: Specifications & Amenities
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                    Configure room dimensions, floor details, facing, and community amenities.
+                  </p>
+                </div>
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
@@ -1940,8 +2167,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 6: PROPERTY LOCATION ================= */}
-            {currentStep === 6 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 1 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     6. Property Location & Map Anchor
@@ -2097,15 +2324,15 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
               </div>
             )}
 
-            {/* ================= STEP 7: PRICE DETAILS ================= */}
-            {currentStep === 7 && (
+            {/* ================= MILESTONE 3: PRICING & MEDIA ================= */}
+            {!isQuickListMode && currentStep === 3 && (
               <div className="space-y-6">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                    7. Pricing & Financial Terms
+                    Stage 3: Pricing & Media Showcase
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Set a competitive price to attract verified high-intent inquiries.
+                    Set competitive financial terms, upload photos, and generate AI marketing descriptions.
                   </p>
                 </div>
 
@@ -2242,8 +2469,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 8: AMENITIES & FACILITIES ================= */}
-            {currentStep === 8 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 2 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     8. Amenities and Facilities
@@ -2302,8 +2529,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 9: PHOTOS & DESCRIPTION (WITH AI) ================= */}
-            {currentStep === 9 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 3 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     9. High-Res Media & AI Description
@@ -2487,15 +2714,15 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
               </div>
             )}
 
-            {/* ================= STEP 10: OWNERSHIP & DOCUMENTS ================= */}
-            {currentStep === 10 && (
+            {/* ================= MILESTONE 4: LEGAL, VERIFICATION & PUBLISH ================= */}
+            {!isQuickListMode && currentStep === 4 && (
               <div className="space-y-6">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
-                    10. Ownership Details & Document Proofs
+                    Stage 4: Legal, Verification & Review
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-500 mt-1">
-                    Verified documentation establishes title credibility and speeds up buyer deal closure.
+                    Verify RERA & Bhu-dhaar records, complete mobile authentication, and publish your listing live.
                   </p>
                 </div>
 
@@ -2613,8 +2840,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 11: CONTACT VERIFICATION ================= */}
-            {currentStep === 11 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 4 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     11. Contact & Identity Verification
@@ -2757,8 +2984,8 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             )}
 
             {/* ================= STEP 12: REVIEW & SUBMIT ================= */}
-            {currentStep === 12 && (
-              <div className="space-y-6">
+            {!isQuickListMode && currentStep === 4 && (
+              <div className="space-y-6 pt-6 border-t border-slate-100">
                 <div>
                   <h4 className="text-lg sm:text-xl font-black text-slate-900 tracking-tight">
                     12. Review & Publish Listing
@@ -2837,7 +3064,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleJumpToStep(5)}
+                        onClick={() => handleJumpToStep(2)}
                         className="text-blue-600 font-bold hover:underline text-[11px] flex-shrink-0 ml-3"
                       >
                         Edit
@@ -2859,7 +3086,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleJumpToStep(6)}
+                        onClick={() => handleJumpToStep(1)}
                         className="text-blue-600 font-bold hover:underline text-[11px] flex-shrink-0 ml-3"
                       >
                         Edit
@@ -2879,7 +3106,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleJumpToStep(7)}
+                        onClick={() => handleJumpToStep(3)}
                         className="text-blue-600 font-bold hover:underline text-[11px] flex-shrink-0 ml-3"
                       >
                         Edit
@@ -2907,7 +3134,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleJumpToStep(8)}
+                        onClick={() => handleJumpToStep(2)}
                         className="text-blue-600 font-bold hover:underline text-[11px] flex-shrink-0 ml-3"
                       >
                         Edit
@@ -2936,7 +3163,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       </div>
                       <button
                         type="button"
-                        onClick={() => handleJumpToStep(11)}
+                        onClick={() => handleJumpToStep(4)}
                         className="text-blue-600 font-bold hover:underline text-[11px] flex-shrink-0 ml-3"
                       >
                         Edit
@@ -2975,7 +3202,23 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
 
             {/* Right: Next / Publish */}
             <div className="flex items-center gap-3">
-              {currentStep < 12 ? (
+              {isQuickListMode ? (
+                <button
+                  type="button"
+                  disabled={isPublishing}
+                  onClick={handlePublishListing}
+                  className="px-6 sm:px-8 py-2.5 sm:py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold text-sm sm:text-base shadow-lg active:scale-95 transition-all flex items-center gap-2"
+                >
+                  {isPublishing ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Publishing Listing...</span>
+                    </>
+                  ) : (
+                    <span>Publish Live in 60s 🚀</span>
+                  )}
+                </button>
+              ) : currentStep < 4 ? (
                 <button
                   type="button"
                   onClick={handleNextStep}
@@ -2997,9 +3240,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                       <span>Publishing Listing...</span>
                     </>
                   ) : (
-                    <>
-                      <span>Submit & Publish Listing 🚀</span>
-                    </>
+                    <span>Submit & Publish Listing 🚀</span>
                   )}
                 </button>
               )}

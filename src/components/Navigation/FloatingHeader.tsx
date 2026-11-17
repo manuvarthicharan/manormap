@@ -15,10 +15,12 @@ import {
   Compass,
   CornerDownLeft,
   Loader2,
-  Check
+  Check,
+  Mic,
+  Ruler
 } from 'lucide-react';
 import { searchLocations } from '../../services/geocoding';
-import { SearchResult, FilterState, Property, PropertyCategory } from '../../types';
+import { SearchResult, FilterState, Property, PropertyCategory, AreaUnit } from '../../types';
 import { getUserProfile } from '../../services/userService';
 import { parseNaturalLanguageQuery } from '../../services/aiIntelligenceService';
 import { formatIndianCurrency } from '../../services/propertyService';
@@ -38,6 +40,8 @@ interface FloatingHeaderProps {
   onOpenCompare?: () => void;
   onOpenAIAdvisor?: () => void;
   activeMapTypeId?: string;
+  areaUnit?: AreaUnit;
+  onAreaUnitChange?: (unit: AreaUnit) => void;
 }
 
 const TRENDING_HUBS = [
@@ -100,7 +104,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   comparedCount = 0,
   onOpenCompare,
   onOpenAIAdvisor,
-  activeMapTypeId = 'hybrid'
+  activeMapTypeId = 'hybrid',
+  areaUnit = 'sqft',
+  onAreaUnitChange
 }) => {
   const isDarkMap = activeMapTypeId === 'hybrid' || activeMapTypeId === 'satellite';
   const [query, setQuery] = useState('');
@@ -109,10 +115,64 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   const [showDropdown, setShowDropdown] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
   const [aiFeedbackMessage, setAiFeedbackMessage] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const speechRecognitionRef = useRef<any>(null);
   const userProfile = getUserProfile();
 
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Web Speech API Voice Search
+  const handleToggleVoiceSearch = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Voice Search is supported on Chrome, Edge, and modern mobile browsers with Web Speech API.');
+      return;
+    }
+
+    if (isListening) {
+      speechRecognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      speechRecognitionRef.current = recognition;
+      recognition.lang = 'en-IN'; // Indian English recognition
+      recognition.continuous = false;
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognition.onresult = (event: any) => {
+        const transcript = event.results?.[0]?.[0]?.transcript;
+        if (transcript) {
+          setQuery(transcript);
+          setShowDropdown(true);
+          setIsListening(false);
+          setTimeout(() => {
+            handleExecuteAISearch(transcript);
+          }, 350);
+        }
+      };
+
+      recognition.onerror = () => {
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.start();
+    } catch (err) {
+      console.warn('Voice recognition error:', err);
+      setIsListening(false);
+    }
+  };
 
   // Keyboard shortcut listener: Cmd/Ctrl + K to focus search
   useEffect(() => {
@@ -215,11 +275,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
     inputRef.current?.focus();
   };
 
-  // AI Natural Language Search Execution
-  const handleExecuteAISearch = async () => {
-    if (!query.trim()) return;
+  // AI Natural Language Search Execution (with optional voice/custom query)
+  const handleExecuteAISearch = async (customQuery?: string) => {
+    const qToUse = customQuery !== undefined ? customQuery : query;
+    if (!qToUse.trim()) return;
 
-    const parsed = parseNaturalLanguageQuery(query);
+    const parsed = parseNaturalLanguageQuery(qToUse);
     const updatedFilters = { ...filterState, ...parsed.filters };
     onFilterChange(updatedFilters);
 
@@ -361,6 +422,22 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               autoComplete="off"
               spellCheck="false"
             />
+
+            {/* Voice Search (Web Speech API with Indian Shorthand Recognition) */}
+            <button
+              type="button"
+              onClick={handleToggleVoiceSearch}
+              className={`p-1 mr-1 rounded-lg transition-all flex items-center justify-center ${
+                isListening
+                  ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-400'
+                  : isDarkMap
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'
+              }`}
+              title={isListening ? 'Listening (Speak now in Indian English)...' : 'Search by Voice'}
+            >
+              <Mic className="w-3.5 h-3.5" />
+            </button>
 
             {/* Clear Button */}
             {query && (
@@ -709,7 +786,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                 </p>
                 <button
                   type="button"
-                  onClick={handleExecuteAISearch}
+                  onClick={() => handleExecuteAISearch()}
                   className="mt-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold inline-flex items-center gap-1.5 shadow-xs transition-all active:scale-95"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
@@ -760,6 +837,56 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             Rent
           </button>
         </div>
+
+        {/* Universal Indian Area Unit Switcher */}
+        {onAreaUnitChange && (
+          <div className={`hidden md:flex items-center p-1 rounded-2xl border shadow-md text-xs font-bold h-10 ${
+            isDarkMap
+              ? 'bg-slate-950/92 backdrop-blur-xl border-slate-700/80 shadow-black/40 text-slate-300'
+              : 'bg-white/95 backdrop-blur-xl border-slate-200/90 shadow-slate-900/5 text-slate-600'
+          }`}>
+            <span className="px-2 text-[10px] uppercase font-extrabold text-slate-400 flex items-center gap-1">
+              <Ruler className="w-3.5 h-3.5 text-blue-500" />
+              <span>Unit:</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => onAreaUnitChange('sqft')}
+              className={`h-8 px-2.5 rounded-xl transition-all ${
+                areaUnit === 'sqft'
+                  ? 'bg-blue-600 text-white shadow-xs font-bold'
+                  : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
+              }`}
+              title="Carpet & Built-Up Sq. Ft."
+            >
+              Sq. Ft.
+            </button>
+            <button
+              type="button"
+              onClick={() => onAreaUnitChange('sqyard')}
+              className={`h-8 px-2.5 rounded-xl transition-all ${
+                areaUnit === 'sqyard'
+                  ? 'bg-blue-600 text-white shadow-xs font-bold'
+                  : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
+              }`}
+              title="Plots & Land in Sq. Yards (Gaj)"
+            >
+              Sq. Yds (Gaj)
+            </button>
+            <button
+              type="button"
+              onClick={() => onAreaUnitChange('acre_gunta')}
+              className={`h-8 px-2.5 rounded-xl transition-all ${
+                areaUnit === 'acre_gunta'
+                  ? 'bg-blue-600 text-white shadow-xs font-bold'
+                  : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
+              }`}
+              title="Farmland in Acres & Guntas"
+            >
+              Acres & Gts
+            </button>
+          </div>
+        )}
 
         {/* Compare Pill Trigger */}
         {comparedCount > 0 && onOpenCompare && (

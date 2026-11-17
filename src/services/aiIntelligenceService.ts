@@ -326,17 +326,18 @@ export function analyzePropertyRiskAndAdvantages(property: Property): AIAnalysis
 
 /**
  * Parses user natural-language queries into structured filters and search coordinates
+ * Enhanced with Indian real-estate shorthand tolerance (85L, 1.5Cr, 200 gaj, HMDA, direct owner, etc.)
  */
 export function parseNaturalLanguageQuery(query: string): {
   filters: Partial<FilterState>;
   localityQuery?: string;
   summary: string;
 } {
-  const q = query.toLowerCase();
+  const q = query.toLowerCase().trim();
   const filters: Partial<FilterState> = {};
   const tokens: string[] = [];
 
-  // BHK detection
+  // BHK detection: e.g. "3bhk", "2 bhk", "4 bed", "1bhk flat"
   const bhkMatch = q.match(/(\d)\s*(?:bhk|bedroom|bed)/i);
   if (bhkMatch) {
     const count = parseInt(bhkMatch[1], 10);
@@ -345,75 +346,132 @@ export function parseNaturalLanguageQuery(query: string): {
   }
 
   // Type: rent vs sale
-  if (q.includes('rent') || q.includes('lease') || q.includes('/mo') || q.includes('to let')) {
+  if (
+    q.includes('rent') ||
+    q.includes('lease') ||
+    q.includes('/mo') ||
+    q.includes('/month') ||
+    q.includes('to let') ||
+    q.includes('pg')
+  ) {
     filters.type = 'rent';
     tokens.push('For Rent');
-  } else if (q.includes('buy') || q.includes('sale') || q.includes('purchase')) {
+  } else if (
+    q.includes('buy') ||
+    q.includes('sale') ||
+    q.includes('purchase') ||
+    q.includes('resale')
+  ) {
     filters.type = 'sale';
     tokens.push('For Sale');
   }
 
-  // Category
-  if (q.includes('villa')) {
+  // Category & Land types
+  if (q.includes('villa') || q.includes('independent house') || q.includes('duplex')) {
     filters.category = 'Villa';
     tokens.push('Villa');
-  } else if (q.includes('plot') || q.includes('land')) {
+  } else if (
+    q.includes('agri') ||
+    q.includes('farmland') ||
+    q.includes('farm land') ||
+    q.includes('farmhouse') ||
+    q.includes('acre') ||
+    q.includes('gunta')
+  ) {
+    filters.category = 'Agricultural Land';
+    tokens.push('Agricultural Land');
+  } else if (
+    q.includes('plot') ||
+    q.includes('land') ||
+    q.includes('gaj') ||
+    q.includes('sqyd') ||
+    q.includes('layout')
+  ) {
     filters.category = 'Plot';
-    tokens.push('Plot');
-  } else if (q.includes('flat') || q.includes('apartment')) {
-    filters.category = 'Apartment';
-    tokens.push('Apartment');
+    tokens.push('Open Plot');
   } else if (q.includes('penthouse')) {
     filters.category = 'Penthouse';
     tokens.push('Penthouse');
-  } else if (q.includes('commercial') || q.includes('office')) {
+  } else if (q.includes('flat') || q.includes('apartment')) {
+    filters.category = 'Apartment';
+    tokens.push('Apartment');
+  } else if (q.includes('commercial') || q.includes('office') || q.includes('shop') || q.includes('retail')) {
     filters.category = 'Commercial';
     tokens.push('Commercial');
   }
 
-  // Price constraints: Crores, Lakhs
-  const crMatch = q.match(/(?:under|below|max|upto|within)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:cr|crore)/i);
+  // Price constraints with Indian Shorthands:
+  // e.g. "1.5cr", "1.5 cr", "85l", "85 lac", "85 lakhs", "45k", "50k/mo"
+  const crMatch = q.match(/(?:under|below|max|upto|within)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:cr|crore|c)\b/i);
+  const lkMatch = q.match(/(?:under|below|max|upto|within)?\s*(?:₹|rs\.?)?\s*(\d+(?:\.\d+)?)\s*(?:l|lac|lakh|lakhs)\b/i);
+  const kMatch = q.match(/(?:under|below|max|upto|within)?\s*(?:₹|rs\.?)?\s*(\d+)\s*(?:k|thousand)(?:\/mo)?\b/i);
+
   if (crMatch) {
     const valCr = parseFloat(crMatch[1]);
     filters.maxPrice = Math.round(valCr * 10000000);
-    tokens.push(`Under ₹${valCr} Cr`);
-  } else {
-    const lkMatch = q.match(/(?:under|below|max|upto|within)?\s*(?:₹|rs\.?)?\s*(\d+)\s*(?:l|lac|lakh)/i);
-    if (lkMatch) {
-      const valLakh = parseInt(lkMatch[1], 10);
-      filters.maxPrice = valLakh * 100000;
-      tokens.push(`Under ₹${valLakh} Lakh`);
-    }
+    tokens.push(`Max ₹${valCr} Cr`);
+  } else if (lkMatch) {
+    const valLakh = parseFloat(lkMatch[1]);
+    filters.maxPrice = Math.round(valLakh * 100000);
+    tokens.push(`Max ₹${valLakh} L`);
+  } else if (kMatch) {
+    const valK = parseInt(kMatch[1], 10);
+    filters.maxPrice = valK * 1000;
+    tokens.push(`Max ₹${valK}k/mo`);
   }
 
-  // Facing
-  if (q.includes('east facing') || q.includes('east')) {
+  // Indian Area Shorthands: "200 gaj", "150 sqyd", "250 sq yards" -> converts to sq ft (* 9)
+  const gajMatch = q.match(/(\d+)\s*(?:gaj|sqyd|sq\.?\s*yd|sq\.?\s*yards?)/i);
+  if (gajMatch) {
+    const gajVal = parseInt(gajMatch[1], 10);
+    const sqFtVal = gajVal * 9;
+    filters.minArea = Math.round(sqFtVal * 0.85);
+    filters.maxArea = Math.round(sqFtVal * 1.15);
+    tokens.push(`~${gajVal} Gaj (${sqFtVal} sq.ft)`);
+  }
+
+  // Facing & Vastu
+  if (q.includes('east facing') || q.includes('east') || q.includes('ne facing')) {
     filters.facing = 'East';
-    tokens.push('East Facing');
+    tokens.push('East / Vastu');
   } else if (q.includes('north facing') || q.includes('north')) {
     filters.facing = 'North';
     tokens.push('North Facing');
-  } else if (q.includes('west')) {
+  } else if (q.includes('west facing') || q.includes('west')) {
     filters.facing = 'West';
-  } else if (q.includes('south')) {
+    tokens.push('West Facing');
+  } else if (q.includes('south facing') || q.includes('south')) {
     filters.facing = 'South';
+    tokens.push('South Facing');
   }
 
   // Ready to move
-  if (q.includes('ready to move') || q.includes('ready') || q.includes('immediate')) {
+  if (q.includes('ready to move') || q.includes('ready') || q.includes('immediate') || q.includes('rtm')) {
     filters.readyToMove = true;
     tokens.push('Ready to Move');
   }
 
-  // Verified only
-  if (q.includes('verified') || q.includes('rera')) {
+  // Approvals & Trust: HMDA, DTCP, RERA, Direct Owner
+  if (
+    q.includes('verified') ||
+    q.includes('rera') ||
+    q.includes('hmda') ||
+    q.includes('dtcp') ||
+    q.includes('bmrda') ||
+    q.includes('approved')
+  ) {
     filters.verifiedOnly = true;
-    tokens.push('RERA Verified Only');
+    tokens.push('Govt / RERA Approved');
   }
 
-  // Extract Locality name (remove common stop words)
+  if (q.includes('direct owner') || q.includes('zero brokerage') || q.includes('no brokerage') || q.includes('owner only')) {
+    tokens.push('Zero Brokerage (Direct Owner)');
+  }
+
+  // Extract Locality name (remove noise / keywords)
   let cleaned = q
-    .replace(/\b(find|search|show|get|properties|property|in|near|around|for|under|below|crore|cr|lakh|lac|bhk|flat|apartment|villa|plot|facing|ready to move|verified)\b/gi, ' ')
+    .replace(/\b(find|search|show|get|properties|property|in|near|around|for|under|below|crore|cr|lakh|lac|l|k|bhk|flat|apartment|villa|plot|facing|ready to move|verified|hmda|dtcp|rera|direct|owner|brokerage|gaj|sqyd|sqft)\b/gi, ' ')
+    .replace(/[₹,]/g, ' ')
     .trim();
 
   // If a meaningful word remains, use it as localityQuery
@@ -422,13 +480,166 @@ export function parseNaturalLanguageQuery(query: string): {
     tokens.push(`Locality: "${localityQuery}"`);
   }
 
-  const summary = tokens.length > 0 ? tokens.join(' • ') : 'Natural query parsed';
+  const summary = tokens.length > 0 ? tokens.join(' • ') : 'Smart search filter applied';
 
   return {
     filters,
     localityQuery,
     summary
   };
+}
+
+/**
+ * Commute & Infrastructure Proximity Rings
+ * Generates realistic peak driving & transit times to key urban infrastructure
+ */
+export interface CommuteRingPoint {
+  category: 'metro' | 'highway' | 'it_hub' | 'hospital' | 'school' | 'airport';
+  name: string;
+  distanceKm: number;
+  driveTimeMin: number;
+  transitTimeMin: number;
+  description: string;
+}
+
+export function computeInfrastructureCommuteRings(property: Property): CommuteRingPoint[] {
+  const [, lat] = property.coordinates;
+  const isHyd = property.city.toLowerCase().includes('hyderabad') || (lat > 17.1 && lat < 17.6);
+  const isBlr = property.city.toLowerCase().includes('bengaluru') || property.city.toLowerCase().includes('bangalore') || (lat > 12.7 && lat < 13.2);
+
+  if (isHyd) {
+    return [
+      {
+        category: 'metro',
+        name: 'Raidurg / Hitec City Metro Terminal (Blue Line)',
+        distanceKm: 3.2,
+        driveTimeMin: 8,
+        transitTimeMin: 12,
+        description: 'Direct air-conditioned metro transit to Begumpet, Secunderabad & Dilsukhnagar'
+      },
+      {
+        category: 'highway',
+        name: 'Nehru Outer Ring Road (ORR) Exit 1 & 2',
+        distanceKm: 2.1,
+        driveTimeMin: 5,
+        transitTimeMin: 7,
+        description: 'Signal-free expressway to Rajiv Gandhi Int. Airport (RGIA) in 25 mins'
+      },
+      {
+        category: 'it_hub',
+        name: 'Financial District & Cyber Pearl Tech Corridor',
+        distanceKm: 4.5,
+        driveTimeMin: 12,
+        transitTimeMin: 15,
+        description: 'Amazon AWS, Google, Microsoft, Waverock & DLF Cybercity'
+      },
+      {
+        category: 'hospital',
+        name: 'Continental & AIG Super Speciality Hospitals',
+        distanceKm: 2.8,
+        driveTimeMin: 7,
+        transitTimeMin: 10,
+        description: '24/7 JCI-accredited cardiac, oncology & emergency trauma care'
+      },
+      {
+        category: 'school',
+        name: 'Oakridge & Delhi Public School (DPS Khajaguda)',
+        distanceKm: 3.6,
+        driveTimeMin: 9,
+        transitTimeMin: 14,
+        description: 'Top-tier IB World & CBSE curricula with campus bus routes'
+      }
+    ];
+  }
+
+  if (isBlr) {
+    return [
+      {
+        category: 'metro',
+        name: 'Indiranagar / Baiyappanahalli Metro (Purple Line)',
+        distanceKm: 2.6,
+        driveTimeMin: 9,
+        transitTimeMin: 12,
+        description: 'Fast connection to MG Road, Majestic, and Whitefield ITPL'
+      },
+      {
+        category: 'highway',
+        name: 'Outer Ring Road (ORR) & Old Madras Road (OMR)',
+        distanceKm: 1.8,
+        driveTimeMin: 6,
+        transitTimeMin: 8,
+        description: 'Elevated corridor to Kempegowda International Airport (BLR)'
+      },
+      {
+        category: 'it_hub',
+        name: 'Embassy GolfLinks (EGL) & Bagmane Tech Park',
+        distanceKm: 4.2,
+        driveTimeMin: 14,
+        transitTimeMin: 18,
+        description: 'Global tech campus hosting IBM, Dell, Goldman Sachs & Fidelity'
+      },
+      {
+        category: 'hospital',
+        name: 'Manipal Hospital HAL Airport Road',
+        distanceKm: 3.1,
+        driveTimeMin: 8,
+        transitTimeMin: 12,
+        description: 'Premier tertiary care hospital with multi-specialty trauma units'
+      },
+      {
+        category: 'school',
+        name: 'National Public School (NPS Indiranagar)',
+        distanceKm: 1.9,
+        driveTimeMin: 6,
+        transitTimeMin: 9,
+        description: 'Prestigious CBSE school within 5 minutes radius'
+      }
+    ];
+  }
+
+  // Default national city infrastructure
+  return [
+    {
+      category: 'metro',
+      name: 'Central Rapid Transit / City Metro Station',
+      distanceKm: 2.5,
+      driveTimeMin: 7,
+      transitTimeMin: 11,
+      description: 'Rapid urban mass transit'
+    },
+    {
+      category: 'highway',
+      name: 'National Highway / Ring Expressway Junction',
+      distanceKm: 2.2,
+      driveTimeMin: 5,
+      transitTimeMin: 7,
+      description: 'High-speed inter-city connection'
+    },
+    {
+      category: 'it_hub',
+      name: 'Commercial Tech Park & Business District',
+      distanceKm: 5.0,
+      driveTimeMin: 15,
+      transitTimeMin: 20,
+      description: 'Key corporate offices & business centres'
+    },
+    {
+      category: 'hospital',
+      name: 'Apollo / Multi-Specialty Hospital',
+      distanceKm: 3.0,
+      driveTimeMin: 8,
+      transitTimeMin: 12,
+      description: '24/7 emergency & inpatient facilities'
+    },
+    {
+      category: 'school',
+      name: 'Top International & CBSE School',
+      distanceKm: 2.4,
+      driveTimeMin: 7,
+      transitTimeMin: 10,
+      description: 'Well-connected school bus routes'
+    }
+  ];
 }
 
 /**

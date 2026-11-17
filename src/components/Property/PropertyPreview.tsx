@@ -1,5 +1,5 @@
 import React from 'react';
-import { Property } from '../../types';
+import { Property, AreaUnit } from '../../types';
 import {
   X,
   MapPin,
@@ -9,12 +9,14 @@ import {
   Heart,
   ArrowRight,
   ShieldCheck,
-  Calculator,
   Scale,
   Sparkles,
   Share2,
-  Check
+  Check,
+  MessageCircle,
+  Navigation
 } from 'lucide-react';
+import { formatAreaByUnit, getStoredAreaUnit } from '../../services/areaUnitService';
 
 interface PropertyPreviewProps {
   property: Property | null;
@@ -25,6 +27,7 @@ interface PropertyPreviewProps {
   onToggleCompare?: (property: Property) => void;
   isCompared?: boolean;
   onOpenAIAdvisor?: (property: Property) => void;
+  areaUnit?: AreaUnit;
 }
 
 export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
@@ -35,11 +38,14 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
   onToggleFavorite,
   onToggleCompare,
   isCompared = false,
-  onOpenAIAdvisor
+  onOpenAIAdvisor,
+  areaUnit
 }) => {
   const [copied, setCopied] = React.useState(false);
 
   if (!property) return null;
+
+  const activeUnit = areaUnit || getStoredAreaUnit();
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -97,7 +103,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 loading="lazy"
               />
 
-              {/* Rent / Sale Badge */}
+              {/* Rent / Sale & Trust Badges */}
               <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
                 <span
                   className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
@@ -108,6 +114,17 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/95 backdrop-blur-sm text-slate-800 border border-slate-200/90 shadow-xs">
                   {property.category}
                 </span>
+                {property.contact.type === 'Owner' && (
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-emerald-600 text-white shadow-xs flex items-center gap-1">
+                    <span>Direct Owner</span>
+                  </span>
+                )}
+                {property.verified && (
+                  <span className="text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-blue-600 text-white shadow-xs flex items-center gap-0.5">
+                    <ShieldCheck className="w-2.5 h-2.5" />
+                    <span>RERA Verified</span>
+                  </span>
+                )}
               </div>
 
               {/* Close Button on Image for Mobile */}
@@ -239,58 +256,72 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 {/* Key Spec Badges */}
                 {property.category === 'Agricultural Land' || property.category === 'Plot' ? (
                   <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold flex-wrap">
-                    <div className="flex items-center gap-1 text-emerald-700">
-                      🌾 <span>{property.landMetrics?.areaAcres ? `${property.landMetrics.areaAcres.toFixed(2)} Acres` : `${property.areaSqFt} sqft`}</span>
-                      {property.landMetrics?.areaGunthas ? (
-                        <span className="text-slate-500 font-medium">({property.landMetrics.areaGunthas.toFixed(1)} Gunthas)</span>
-                      ) : null}
+                    <div className="flex items-center gap-1 text-emerald-700 font-bold">
+                      🌾 <span>{formatAreaByUnit(property.areaSqFt, activeUnit).formatted}</span>
                     </div>
                     <div className="flex items-center gap-1 text-slate-500">
                       <span>•</span>
                       <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                        {(property.landMetrics as any)?.soilType || 'Agricultural Zone'}
+                        {(property.landMetrics as any)?.soilType || 'Freehold Parcel'}
                       </span>
                     </div>
                   </div>
                 ) : (
                   <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium">
-                    {property.bhk && (
+                    {property.bhk ? (
                       <div className="flex items-center gap-1">
                         <BedDouble className="w-3.5 h-3.5 text-slate-400" />
                         <span>{property.bhk} BHK</span>
                       </div>
-                    )}
+                    ) : null}
                     <div className="flex items-center gap-1">
                       <Bath className="w-3.5 h-3.5 text-slate-400" />
                       <span>{property.bathrooms} Baths</span>
                     </div>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1 font-bold text-slate-800">
                       <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{property.areaSqFt} sqft</span>
+                      <span>{formatAreaByUnit(property.areaSqFt, activeUnit).formatted}</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Exact-Fit Action Buttons: View Details & Loan EMI */}
-              <div className="pt-3 mt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
+              {/* Action Buttons: View Details, 1-Tap WhatsApp, and Directions */}
+              <div className="pt-2.5 mt-2 border-t border-slate-100 flex items-center gap-1.5">
                 <button
                   type="button"
                   onClick={() => onViewDetails(property, 'overview')}
-                  className="h-9 px-3 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98] shadow-xs"
+                  className="flex-1 h-9 px-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-colors active:scale-[0.98] shadow-xs"
                 >
-                  <span>View Details</span>
+                  <span>Details</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => onViewDetails(property, 'emi')}
-                  className="h-9 px-3 border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98]"
+                {/* 1-Tap WhatsApp Lead CTA */}
+                <a
+                  href={`https://wa.me/${(property.contact.phone.replace(/\D/g, '').startsWith('91') ? '' : '91') + property.contact.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
+                    `Hello ${property.contact.name}, I am interested in '${property.title}' (${property.priceDisplay}) on ManorMap: ${window.location.origin}${window.location.pathname}?property=${encodeURIComponent(property.id)}\n\nIs it available? Please share site visit slot details.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 px-3 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition-colors active:scale-[0.98] shadow-xs flex-shrink-0"
+                  title="Chat directly on WhatsApp"
                 >
-                  <Calculator className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Loan EMI</span>
-                </button>
+                  <MessageCircle className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">WhatsApp</span>
+                </a>
+
+                {/* Direct Google Maps Navigation Link */}
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${property.coordinates[1]},${property.coordinates[0]}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 px-2.5 border border-slate-200 hover:border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-xl flex items-center justify-center gap-1 transition-colors active:scale-[0.98] flex-shrink-0"
+                  title="Get Driving Directions on Google Maps"
+                >
+                  <Navigation className="w-3.5 h-3.5 text-blue-600" />
+                  <span className="hidden sm:inline">Navigate</span>
+                </a>
               </div>
             </div>
           </div>
