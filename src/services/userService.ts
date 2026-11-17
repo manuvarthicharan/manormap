@@ -9,9 +9,7 @@ export interface UserProfile {
   avatarUrl: string;
   city: string;
   state: string;
-  kycVerified: boolean;
   memberSince: string;
-  panNumberMasked: string;
   authProvider?: 'google' | 'guest';
   isAuthenticated?: boolean;
 }
@@ -24,20 +22,18 @@ const DEFAULT_AVATARS = [
   'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=256&h=256&q=80'
 ];
 
-const USER_STORAGE_KEY = 'radar_user_profile';
+const USER_STORAGE_KEY = 'manormap_user_profile';
 
 const DEFAULT_PROFILE: UserProfile = {
-  id: 'usr_guest_demo',
-  name: 'Rohith Polisetti',
-  email: 'rohith@realtyradar.in',
-  phone: '+91 98490 12345',
-  role: 'Verified Property Owner & Investor',
+  id: 'usr_guest',
+  name: 'Guest User',
+  email: 'user@manormap.com',
+  phone: '',
+  role: 'Buyer / Investor',
   avatarUrl: DEFAULT_AVATARS[0],
   city: 'Hyderabad',
   state: 'Telangana',
-  kycVerified: true,
-  memberSince: 'March 2024',
-  panNumberMasked: 'ABCDE****F',
+  memberSince: '2026',
   authProvider: 'guest',
   isAuthenticated: false
 };
@@ -98,8 +94,7 @@ export function syncProfileFromSupabaseUser(supabaseUser: User | null): UserProf
     email: supabaseUser.email || current.email,
     avatarUrl: googleAvatar,
     authProvider: 'google',
-    isAuthenticated: true,
-    kycVerified: true
+    isAuthenticated: true
   };
 
   localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(authenticatedProfile));

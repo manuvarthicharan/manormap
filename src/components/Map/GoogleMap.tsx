@@ -74,6 +74,9 @@ interface GoogleMapProps {
   highlightedPropertyIds?: string[];
   aiPolygon?: { coordinates: [number, number][]; color?: string; label?: string } | null;
   onClearAIPolygon?: () => void;
+  // Map Type control
+  activeMapTypeId?: string;
+  onMapTypeChange?: (mapTypeId: string) => void;
 }
 
 export const GoogleMap: React.FC<GoogleMapProps> = ({
@@ -109,7 +112,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   onListThisLand,
   highlightedPropertyIds = [],
   aiPolygon = null,
-  onClearAIPolygon
+  onClearAIPolygon,
+  activeMapTypeId: propsActiveMapTypeId,
+  onMapTypeChange
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
@@ -133,10 +138,19 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const [mapLoaded, setMapLoaded] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [currentZoom, setCurrentZoom] = useState(13);
-  const [activeMapTypeId, setActiveMapTypeId] = useState<string>('roadmap');
+  const [activeMapTypeId, setActiveMapTypeId] = useState<string>(propsActiveMapTypeId || 'hybrid');
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [showTransitLayer, setShowTransitLayer] = useState(false);
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
+
+  useEffect(() => {
+    if (propsActiveMapTypeId && propsActiveMapTypeId !== activeMapTypeId) {
+      setActiveMapTypeId(propsActiveMapTypeId);
+      if (mapRef.current) {
+        mapRef.current.setMapTypeId(propsActiveMapTypeId);
+      }
+    }
+  }, [propsActiveMapTypeId]);
 
   // Agricultural Land Drawing Coordinates (identical simple logic to polygonSearch)
   const [landDrawCoordinates, setLandDrawCoordinates] = useState<[number, number][]>(() => drawnLandBorders || []);
@@ -212,8 +226,9 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           maxZoom: 20,
           disableDefaultUI: true,
           gestureHandling: 'greedy',
+          mapTypeId: maps.MapTypeId.HYBRID,
           styles: cleanStyle,
-          backgroundColor: '#f8fafc'
+          backgroundColor: '#0f172a'
         });
 
         mapRef.current = map;
@@ -679,6 +694,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     if (mapRef.current) {
       mapRef.current.setMapTypeId(typeId);
       setActiveMapTypeId(typeId);
+      onMapTypeChange?.(typeId);
     }
     setIsLayerMenuOpen(false);
   };

@@ -100,9 +100,8 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
               {/* Rent / Sale Badge */}
               <div className="absolute top-2 left-2 flex flex-col gap-1 items-start">
                 <span
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${
-                    property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
-                  }`}
+                  className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider text-white shadow-xs ${property.type === 'sale' ? 'bg-blue-600' : 'bg-emerald-600'
+                    }`}
                 >
                   {property.type === 'sale' ? 'For Sale' : 'For Rent'}
                 </span>
@@ -140,11 +139,10 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     {onToggleCompare && (
                       <button
                         onClick={() => onToggleCompare(property)}
-                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
-                          isCompared
-                            ? 'text-indigo-600 bg-indigo-50 border border-indigo-200'
-                            : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
-                        }`}
+                        className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isCompared
+                          ? 'text-indigo-600 bg-indigo-50 border border-indigo-200'
+                          : 'text-slate-400 hover:text-slate-700 hover:bg-slate-100'
+                          }`}
                         title={isCompared ? 'In Comparison' : 'Add to Compare'}
                       >
                         <Scale className="w-3.5 h-3.5" />
@@ -172,11 +170,10 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     </button>
                     <button
                       onClick={() => onToggleFavorite(property.id)}
-                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
-                        isFavorite
-                          ? 'text-rose-600 bg-rose-50'
-                          : 'text-slate-400 hover:text-rose-600 hover:bg-slate-100'
-                      }`}
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${isFavorite
+                        ? 'text-rose-600 bg-rose-50'
+                        : 'text-slate-400 hover:text-rose-600 hover:bg-slate-100'
+                        }`}
                       title={isFavorite ? 'Remove Favorite' : 'Save Property'}
                     >
                       <Heart className={`w-3.5 h-3.5 ${isFavorite ? 'fill-rose-600' : ''}`} />
@@ -218,9 +215,8 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     </button>
                     <button
                       onClick={() => onToggleFavorite(property.id)}
-                      className={`p-1.5 rounded-lg ${
-                        isFavorite ? 'text-rose-600 bg-rose-50' : 'text-slate-400 bg-slate-100'
-                      }`}
+                      className={`p-1.5 rounded-lg ${isFavorite ? 'text-rose-600 bg-rose-50' : 'text-slate-400 bg-slate-100'
+                        }`}
                     >
                       <Heart className={`w-4 h-4 ${isFavorite ? 'fill-rose-600' : ''}`} />
                     </button>

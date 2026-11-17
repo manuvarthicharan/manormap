@@ -10,7 +10,6 @@ import {
   HelpCircle,
   Trash2,
   ShieldCheck,
-  CheckCircle2,
   MapPin,
   Navigation,
   RefreshCw,
@@ -35,6 +34,20 @@ interface ActivityModalProps {
   onSelectLocationCoords?: (coords: [number, number]) => void;
 }
 
+interface SavedSearchItem {
+  id: string;
+  title: string;
+  sub: string;
+  alert: string;
+  coords: [number, number];
+}
+
+const DEFAULT_SAVED_SEARCHES: SavedSearchItem[] = [
+  { id: 'ss-1', title: 'Gachibowli & Financial District', sub: '3 BHK, ₹1.5 Cr – ₹2.5 Cr', alert: 'Active Daily Alert', coords: [78.3512, 17.4385] },
+  { id: 'ss-2', title: 'Indiranagar & Koramangala', sub: 'Penthouse & Luxury Villas', alert: 'Weekly Digest', coords: [77.6412, 12.9719] },
+  { id: 'ss-3', title: 'Bandra West Sea-Facing', sub: '3+ BHK, Ready to Move', alert: 'Instant Alert', coords: [72.8258, 19.0596] }
+];
+
 export const ActivityModals: React.FC<ActivityModalProps> = ({
   modalType,
   onClose,
@@ -51,9 +64,31 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   const [nameInput, setNameInput] = useState(profile.name);
   const [emailInput, setEmailInput] = useState(profile.email);
   const [phoneInput, setPhoneInput] = useState(profile.phone);
+  const [roleInput, setRoleInput] = useState(profile.role || 'Buyer / Investor');
+  const [cityInput, setCityInput] = useState(profile.city || 'Hyderabad');
+  const [stateInput, setStateInput] = useState(profile.state || 'Telangana');
   const [avatarUrlInput, setAvatarUrlInput] = useState(profile.avatarUrl);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState('');
   const supabaseOnline = isSupabaseConfigured();
+
+  // Saved Searches & Alerts state with localStorage persistence
+  const [savedSearches, setSavedSearches] = useState<SavedSearchItem[]>(() => {
+    try {
+      const stored = localStorage.getItem('manormap_saved_searches');
+      if (stored) return JSON.parse(stored);
+    } catch { }
+    return DEFAULT_SAVED_SEARCHES;
+  });
+
+  const handleDeleteSavedSearch = (id: string) => {
+    setSavedSearches((prev) => {
+      const updated = prev.filter((s) => s.id !== id);
+      try {
+        localStorage.setItem('manormap_saved_searches', JSON.stringify(updated));
+      } catch { }
+      return updated;
+    });
+  };
 
   const handleGoogleSignIn = async () => {
     if (!supabaseOnline) {
@@ -94,7 +129,10 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     const updated = saveUserProfile({
       name: nameInput.trim() || profile.name,
       email: emailInput.trim() || profile.email,
-      phone: phoneInput.trim() || profile.phone,
+      phone: phoneInput.trim(),
+      role: roleInput,
+      city: cityInput.trim() || profile.city,
+      state: stateInput.trim() || profile.state,
       avatarUrl: avatarUrlInput.trim() || profile.avatarUrl
     });
     setProfile(updated);
@@ -106,7 +144,7 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
-      <div 
+      <div
         className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
         onClick={onClose}
       />
@@ -366,7 +404,8 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                         type="text"
                         value={nameInput}
                         onChange={(e) => setNameInput(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                        placeholder="Your full name"
                       />
                     </div>
                     <div>
@@ -375,7 +414,8 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                         type="email"
                         value={emailInput}
                         onChange={(e) => setEmailInput(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                        placeholder="name@example.com"
                       />
                     </div>
                     <div>
@@ -384,24 +424,49 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                         type="tel"
                         value={phoneInput}
                         onChange={(e) => setPhoneInput(e.target.value)}
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
+                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                        placeholder="+91 98765 43210"
                       />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-slate-600 block mb-1">Custom Avatar Link</label>
-                      <input
-                        type="url"
-                        value={avatarUrlInput}
-                        onChange={(e) => setAvatarUrlInput(e.target.value)}
-                        placeholder="https://..."
-                        className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800"
-                      />
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 block mb-1">I am a</label>
+                        <select
+                          value={roleInput}
+                          onChange={(e) => setRoleInput(e.target.value)}
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                        >
+                          <option value="Buyer / Investor">Buyer / Investor</option>
+                          <option value="Property Owner">Property Owner</option>
+                          <option value="Real Estate Agent">Real Estate Agent</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 block mb-1">City</label>
+                        <input
+                          type="text"
+                          value={cityInput}
+                          onChange={(e) => setCityInput(e.target.value)}
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                          placeholder="e.g. Hyderabad"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-600 block mb-1">State</label>
+                        <input
+                          type="text"
+                          value={stateInput}
+                          onChange={(e) => setStateInput(e.target.value)}
+                          className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium text-slate-800 focus:outline-none focus:border-blue-500"
+                          placeholder="e.g. Telangana"
+                        />
+                      </div>
                     </div>
                     <div className="flex justify-end gap-2 pt-2">
                       <button
                         type="button"
                         onClick={() => setIsEditingProfile(false)}
-                        className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600"
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100"
                       >
                         Cancel
                       </button>
@@ -417,27 +482,28 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                 ) : (
                   <div className="space-y-2 text-xs">
                     <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-                      <span className="text-slate-500">Platform Portal</span>
-                      <span className="font-bold text-slate-800">Real Estate Radar (National Edition)</span>
-                    </div>
-                    <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
                       <span className="text-slate-500">Account Classification</span>
-                      <span className="font-bold text-slate-800">{profile.role}</span>
+                      <span className="font-bold text-slate-800">{profile.role || 'Buyer / Investor'}</span>
                     </div>
                     <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-                      <span className="text-slate-500">Region Coverage</span>
-                      <span className="font-bold text-slate-800">{profile.city}, {profile.state} (India)</span>
+                      <span className="text-slate-500">Preferred Location</span>
+                      <span className="font-bold text-slate-800">{profile.city || 'Hyderabad'}, {profile.state || 'Telangana'}</span>
                     </div>
                     <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-                      <span className="text-slate-500">Verification Status</span>
-                      <span className="font-bold text-emerald-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        Aadhaar / PAN KYC Verified
-                      </span>
+                      <span className="text-slate-500">Registered Mobile</span>
+                      <span className="font-medium text-slate-800">{profile.phone || 'Not provided'}</span>
                     </div>
                     <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
-                      <span className="text-slate-500">PAN Card</span>
-                      <span className="font-mono text-slate-700">{profile.panNumberMasked}</span>
+                      <span className="text-slate-500">Saved Favorites</span>
+                      <span className="font-bold text-rose-600">{favoriteProps.length} Shortlisted Properties</span>
+                    </div>
+                    <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                      <span className="text-slate-500">My Listed Properties</span>
+                      <span className="font-bold text-blue-600">{myListedProps.length} Listed Properties</span>
+                    </div>
+                    <div className="p-3 rounded-xl border border-slate-100 flex justify-between items-center">
+                      <span className="text-slate-500">Member Since</span>
+                      <span className="font-medium text-slate-600">{profile.memberSince || '2026'}</span>
                     </div>
                   </div>
                 )}
@@ -495,33 +561,46 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
             {/* SAVED SEARCHES */}
             {modalType === 'saved-searches' && (
               <div className="space-y-3">
-                {[
-                  { title: 'Gachibowli & Financial District', sub: '3 BHK, ₹1.5 Cr – ₹2.5 Cr', alert: 'Active Daily Alert', coords: [78.3512, 17.4385] as [number, number] },
-                  { title: 'Indiranagar & Koramangala', sub: 'Penthouse & Luxury Villas', alert: 'Weekly Digest', coords: [77.6412, 12.9719] as [number, number] },
-                  { title: 'Bandra West Sea-Facing', sub: '3+ BHK, Ready to Move', alert: 'Instant Alert', coords: [72.8258, 19.0596] as [number, number] }
-                ].map((s, idx) => (
-                  <div key={idx} className="p-3.5 rounded-2xl border border-slate-100 hover:bg-slate-50 flex items-center justify-between">
-                    <div>
-                      <div className="text-xs font-bold text-slate-900">{s.title}</div>
-                      <div className="text-[11px] text-slate-500">{s.sub}</div>
-                      <span className="inline-block mt-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
-                        {s.alert}
-                      </span>
+                {savedSearches.length > 0 ? (
+                  savedSearches.map((s) => (
+                    <div key={s.id} className="p-3.5 rounded-2xl border border-slate-100 hover:bg-slate-50 flex items-center justify-between gap-3 transition-colors">
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 truncate">{s.title}</div>
+                        <div className="text-[11px] text-slate-500 truncate">{s.sub}</div>
+                        <span className="inline-block mt-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                          {s.alert}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        {onSelectLocationCoords && (
+                          <button
+                            onClick={() => {
+                              onSelectLocationCoords(s.coords);
+                              onClose();
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl transition-colors"
+                            title="View on Map"
+                          >
+                            <Navigation className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteSavedSearch(s.id)}
+                          className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                          title="Delete Alert"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    {onSelectLocationCoords && (
-                      <button
-                        onClick={() => {
-                          onSelectLocationCoords(s.coords);
-                          onClose();
-                        }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl"
-                        title="View on Map"
-                      >
-                        <Navigation className="w-4 h-4" />
-                      </button>
-                    )}
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-slate-500 text-xs bg-slate-50 rounded-2xl border border-slate-100">
+                    <Bookmark className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                    <p className="font-bold text-slate-700">No saved localities or alerts</p>
+                    <p className="text-[11px] text-slate-400 mt-1">Search any locality or micro-market to subscribe to instant alerts.</p>
                   </div>
-                ))}
+                )}
               </div>
             )}
 

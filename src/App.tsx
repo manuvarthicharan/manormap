@@ -93,7 +93,7 @@ export const App: React.FC = () => {
     try {
       localStorage.removeItem('app_theme');
       localStorage.removeItem('manormap_theme');
-    } catch (_) {}
+    } catch (_) { }
     document.documentElement.classList.remove('dark');
   }, []);
 
@@ -120,6 +120,9 @@ export const App: React.FC = () => {
 
   // AI Advisor Drawer state
   const [isAIAdvisorOpen, setIsAIAdvisorOpen] = useState(false);
+
+  // Active Map Layer type (default to 'hybrid' mode)
+  const [activeMapTypeId, setActiveMapTypeId] = useState<string>('hybrid');
 
   // Check if any geospatial drawing tool or surveyor is active
   const isAnyGeospatialToolActive = radiusSearch.active || polygonSearch.active || landSurvey.active || isDrawingLandForProperty;
@@ -652,7 +655,7 @@ export const App: React.FC = () => {
       center: currentMapCenter,
       zoom: mapInstance ? mapInstance.getZoom() || 14 : 14,
       bounds: currentBounds,
-      mapType: 'roadmap',
+      mapType: activeMapTypeId,
       activeLayers: [],
       currentLocality: currentLocalityName,
       currentCity: currentCityName,
@@ -722,6 +725,8 @@ export const App: React.FC = () => {
         highlightedPropertyIds={highlightedPropertyIds}
         aiPolygon={aiPolygon}
         onClearAIPolygon={() => setAiPolygon(null)}
+        activeMapTypeId={activeMapTypeId}
+        onMapTypeChange={setActiveMapTypeId}
       />
 
       {/* 
@@ -747,10 +752,13 @@ export const App: React.FC = () => {
           properties={allProps}
           onSelectProperty={(prop) => {
             setSelectedProperty(prop);
-            if (mapInstance && typeof window !== 'undefined' && window.google?.maps) {
+            if (prop && mapInstance && typeof window !== 'undefined' && window.google?.maps) {
               const [lng, lat] = prop.coordinates;
               mapInstance.panTo(new google.maps.LatLng(lat, lng));
-              mapInstance.setZoom(16);
+              const currentZoom = mapInstance.getZoom() || 14;
+              if (currentZoom < 16) {
+                mapInstance.setZoom(16);
+              }
             }
           }}
           filterState={filterState}
@@ -759,11 +767,12 @@ export const App: React.FC = () => {
           comparedCount={comparedPropertyIds.length}
           onOpenCompare={() => setIsComparisonModalOpen(true)}
           onOpenAIAdvisor={() => handleOpenAIAdvisor()}
+          activeMapTypeId={activeMapTypeId}
         />
       )}
 
       {/* 
-        MOBILE FLOATING BOTTOM NAVIGATION BAR (Thumb-friendly, sleek, uncluttered)
+        Interactive Pin Drop Overlay (Active during property location selection)
       */}
       {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && (
         <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-white/95 backdrop-blur-md text-slate-800 rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-1.5 animate-in slide-in-from-bottom duration-200">
@@ -790,7 +799,7 @@ export const App: React.FC = () => {
           </button>
 
           {/* Compare (if any active) */}
-          {comparedPropertyIds.length > 0 ? (
+          {comparedPropertyIds.length > 0 && (
             <button
               onClick={() => setIsComparisonModalOpen(true)}
               className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-indigo-600 hover:text-indigo-800 transition-colors active:scale-95 relative"
@@ -801,16 +810,16 @@ export const App: React.FC = () => {
                 {comparedPropertyIds.length}
               </span>
             </button>
-          ) : (
-            /* List Property */
-            <button
-              onClick={handleOpenAddProperty}
-              className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95"
-            >
-              <Plus className="w-5 h-5 text-amber-500" />
-              <span className="text-[10px] font-bold mt-0.5">List Prop</span>
-            </button>
           )}
+
+          {/* List Property */}
+          <button
+            onClick={handleOpenAddProperty}
+            className="flex flex-col items-center justify-center py-1 px-3 rounded-xl text-slate-600 hover:text-slate-900 transition-colors active:scale-95"
+          >
+            <Plus className="w-5 h-5 text-amber-500" />
+            <span className="text-[10px] font-bold mt-0.5">List Prop</span>
+          </button>
         </nav>
       )}
 

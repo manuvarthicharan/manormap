@@ -37,6 +37,7 @@ interface FloatingHeaderProps {
   comparedCount?: number;
   onOpenCompare?: () => void;
   onOpenAIAdvisor?: () => void;
+  activeMapTypeId?: string;
 }
 
 const TRENDING_HUBS = [
@@ -98,8 +99,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   onOpenAdvancedFilters,
   comparedCount = 0,
   onOpenCompare,
-  onOpenAIAdvisor
+  onOpenAIAdvisor,
+  activeMapTypeId = 'hybrid'
 }) => {
+  const isDarkMap = activeMapTypeId === 'hybrid' || activeMapTypeId === 'satellite';
   const [query, setQuery] = useState('');
   const [suggestions, setSuggestions] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -288,19 +291,28 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
       {/* 
         1. TOP-LEFT SAAS SEARCH COMMAND BAR 
         Clean, bounded width on desktop so it never stretches across the whole screen.
+        Dynamic theme adapts automatically to dark (hybrid/satellite) vs light (roadmap/terrain) background.
       */}
       <div
         ref={searchContainerRef}
         className="fixed top-3 left-3 right-3 sm:top-4 sm:left-6 sm:right-auto sm:w-[380px] md:w-[440px] lg:w-[480px] z-30 pointer-events-auto transition-all"
       >
-        <div className="flex items-center gap-1.5 sm:gap-2 bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl shadow-slate-900/5 border border-slate-200/90 p-1.5 sm:p-2 transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20">
+        <div className={`flex items-center gap-1.5 sm:gap-2 rounded-2xl shadow-xl transition-all focus-within:ring-2 focus-within:ring-blue-500/30 ${
+          isDarkMap
+            ? 'bg-slate-950/92 backdrop-blur-xl border border-slate-700/80 shadow-black/50 text-white focus-within:border-blue-500'
+            : 'bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-slate-900/5 text-slate-900 focus-within:border-blue-500'
+        } p-1.5 sm:p-2`}>
 
           {/* Logo & Navigation Menu Button */}
           <div className="flex items-center gap-1 flex-shrink-0">
             <button
               onClick={onOpenMenu}
               title="Open Navigation Menu"
-              className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-slate-700 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all active:scale-95 flex-shrink-0"
+              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl transition-all active:scale-95 flex-shrink-0 ${
+                isDarkMap
+                  ? 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+              }`}
               aria-label="Menu"
             >
               <Menu className="w-5 h-5" />
@@ -309,7 +321,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* ManorMap Brand Logo */}
             <div
               onClick={onOpenMenu}
-              className="flex items-center pr-1.5 sm:pr-2 border-r border-slate-200/80 cursor-pointer select-none group flex-shrink-0"
+              className={`flex items-center pr-1.5 sm:pr-2 border-r cursor-pointer select-none group flex-shrink-0 ${
+                isDarkMap ? 'border-slate-800' : 'border-slate-200/80'
+              }`}
               title="ManorMap Menu"
             >
               <div className="sm:hidden">
@@ -324,7 +338,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           {/* Omnisearch Hero Input Field */}
           <div className="relative flex-1 flex items-center min-w-0">
             <Search className={`w-4 h-4 ml-1 mr-1.5 pointer-events-none flex-shrink-0 transition-colors ${
-              query ? 'text-blue-600' : 'text-slate-400'
+              query ? 'text-blue-500' : (isDarkMap ? 'text-slate-400' : 'text-slate-400')
             }`} />
             
             <input
@@ -339,7 +353,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               onFocus={() => setShowDropdown(true)}
               onKeyDown={handleKeyDown}
               placeholder="Search locality, project, or PIN..."
-              className="w-full bg-transparent text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:outline-none pr-7 py-1 font-medium truncate"
+              className={`w-full bg-transparent text-xs sm:text-sm focus:outline-none pr-7 py-1 font-medium truncate ${
+                isDarkMap
+                  ? 'text-white placeholder-slate-400'
+                  : 'text-slate-900 placeholder-slate-400'
+              }`}
               autoComplete="off"
               spellCheck="false"
             />
@@ -349,7 +367,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className="absolute right-0.5 text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                className={`absolute right-0.5 p-1 rounded-lg transition-colors ${
+                  isDarkMap
+                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                }`}
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -358,7 +380,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
             {/* Cmd/Ctrl + K Indicator */}
             {!query && (
-              <span className="hidden xl:flex items-center px-1.5 py-0.5 rounded-md bg-slate-100 text-[10px] text-slate-400 font-mono font-bold select-none mr-1">
+              <span className={`hidden xl:flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold select-none mr-1 ${
+                isDarkMap
+                  ? 'bg-slate-800 text-slate-300 border border-slate-700/60'
+                  : 'bg-slate-100 text-slate-400'
+              }`}>
                 ⌘K
               </span>
             )}
@@ -372,7 +398,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             className={`relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl transition-all flex-shrink-0 active:scale-95 ${
               activeFilterCount > 0
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-2 ring-blue-400/40'
-                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+                : isDarkMap
+                  ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
             }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
@@ -402,12 +430,18 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
         {/* Omnisearch Enhanced Dropdown Menu - Aligned directly with Searchbar */}
         {showDropdown && (
-          <div className="mt-2 w-full bg-white/98 backdrop-blur-2xl rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden divide-y divide-slate-100 animate-in fade-in slide-in-from-top-1 duration-150 max-h-[70dvh] sm:max-h-[460px] overflow-y-auto">
+          <div className={`mt-2 w-full rounded-2xl shadow-2xl border overflow-hidden divide-y animate-in fade-in slide-in-from-top-1 duration-150 max-h-[70dvh] sm:max-h-[460px] overflow-y-auto ${
+            isDarkMap
+              ? 'bg-slate-950/96 backdrop-blur-2xl border-slate-700/90 shadow-black/70 divide-slate-800/80 text-slate-100'
+              : 'bg-white/98 backdrop-blur-2xl border-slate-200/90 divide-slate-100 text-slate-900'
+          }`}>
 
             {/* Live Search Spinner */}
             {isSearching && (
-              <div className="p-3 text-xs text-slate-500 flex items-center gap-2 bg-slate-50/50">
-                <Loader2 className="w-3.5 h-3.5 text-blue-600 animate-spin" />
+              <div className={`p-3 text-xs flex items-center gap-2 ${
+                isDarkMap ? 'text-slate-400 bg-slate-900/60' : 'text-slate-500 bg-slate-50/50'
+              }`}>
+                <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
                 <span>Searching Google Maps & real estate database...</span>
               </div>
             )}
@@ -415,12 +449,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 1: MATCHING PROPERTIES & PROJECTS */}
             {matchingProperties.length > 0 && (
               <div className="p-2 sm:p-2.5">
-                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 py-1 flex items-center justify-between">
+                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center justify-between ${
+                  isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                }`}>
                   <div className="flex items-center gap-1.5">
-                    <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                    <Building2 className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                     <span>Matching Listings ({matchingProperties.length})</span>
                   </div>
-                  <span className="text-[9px] text-slate-400">Jump to property</span>
+                  <span className={`text-[9px] ${isDarkMap ? 'text-slate-400' : 'text-slate-400'}`}>Jump to property</span>
                 </div>
 
                 <div className="space-y-1 mt-1">
@@ -430,32 +466,49 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                       <div
                         key={prop.id}
                         onClick={() => handleSelectMatchingProperty(prop)}
-                        className={`p-2 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all ${isSelected
-                          ? 'bg-blue-50 ring-1 ring-blue-500/40'
-                          : 'hover:bg-slate-50'
-                          }`}
+                        className={`p-2 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all ${
+                          isSelected
+                            ? isDarkMap
+                              ? 'bg-blue-950/70 ring-1 ring-blue-500/60'
+                              : 'bg-blue-50 ring-1 ring-blue-500/40'
+                            : isDarkMap
+                              ? 'hover:bg-slate-900/80'
+                              : 'hover:bg-slate-50'
+                        }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0 font-bold text-xs">
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-xs ${
+                            isDarkMap
+                              ? 'bg-blue-950/80 text-blue-400 border border-blue-800/80'
+                              : 'bg-blue-50 text-blue-600 border border-blue-100'
+                          }`}>
                             <Building2 className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                            <div className={`text-xs sm:text-sm font-bold truncate ${
+                              isDarkMap ? 'text-white' : 'text-slate-900'
+                            }`}>
                               {prop.title}
                             </div>
-                            <div className="text-[11px] text-slate-500 truncate flex items-center gap-1.5">
+                            <div className={`text-[11px] truncate flex items-center gap-1.5 ${
+                              isDarkMap ? 'text-slate-300' : 'text-slate-500'
+                            }`}>
                               <span>{prop.area || prop.address}, {prop.city}</span>
                               <span>•</span>
-                              <span className="text-slate-400">{prop.category}</span>
+                              <span className={isDarkMap ? 'text-slate-400' : 'text-slate-400'}>{prop.category}</span>
                             </div>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className="text-xs font-black text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-lg shadow-2xs">
+                          <span className={`text-xs font-black px-2 py-0.5 rounded-lg shadow-2xs ${
+                            isDarkMap
+                              ? 'text-emerald-300 bg-emerald-950/80 border border-emerald-800/80'
+                              : 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                          }`}>
                             {formatIndianCurrency(prop.price, prop.type)}
                           </span>
-                          <ArrowRight className="w-3.5 h-3.5 text-slate-300" />
+                          <ArrowRight className={`w-3.5 h-3.5 ${isDarkMap ? 'text-slate-500' : 'text-slate-300'}`} />
                         </div>
                       </div>
                     );
@@ -467,8 +520,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 2: LOCALITY & CITY SUGGESTIONS */}
             {suggestions.length > 0 && (
               <div className="p-2 sm:p-2.5">
-                <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider px-2 py-1 flex items-center gap-1.5">
-                  <MapPin className="w-3.5 h-3.5 text-blue-600" />
+                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center gap-1.5 ${
+                  isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                }`}>
+                  <MapPin className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                   <span>Localities, Cities & PIN Codes</span>
                 </div>
 
@@ -480,13 +535,22 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                       <div
                         key={item.id}
                         onClick={() => handleSelectLocation(item)}
-                        className={`p-2 sm:p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all text-left ${isSelected
-                          ? 'bg-blue-50 ring-1 ring-blue-500/40'
-                          : 'hover:bg-slate-50'
-                          }`}
+                        className={`p-2 sm:p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all text-left ${
+                          isSelected
+                            ? isDarkMap
+                              ? 'bg-blue-950/70 ring-1 ring-blue-500/60'
+                              : 'bg-blue-50 ring-1 ring-blue-500/40'
+                            : isDarkMap
+                              ? 'hover:bg-slate-900/80'
+                              : 'hover:bg-slate-50'
+                        }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0">
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                            isDarkMap
+                              ? 'bg-blue-950/80 text-blue-400 border border-blue-800/80'
+                              : 'bg-blue-50 text-blue-600 border border-blue-100'
+                          }`}>
                             {item.type === 'city' ? (
                               <Building2 className="w-4 h-4" />
                             ) : (
@@ -494,18 +558,26 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             )}
                           </div>
                           <div className="min-w-0">
-                            <div className="text-xs sm:text-sm font-bold text-slate-900 truncate">
+                            <div className={`text-xs sm:text-sm font-bold truncate ${
+                              isDarkMap ? 'text-white' : 'text-slate-900'
+                            }`}>
                               {item.title}
                             </div>
                             {item.subTitle && (
-                              <div className="text-[11px] text-slate-500 truncate">
+                              <div className={`text-[11px] truncate ${
+                                isDarkMap ? 'text-slate-300' : 'text-slate-500'
+                              }`}>
                                 {item.subTitle}
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 flex-shrink-0">
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md flex-shrink-0 ${
+                          isDarkMap
+                            ? 'bg-slate-800 text-slate-300 border border-slate-700/70'
+                            : 'bg-slate-100 text-slate-600'
+                        }`}>
                           {item.type}
                         </span>
                       </div>
@@ -521,12 +593,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
                 {/* Micro-Markets Grid */}
                 <div>
-                  <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
+                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center justify-between ${
+                    isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                  }`}>
                     <div className="flex items-center gap-1.5">
-                      <TrendingUp className="w-3.5 h-3.5 text-blue-600" />
+                      <TrendingUp className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                       <span>Premier Indian Micro-Markets</span>
                     </div>
-                    <span className="text-[9px] text-emerald-600 font-bold">Q4 Yield</span>
+                    <span className={`text-[9px] font-bold ${isDarkMap ? 'text-emerald-400' : 'text-emerald-600'}`}>Q4 Yield</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -542,16 +616,30 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             type: 'area'
                           })
                         }
-                        className="p-2 rounded-xl hover:bg-blue-50/70 cursor-pointer text-left transition-all flex items-center gap-2 group border border-slate-100"
+                        className={`p-2 rounded-xl cursor-pointer text-left transition-all flex items-center gap-2 group border ${
+                          isDarkMap
+                            ? 'hover:bg-slate-900/90 border-slate-800/80 bg-slate-900/40'
+                            : 'hover:bg-blue-50/70 border-slate-100 bg-white'
+                        }`}
                       >
-                        <div className="w-7 h-7 rounded-lg bg-slate-100 group-hover:bg-blue-100 group-hover:text-blue-700 text-slate-600 flex items-center justify-center flex-shrink-0 transition-colors">
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
+                          isDarkMap
+                            ? 'bg-slate-800 text-slate-300 group-hover:bg-blue-900 group-hover:text-blue-300'
+                            : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
+                        }`}>
                           <Compass className="w-3.5 h-3.5" />
                         </div>
                         <div className="truncate flex-1 min-w-0">
-                          <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600 truncate">
+                          <div className={`text-xs font-bold truncate ${
+                            isDarkMap
+                              ? 'text-white group-hover:text-blue-400'
+                              : 'text-slate-900 group-hover:text-blue-600'
+                          }`}>
                             {loc.title}
                           </div>
-                          <div className="text-[10px] text-emerald-600 font-semibold truncate">
+                          <div className={`text-[10px] font-semibold truncate ${
+                            isDarkMap ? 'text-emerald-400' : 'text-emerald-600'
+                          }`}>
                             {loc.priceTrend}
                           </div>
                         </div>
@@ -561,9 +649,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                 </div>
 
                 {/* Quick Explore by Property Type */}
-                <div className="pt-2 border-t border-slate-100">
-                  <div className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-indigo-600" />
+                <div className={`pt-2 border-t ${isDarkMap ? 'border-slate-800' : 'border-slate-100'}`}>
+                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${
+                    isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                  }`}>
+                    <Tag className={`w-3.5 h-3.5 ${isDarkMap ? 'text-indigo-400' : 'text-indigo-600'}`} />
                     <span>Explore by Asset Class</span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
@@ -583,7 +673,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                           className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95 ${
                             isActive
                               ? 'bg-blue-600 text-white shadow-xs'
-                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                              : isDarkMap
+                                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60'
+                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                           }`}
                         >
                           <span>{cat.icon}</span>
@@ -600,13 +692,19 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 4: NO RESULTS STATE */}
             {query.trim().length >= 2 && !isSearching && suggestions.length === 0 && matchingProperties.length === 0 && (
               <div className="p-4 text-center space-y-2">
-                <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center">
+                <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center ${
+                  isDarkMap ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-400'
+                }`}>
                   <Search className="w-4 h-4" />
                 </div>
-                <div className="text-xs font-bold text-slate-800">
+                <div className={`text-xs font-bold ${
+                  isDarkMap ? 'text-slate-200' : 'text-slate-800'
+                }`}>
                   No exact match for "{query}"
                 </div>
-                <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                <p className={`text-[11px] max-w-xs mx-auto ${
+                  isDarkMap ? 'text-slate-400' : 'text-slate-500'
+                }`}>
                   Try a locality (e.g. Kokapet, Tellapur) or press Enter to trigger AI search.
                 </p>
                 <button
@@ -630,14 +728,20 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
       */}
       <div className="hidden sm:flex items-center gap-2 fixed top-4 right-6 z-30 pointer-events-auto">
         {/* Inline Segmented Switch: Buy vs Rent */}
-        <div className="flex items-center bg-white/95 backdrop-blur-xl p-1 rounded-2xl border border-slate-200/90 shadow-md shadow-slate-900/5 text-xs font-bold text-slate-600 h-10">
+        <div className={`flex items-center p-1 rounded-2xl border shadow-md text-xs font-bold h-10 ${
+          isDarkMap
+            ? 'bg-slate-950/92 backdrop-blur-xl border-slate-700/80 shadow-black/40 text-slate-300'
+            : 'bg-white/95 backdrop-blur-xl border-slate-200/90 shadow-slate-900/5 text-slate-600'
+        }`}>
           <button
             type="button"
             onClick={() => onFilterChange({ ...filterState, type: filterState.type === 'sale' ? 'all' : 'sale' })}
             className={`h-8 px-3 rounded-xl transition-all ${
               filterState.type === 'sale'
                 ? 'bg-blue-600 text-white shadow-xs font-bold'
-                : 'hover:text-slate-900'
+                : isDarkMap
+                  ? 'hover:text-white'
+                  : 'hover:text-slate-900'
             }`}
           >
             Buy
@@ -648,7 +752,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             className={`h-8 px-3 rounded-xl transition-all ${
               filterState.type === 'rent'
                 ? 'bg-blue-600 text-white shadow-xs font-bold'
-                : 'hover:text-slate-900'
+                : isDarkMap
+                  ? 'hover:text-white'
+                  : 'hover:text-slate-900'
             }`}
           >
             Rent
@@ -660,10 +766,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenCompare}
-            className="flex items-center gap-1.5 h-10 px-3 rounded-2xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold transition-all hover:bg-indigo-100 shadow-md active:scale-95"
+            className={`flex items-center gap-1.5 h-10 px-3 rounded-2xl text-xs font-bold transition-all shadow-md active:scale-95 border ${
+              isDarkMap
+                ? 'bg-indigo-950/80 border-indigo-800 text-indigo-300 hover:bg-indigo-900/80'
+                : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+            }`}
             title="Open Property Comparison"
           >
-            <Scale className="w-4 h-4 text-indigo-600" />
+            <Scale className="w-4 h-4 text-indigo-400" />
             <span>Compare ({comparedCount})</span>
           </button>
         )}
@@ -674,7 +784,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             type="button"
             onClick={onOpenAIAdvisor}
             title="Open AI Real Estate Advisor"
-            className="w-10 h-10 flex items-center justify-center bg-white/95 backdrop-blur-xl border border-slate-200/90 text-emerald-600 hover:bg-emerald-50 rounded-2xl shadow-md transition-all active:scale-95"
+            className={`w-10 h-10 flex items-center justify-center rounded-2xl shadow-md transition-all active:scale-95 border ${
+              isDarkMap
+                ? 'bg-slate-950/92 backdrop-blur-xl border-slate-700/80 text-emerald-400 hover:bg-slate-900 shadow-black/40'
+                : 'bg-white/95 backdrop-blur-xl border-slate-200/90 text-emerald-600 hover:bg-emerald-50 shadow-slate-900/5'
+            }`}
           >
             <Sparkles className="w-4 h-4" />
           </button>
@@ -695,7 +809,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           type="button"
           onClick={onOpenProfile}
           title="Account & Settings"
-          className="relative w-10 h-10 rounded-2xl overflow-hidden border border-slate-200 hover:ring-2 hover:ring-blue-500/30 transition-all flex items-center justify-center text-xs font-bold text-slate-700 shadow-md active:scale-95"
+          className={`relative w-10 h-10 rounded-2xl overflow-hidden border hover:ring-2 hover:ring-blue-500/30 transition-all flex items-center justify-center text-xs font-bold shadow-md active:scale-95 ${
+            isDarkMap ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700'
+          }`}
           aria-label="Profile"
         >
           <img
