@@ -1,4 +1,4 @@
-import { Property, MapBounds, FilterState, LandSurveyState } from '../types';
+import { Property, MapBounds, FilterState, LandSurveyState, ListingType } from '../types';
 import { calculateDistanceKm } from './aiIntelligenceService';
 import { isSupabaseConfigured } from './supabaseClient';
 import {
@@ -323,8 +323,8 @@ export function calculateLandParcelMetrics(points: [number, number][]): LandSurv
   return computeLandSurveyMetrics(points);
 }
 
-export function formatIndianCurrency(amount: number, type: 'sale' | 'rent' = 'sale'): string {
-  if (type === 'rent') {
+export function formatIndianCurrency(amount: number, type: ListingType | 'sale' | 'rent' | 'lease' | 'pg' = 'sale'): string {
+  if (type === 'rent' || type === 'pg') {
     if (amount >= 100000) {
       return `₹${(amount / 100000).toFixed(1)}L/mo`;
     }
@@ -332,6 +332,18 @@ export function formatIndianCurrency(amount: number, type: 'sale' | 'rent' = 'sa
       return `₹${Math.round(amount / 1000)}k/mo`;
     }
     return `₹${amount.toLocaleString('en-IN')}/mo`;
+  }
+
+  if (type === 'lease') {
+    if (amount >= 10000000) {
+      const cr = amount / 10000000;
+      return `₹${cr % 1 === 0 ? cr.toFixed(0) : cr.toFixed(2)} Cr Lease`;
+    }
+    if (amount >= 100000) {
+      const lk = amount / 100000;
+      return `₹${lk % 1 === 0 ? lk.toFixed(0) : lk.toFixed(1)} L Lease`;
+    }
+    return `₹${amount.toLocaleString('en-IN')} Lease`;
   }
 
   if (amount >= 10000000) {

@@ -1,6 +1,18 @@
-export type ListingType = 'sale' | 'rent';
+export type ListingType = 'sale' | 'rent' | 'lease' | 'pg';
 
-export type PropertyCategory = 'Apartment' | 'Villa' | 'Independent House' | 'Plot' | 'Commercial' | 'Penthouse' | 'Agricultural Land';
+export type PropertyCategory =
+  | 'Apartment'
+  | 'Villa'
+  | 'Independent House'
+  | 'Plot'
+  | 'Open Plot'
+  | 'Commercial'
+  | 'Penthouse'
+  | 'Agricultural Land'
+  | 'Office'
+  | 'Shop'
+  | 'Warehouse'
+  | 'Industrial';
 
 export interface LocalityScores {
   transit: number; // 0-100
@@ -55,6 +67,7 @@ export interface Property {
   address: string;
   area: string;
   city: string;
+  district?: string;
   state: string;
   pinCode: string;
   coordinates: [number, number]; // [longitude, latitude] - standard GeoJSON / PostGIS format
@@ -75,12 +88,24 @@ export interface Property {
   contact: {
     name: string;
     phone: string;
-    type: 'Owner' | 'Verified Agent' | 'Builder';
+    type: 'Owner' | 'Verified Agent' | 'Agent' | 'Builder' | 'Company';
     email?: string;
     responseTime?: string;
     kycVerified?: boolean;
     registrationId?: string;
   };
+  projectOrSociety?: string;
+  deposit?: number;
+  leaseAmount?: number;
+  brokerage?: string;
+  isNegotiable?: boolean;
+  ownershipType?: string;
+  approvalAuthority?: string;
+  surveyNumber?: string;
+  videoUrl?: string;
+  floorPlanUrl?: string;
+  whatsappNumber?: string;
+  landmarks?: string[];
   boundaryPolygon?: [number, number][]; // GeoJSON array of [lng, lat] vertices forming the cadastral / parcel boundary
   landMetrics?: {
     areaAcres: number;
