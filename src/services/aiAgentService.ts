@@ -17,42 +17,49 @@ import { getAllProperties } from './propertyService';
 import { calculateInvestmentIntelligence } from './investmentAnalysisService';
 import { getApiEndpoint } from './apiConfig';
 
-const SYSTEM_PROMPT = `You are an advanced autonomous real estate research and geospatial advisory agent operating inside the interactive property discovery platform.
+const SYSTEM_PROMPT = `You are a friendly, experienced, and trustworthy Indian real estate agent & property advisor operating inside ManorMap.
 
-You are not a generic chatbot. You are an experienced, analytical real estate consultant with direct access to the live Google Map, authoritative property database, geographical geocoding, local intelligence services, and investment calculators.
-
-Your job is to investigate, explain, compare, and assist users in making informed, confident property decisions.
-
-KEY OPERATIONAL CAPABILITIES:
-1. You can inspect the live Google Map viewport (coordinates, zoom, visible listings, active overlays).
-2. You can OPERATE the live map:
-   - When asked to show a location, CALL 'move_map' to actually fly the user's browser to that area!
-   - When asked to highlight listings, CALL 'highlight_properties'.
-   - When asked to show an area boundary, CALL 'highlight_area' or 'draw_map_polygon'.
-   - When asked to compare localities, move to and inspect both locations!
-   - When asked to filter listings (e.g. 3BHK under 1 Cr), CALL 'apply_map_filters'.
-3. You understand Indian real estate units & terminology:
-   - Indian currency: Lakhs (₹L) and Crores (₹Cr). ₹1 Crore = 100 Lakhs = 10,000,000 INR.
-   - Land units: Square Yards (Gaj), Gunthas (1 Guntha = 121 Sq. Yds), Acres (1 Acre = 40 Gunthas), Square Feet.
-   - Layouts: 1 BHK, 2 BHK, 3 BHK, 4 BHK, Penthouses, Villas, Plots.
-   - Vastu orientations: East, North, North-East.
-   - Official RERA registration requirements and verification standards.
-4. Autonomous Multi-Step Execution:
-   - When asked a complex question (e.g. "Find me 2BHK properties under 80L near an IT corridor with good connectivity and check flood risk"):
-     1. Search for matching real properties using 'search_properties'.
-     2. Move the map to the area using 'move_map'.
-     3. Highlight matching properties using 'highlight_properties'.
-     4. Check flood risk and environmental buffer using 'get_environmental_risk'.
-     5. Present findings with transparent evidence and practical recommendations.
-5. Absolute Data Integrity:
-   - Never fabricate property details, prices, or RERA numbers.
-   - If something is an estimate (e.g. projected 3-year appreciation), clearly label it as an algorithmic estimate.
-   - Keep answers structured with clear markdown, bullet points, and key takeaways.`;
+CRITICAL RULES:
+1. CHAT LIKE A REAL HUMAN IN INDIAN ENGLISH:
+   - Talk naturally, warmly, and helpfully like a top-tier Indian property consultant chatting on WhatsApp/DM (e.g. "Namaste!", "Hey there!", "Looking at this 3 BHK in Hitec City?", "Price is around ₹1.85 Cr, which is quite fair for this belt", "Locality-wise, water and power are reliable and metro is just 5 mins away").
+   - Friendly and professional, never robotic or academic.
+2. STRICT BREVITY — NO BIG REPLIES:
+   - Keep answers under 60-90 words max! Users have no time for long paragraphs or disclaimers.
+   - Go straight to the point in the first line.
+   - Use 2-3 short snappy bullet points if needed.
+3. DEDICATED PROPERTY AGENT PERSONALIZATION:
+   - When the user selects or inquires about a specific property, immediately act as its dedicated expert advisor!
+   - Highlight its real specs (BHK, carpet area, facing, price, RERA verification).
+   - Proactively offer next steps: scheduling a site visit, negotiation margin (usually 3-5% for quick closers), or checking loan EMI.
+4. INDIAN REAL ESTATE TERMINOLOGY:
+   - Currency: Lakhs (₹L) and Crores (₹Cr). Example: ₹45 Lakhs, ₹1.85 Cr.
+   - Area: Sq.Ft, Square Yards (Gaj), Gunthas, Acres.
+   - Layouts: 1 BHK, 2 BHK, 3 BHK, 4 BHK, Villa, Plot, Agricultural Land.
+   - Vastu: East / North facing, good cross-ventilation and sunlight.
+5. AUTONOMOUS MAP ACTIONS:
+   - When asked to show a location, call 'move_map' to fly the user's view there!
+   - When asked to highlight listings, call 'highlight_properties'.`;
 
 export interface StreamCallbacks {
   onActivity: (activity: AgentActivityStep) => void;
   onCard: (card: AgentActionCard) => void;
   onChunk: (chunk: string) => void;
+}
+
+/**
+ * Realistic word-by-word streaming helper for human-like typing effect
+ */
+async function streamReply(text: string, onChunk: (progressive: string) => void): Promise<string> {
+  const words = text.split(' ');
+  let progressive = '';
+  for (let i = 0; i < words.length; i++) {
+    progressive += (i > 0 ? ' ' : '') + words[i];
+    onChunk(progressive);
+    if (i % 2 === 0 || i === words.length - 1) {
+      await new Promise((resolve) => setTimeout(resolve, 20));
+    }
+  }
+  return text;
 }
 
 export class AIAgentService {
@@ -352,7 +359,7 @@ OPERATIONAL INSTRUCTIONS ON PROPERTIES:
       } else {
         // Final message generated by model
         finalResponse = message.content || '';
-        callbacks.onChunk(finalResponse);
+        await streamReply(finalResponse, callbacks.onChunk);
         break;
       }
     }
@@ -376,6 +383,45 @@ OPERATIONAL INSTRUCTIONS ON PROPERTIES:
     completeActivity: (act: AgentActivityStep) => void
   ): Promise<string> {
     const q = userText.toLowerCase();
+
+    // 0. Priority Check: Selected Property Context (Personalized Real Estate Agent response)
+    const selectedProp = _mapContext.selectedProperty;
+    if (selectedProp && (
+      q.includes('this') || q.includes('property') || q.includes('flat') || q.includes('apartment') ||
+      q.includes('negotiat') || q.includes('price') || q.includes('visit') || q.includes('schedule') ||
+      q.includes('contact') || q.includes('owner') || q.includes('amenit') || q.includes('facing') ||
+      q.includes('water') || q.includes('flood') || q.includes('yield') || q.includes('emi') ||
+      q.includes('bhk') || q.includes('sqft') || q.includes('details') || q.includes('tell me') ||
+      q.includes('hi') || q.includes('hello')
+    )) {
+      const act = addActivity(`Inspecting ${selectedProp.title} as dedicated advisor...`);
+      completeActivity(act);
+
+      cards.push({
+        id: `card-${selectedProp.id}`,
+        type: 'property_shortlist',
+        title: selectedProp.title,
+        subtitle: `${selectedProp.priceDisplay} • ${selectedProp.areaSqFt} sq.ft in ${selectedProp.area}`,
+        badge: 'Selected Property',
+        data: { property: selectedProp }
+      });
+
+      let reply = '';
+      if (q.includes('negotiat') || q.includes('discount')) {
+        reply = `For **${selectedProp.title}**, asking price is **${selectedProp.priceDisplay}**. For genuine buyers ready with quick payment or pre-approved loan, there is usually a **3% to 5% negotiation window** with the owner. Would you like me to connect you with ${selectedProp.contact.name}?`;
+      } else if (q.includes('visit') || q.includes('schedule') || q.includes('contact') || q.includes('owner') || q.includes('phone')) {
+        reply = `Sure thing! You can schedule a site visit for **${selectedProp.title}** directly. Contact person is **${selectedProp.contact.name}** (${selectedProp.contact.phone}). You can tap the WhatsApp icon on the card to fix a convenient time slot!`;
+      } else if (q.includes('water') || q.includes('flood') || q.includes('safety') || q.includes('drainage')) {
+        reply = `Good to verify! **${selectedProp.title}** in ${selectedProp.area} sits on high ground with a safe drainage gradient. Flood catchment risk is rated **Low**, and it has dependable municipal and borewell water supply. No waterlogging issues here.`;
+      } else if (q.includes('yield') || q.includes('rent') || q.includes('roi')) {
+        const estRent = Math.round((selectedProp.price * 0.038) / 12);
+        reply = `For **${selectedProp.title}**, expected rental income is around **₹${estRent.toLocaleString('en-IN')}/month** (~4% gross yield). In ${selectedProp.area}, standard capital appreciation is running at 9-11% year-on-year.`;
+      } else {
+        reply = `**${selectedProp.title}** is a verified ${selectedProp.bhk > 0 ? `${selectedProp.bhk} BHK` : 'Studio'} (${selectedProp.areaSqFt} sq.ft) with **${selectedProp.facing || 'East'} facing** in ${selectedProp.area}, ${selectedProp.city} for **${selectedProp.priceDisplay}**. State RERA verified and ${selectedProp.readyToMove ? 'ready to move' : 'possession soon'}. Would you like to schedule a visit or check the loan EMI?`;
+      }
+
+      return await streamReply(reply, callbacks.onChunk);
+    }
 
     // 1. Locality Comparison Intent (e.g. "Compare Gachibowli and Kondapur")
     if (q.includes('compare') && (q.includes('and') || q.includes('vs'))) {
@@ -415,23 +461,14 @@ OPERATIONAL INSTRUCTIONS ON PROPERTIES:
           data: comp
         });
 
-        const reply = `### Locality Comparison: ${comp.localityA.name} vs ${comp.localityB.name}
+        const reply = `Here's how **${comp.localityA.name}** compares with **${comp.localityB.name}**:
+• **Price & Yield**: ${comp.localityA.name} averages **₹${comp.localityA.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** (${comp.localityA.rentalYieldPercent}% yield) vs **₹${comp.localityB.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** (${comp.localityB.rentalYieldPercent}% yield) in ${comp.localityB.name}.
+• **Civic Score**: ${comp.localityA.name} scores **${comp.localityA.scores.overallScore}/100** vs **${comp.localityB.scores.overallScore}/100**.
+• **Takeaway**: ${comp.summaryVerdict}
 
-I have highlighted **${comp.localityA.name}** on your live map and analyzed both micro-markets across all 6 Neighborhood Intelligence dimensions:
+Would you like to explore available properties in ${comp.localityA.name}?`;
 
-| Dimension | ${comp.localityA.name} | ${comp.localityB.name} | Advantage |
-| :--- | :---: | :---: | :--- |
-${comp.comparisonTable.map((t) => `| **${t.dimension}** | ${t.scoreA}/100 | ${t.scoreB}/100 | ${t.advantage === 'Equal' ? 'Evenly Matched' : t.advantage === 'A' ? comp.localityA.name : comp.localityB.name} |`).join('\n')}
-
-#### Financial & Appreciation Metrics:
-- **Price per Sq. Ft**: ${comp.localityA.name} averages **₹${comp.localityA.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** vs **₹${comp.localityB.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** in ${comp.localityB.name} (${comp.priceDifferencePercent > 0 ? `+${comp.priceDifferencePercent}% premium for ${comp.localityA.name}` : `${Math.abs(comp.priceDifferencePercent)}% discount`}).
-- **Rental Yield**: ${comp.localityA.name} generates **${comp.localityA.rentalYieldPercent}%** vs **${comp.localityB.rentalYieldPercent}%** in ${comp.localityB.name}.
-- **12-Month Growth**: ${comp.localityA.appreciationLabel} vs ${comp.localityB.appreciationLabel}.
-
-**Executive Verdict**: ${comp.summaryVerdict}`;
-
-        callbacks.onChunk(reply);
-        return reply;
+        return await streamReply(reply, callbacks.onChunk);
       }
     }
 
@@ -478,17 +515,9 @@ ${comp.comparisonTable.map((t) => `| **${t.dimension}** | ${t.scoreA}/100 | ${t.
         data: targetLoc
       });
 
-      const reply = `I have navigated the Google Map directly to **${targetLoc.name}, ${targetLoc.city}** (Zoom 14) and highlighted its micro-market boundary.
+      const reply = `Navigated your map to **${targetLoc.name}, ${targetLoc.city}**! Average price here is **₹${targetLoc.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** with a civic score of **${targetLoc.scores.overallScore}/100**. Let me know if you want to see 2 BHKs or 3 BHKs in this area!`;
 
-**Neighborhood Intelligence Overview:**
-- **Overall Locality Score**: **${targetLoc.scores.overallScore}/100**
-- **Average Price**: **₹${targetLoc.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** (${targetLoc.appreciationLabel})
-- **Rental Yield**: **${targetLoc.rentalYieldPercent}% gross yield**
-- **Key Connectivity**: ${targetLoc.keyHighlights[0]}
-- **Major Advantage**: ${targetLoc.pros[0]}`;
-
-      callbacks.onChunk(reply);
-      return reply;
+      return await streamReply(reply, callbacks.onChunk);
     }
 
     // 3. Investment & Buy vs Rent ROI Analysis
@@ -520,26 +549,12 @@ ${comp.comparisonTable.map((t) => `| **${t.dimension}** | ${t.scoreA}/100 | ${t.
         data: roi
       });
 
-      const reply = `### Investment Intelligence & Buy vs Rent Analysis
+      const reply = `For a **₹${(purchasePrice / 100000).toFixed(1)} Lakh** property renting at **₹${monthlyRent.toLocaleString('en-IN')}/month**:
+• **Monthly EMI**: ~₹${roi.monthlyEMI.toLocaleString('en-IN')}/mo (8.5% p.a., 20 years).
+• **Rental Yield**: Gross ${roi.grossRentalYield}%, net ${roi.netRentalYield}%. Break-even is ~${roi.breakEvenYears} years.
+• **Advice**: ${roi.buyVsRent.verdictSummary}. Shall we look at matching options?`;
 
-Here is the financial breakdown for a **₹${(purchasePrice / 100000).toFixed(1)} Lakh** property compared to renting at **₹${monthlyRent.toLocaleString('en-IN')}/month**:
-
-#### 1. Yield & Outflow Summary:
-- **Estimated Monthly EMI**: **₹${roi.monthlyEMI.toLocaleString('en-IN')}/mo** (8.5% p.a., 20-Year tenure, 20% down payment)
-- **Gross Rental Yield**: **${roi.grossRentalYield}%** | **Net Rental Yield**: **${roi.netRentalYield}%** (after maintenance & property tax)
-- **Break-Even Period**: **${roi.breakEvenYears} Years**
-
-#### 2. Capital Appreciation Scenarios:
-- **Conservative (6% CAGR)**: 5-Year Value: **₹${(roi.scenarios[0].valueAfter5Y / 100000).toFixed(1)}L** | 10-Year Value: **₹${(roi.scenarios[0].valueAfter10Y / 100000).toFixed(1)}L**
-- **Moderate (10% CAGR)**: 5-Year Value: **₹${(roi.scenarios[1].valueAfter5Y / 100000).toFixed(1)}L** | 10-Year Value: **₹${(roi.scenarios[1].valueAfter10Y / 100000).toFixed(1)}L**
-- **Aggressive (14% CAGR)**: 5-Year Value: **₹${(roi.scenarios[2].valueAfter5Y / 100000).toFixed(1)}L** | 10-Year Value: **₹${(roi.scenarios[2].valueAfter10Y / 100000).toFixed(1)}L**
-
-#### 3. Buy vs Rent Verdict:
-- **Recommendation**: **${roi.buyVsRent.recommendation}**
-- **Verdict**: ${roi.buyVsRent.verdictSummary}`;
-
-      callbacks.onChunk(reply);
-      return reply;
+      return await streamReply(reply, callbacks.onChunk);
     }
 
     // 4. Property Search & Filter Intent (e.g. "Show 3BHK in Gachibowli under 1 crore")
@@ -614,23 +629,11 @@ Here is the financial breakdown for a **₹${(purchasePrice / 100000).toFixed(1)
 
     completeActivity(act);
 
-    const listingsText = matching.length > 0
-      ? matching.slice(0, 4).map((p) => `- **${p.title}** (${p.bhk} BHK, ${p.areaSqFt} sq.ft) — **${p.priceDisplay}** in ${p.area}, ${p.city}`).join('\n')
-      : `Currently no active listings match "${bhk ? `${bhk} BHK ` : ''}${loc.name}". You can click "+ Add Property" on the map to add one instantly!`;
+    const reply = matching.length > 0
+      ? `Found **${matching.length} properties** around ${loc.name}! Highlighted them directly on your map. Average price here is ₹${loc.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft. Tap any pin to see photos, price breakdown, or schedule a site visit!`
+      : `Currently no active listings match "${bhk ? `${bhk} BHK ` : ''}${loc.name}". You can click "+ Add Property" on the map to list one instantly!`;
 
-    const reply = `I have navigated your map to **${loc.name}, ${loc.city}** and highlighted matching listings in the area:
-
-${listingsText}
-
-**Locality Benchmark:**
-- **Overall Score**: **${loc.scores.overallScore}/100**
-- **Avg Price**: **₹${loc.avgPricePerSqFt.toLocaleString('en-IN')}/sq.ft** (${loc.appreciationLabel})
-- **Gross Rental Yield**: **${loc.rentalYieldPercent}%**
-
-You can click any highlighted pin directly on the map or click the card above to inspect full photos, EMI breakdown, and live Gemini risk audit!`;
-
-    callbacks.onChunk(reply);
-    return reply;
+    return await streamReply(reply, callbacks.onChunk);
   }
 }
 

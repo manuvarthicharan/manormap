@@ -12,8 +12,7 @@ import {
   ShieldCheck,
   ChevronRight,
   Calculator,
-  LogOut,
-  Database
+  LogOut
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
@@ -162,22 +161,6 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                 <span>Sign In with Google</span>
               </button>
             )}
-
-            {/* Supabase Database Architecture Status Pill */}
-            <div className="px-2.5 py-1 rounded-lg bg-slate-100/80 flex items-center justify-between text-[10px] text-slate-600 font-medium">
-              <div className="flex items-center gap-1.5">
-                <Database className="w-3 h-3 text-blue-600" />
-                <span>Supabase PostGIS</span>
-              </div>
-              <span className={`font-bold flex items-center gap-1 ${
-                supabaseOnline ? 'text-emerald-600' : 'text-blue-600'
-              }`}>
-                <span className={`w-1.5 h-1.5 rounded-full ${
-                  supabaseOnline ? 'bg-emerald-500 animate-pulse' : 'bg-blue-500'
-                }`} />
-                {supabaseOnline ? 'Cloud Connected' : 'Ready for Setup'}
-              </span>
-            </div>
           </div>
 
           {/* Navigation Sections */}
@@ -316,8 +299,8 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
         {/* Sticky Bottom Attribution Footer */}
         <div className="p-3.5 border-t border-slate-100 bg-slate-50 flex-shrink-0 text-center">
           <div className="text-[11px] text-slate-500 space-y-0.5">
-            <div className="font-bold text-slate-700">ManorMap Real Estate Engine</div>
-            <div>Google Maps JavaScript API &bull; PostGIS Spatial Engine</div>
+            <div className="font-bold text-slate-700">ManorMap Real Estate</div>
+            <div className="text-[10px] text-slate-400">&copy; 2026 ManorMap. All rights reserved.</div>
           </div>
         </div>
       </div>

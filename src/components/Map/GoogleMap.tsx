@@ -355,6 +355,10 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
           const [lng, lat] = clickedProp.coordinates;
           map.panTo(new google.maps.LatLng(lat, lng));
+          const currentZoom = map.getZoom() || 14;
+          if (currentZoom < 16) {
+            map.setZoom(16);
+          }
         });
 
         markersRef.current.set(property.id, marker);

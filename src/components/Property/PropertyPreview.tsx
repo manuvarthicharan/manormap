@@ -11,7 +11,9 @@ import {
   ShieldCheck,
   Calculator,
   Scale,
-  Sparkles
+  Sparkles,
+  Share2,
+  Check
 } from 'lucide-react';
 
 interface PropertyPreviewProps {
@@ -35,7 +37,45 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
   isCompared = false,
   onOpenAIAdvisor
 }) => {
+  const [copied, setCopied] = React.useState(false);
+
   if (!property) return null;
+
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareUrl = `${window.location.origin}${window.location.pathname}?property=${encodeURIComponent(property.id)}`;
+    const shareData = {
+      title: `${property.title} | ManorMap`,
+      text: `Verified property: ${property.title} in ${property.area}, ${property.city} for ${property.priceDisplay}`,
+      url: shareUrl
+    };
+
+    if (navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2200);
+        return;
+      } catch {
+        // Fall back to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }
+  };
 
   return (
     <div className="z-30 pointer-events-auto">
@@ -120,6 +160,17 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                       </button>
                     )}
                     <button
+                      onClick={handleShare}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        copied
+                          ? 'text-emerald-600 bg-emerald-50'
+                          : 'text-slate-400 bg-slate-100 hover:text-slate-700'
+                      }`}
+                      title={copied ? 'Link Copied!' : 'Share Personalized Link'}
+                    >
+                      {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                    </button>
+                    <button
                       onClick={() => onToggleFavorite(property.id)}
                       className={`w-7 h-7 rounded-lg flex items-center justify-center transition-colors ${
                         isFavorite
@@ -154,6 +205,17 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                         <Scale className="w-4 h-4" />
                       </button>
                     )}
+                    <button
+                      onClick={handleShare}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        copied
+                          ? 'text-emerald-600 bg-emerald-50'
+                          : 'text-slate-400 bg-slate-100 hover:text-slate-700'
+                      }`}
+                      title={copied ? 'Link Copied!' : 'Share Personalized Link'}
+                    >
+                      {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
+                    </button>
                     <button
                       onClick={() => onToggleFavorite(property.id)}
                       className={`p-1.5 rounded-lg ${

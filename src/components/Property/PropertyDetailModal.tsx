@@ -154,15 +154,36 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
   const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${property.coordinates[1]},${property.coordinates[0]}`;
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: `${property.title}`,
-        text: `Verified property in ${property.area}, ${property.city} for ${property.priceDisplay}`,
-        url: window.location.href
-      }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
+  const handleShare = async () => {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?property=${encodeURIComponent(property.id)}`;
+    const shareData = {
+      title: `${property.title} | ManorMap`,
+      text: `Verified property: ${property.title} in ${property.area}, ${property.city} for ${property.priceDisplay}`,
+      url: shareUrl
+    };
+
+    if (navigator.share && typeof navigator.canShare === 'function' && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+        setCopyFeedback(true);
+        setTimeout(() => setCopyFeedback(false), 2500);
+        return;
+      } catch {
+        // Fall back to clipboard
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopyFeedback(true);
+      setTimeout(() => setCopyFeedback(false), 2500);
+    } catch {
+      const textarea = document.createElement('textarea');
+      textarea.value = shareUrl;
+      document.body.appendChild(textarea);
+      textarea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textarea);
       setCopyFeedback(true);
       setTimeout(() => setCopyFeedback(false), 2500);
     }
@@ -565,14 +586,14 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                         <span className="font-extrabold text-sm text-white">Live Institutional Audit</span>
                         <span className="text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-900 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                           <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-ping" />
-                          Google Gemini 2.5 Flash
+                          Verified AI Advisory
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-300 mt-0.5">
                         {isLoadingGeminiAudit ? (
                           <span className="text-blue-300 flex items-center gap-1">
                             <Sparkles className="w-3 h-3 animate-spin text-emerald-400" />
-                            Gemini 2.5 Flash auditing property terrain, RERA price benchmark & Vastu...
+                            Auditing property terrain, RERA price benchmark & Vastu...
                           </span>
                         ) : (
                           geminiAudit?.investmentVerdict || aiAnalysis.investmentVerdict
@@ -594,7 +615,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                     disabled={isLoadingGeminiAudit}
                     className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-colors border border-white/10 flex-shrink-0 disabled:opacity-50"
                   >
-                    {isLoadingGeminiAudit ? 'Auditing...' : 'Re-run Gemini'}
+                    {isLoadingGeminiAudit ? 'Auditing...' : 'Re-run AI Audit'}
                   </button>
                 </div>
 
@@ -668,7 +689,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200/80 space-y-2">
                   <div className="font-extrabold text-sm text-emerald-900 flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Pointwise Advantages & Capital Drivers (Gemini Flash Verified)</span>
+                    <span>Pointwise Advantages & Capital Drivers (Verified AI Assessment)</span>
                   </div>
                   <ul className="space-y-1.5 text-slate-700">
                     {(geminiAudit?.pros || aiAnalysis.pros).map((pro, idx) => (
@@ -684,7 +705,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 space-y-2">
                   <div className="font-extrabold text-sm text-amber-900 flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 text-amber-600" />
-                    <span>Pointwise Disadvantages & Locality Watchpoints (Gemini Flash Verified)</span>
+                    <span>Pointwise Disadvantages & Locality Watchpoints (Verified AI Assessment)</span>
                   </div>
                   <ul className="space-y-1.5 text-slate-700">
                     {(geminiAudit?.cons || aiAnalysis.cons).map((con, idx) => (

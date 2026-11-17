@@ -17,7 +17,6 @@ import {
   Edit2,
   Save,
   Check,
-  Database,
   LogOut
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
@@ -484,27 +483,11 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                         <GoogleIcon className="w-4 h-4" />
                         <span>Continue with Google</span>
                       </button>
-                      <span className="text-[11px] text-slate-400">
-                        {supabaseOnline ? 'PostGIS Cloud Ready' : 'Configure Supabase in .env'}
+                      <span className="text-[11px] text-slate-500">
+                        Secure instant sign-in & device synchronization
                       </span>
                     </div>
                   )}
-                </div>
-
-                {/* Scalable Cloud Database Architecture Card */}
-                <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2.5">
-                    <Database className="w-4 h-4 text-blue-600 flex-shrink-0" />
-                    <div>
-                      <div className="font-bold text-slate-800">Supabase PostgreSQL + PostGIS</div>
-                      <div className="text-[10px] text-slate-500">Spatial Geometry (SRID 4326) &bull; Row Level Security (RLS)</div>
-                    </div>
-                  </div>
-                  <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
-                    supabaseOnline ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
-                  }`}>
-                    {supabaseOnline ? 'Cloud Active' : 'Local Fallback'}
-                  </span>
                 </div>
               </div>
             )}

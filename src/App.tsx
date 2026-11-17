@@ -206,6 +206,53 @@ export const App: React.FC = () => {
     };
   }, []);
 
+  // Deep linking: Open directly to shared property from URL query parameter (e.g. ?property=prop-123)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const targetId = params.get('property') || params.get('id');
+      if (targetId && allProps.length > 0) {
+        const found = allProps.find((p) => p.id === targetId);
+        if (found) {
+          setSelectedProperty(found);
+          if (mapInstance && typeof window !== 'undefined' && window.google?.maps) {
+            const [lng, lat] = found.coordinates;
+            mapInstance.panTo(new google.maps.LatLng(lat, lng));
+            const currentZoom = mapInstance.getZoom() || 14;
+            if (currentZoom < 16) {
+              mapInstance.setZoom(16);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error reading deep-link property parameter:', e);
+    }
+  }, [allProps, mapInstance]);
+
+  // Keep browser URL synchronized with selected property for instant shareability
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const currentUrl = new URL(window.location.href);
+      if (selectedProperty) {
+        if (currentUrl.searchParams.get('property') !== selectedProperty.id) {
+          currentUrl.searchParams.set('property', selectedProperty.id);
+          window.history.replaceState({ propertyId: selectedProperty.id }, '', currentUrl.toString());
+        }
+      } else {
+        if (currentUrl.searchParams.has('property') || currentUrl.searchParams.has('id')) {
+          currentUrl.searchParams.delete('property');
+          currentUrl.searchParams.delete('id');
+          window.history.replaceState({}, '', currentUrl.toString());
+        }
+      }
+    } catch {
+      // Ignore URL state replacement errors in non-browser environments
+    }
+  }, [selectedProperty]);
+
   // Register real Google Maps instance with the Autonomous AI Agent action bridge
   useEffect(() => {
     if (!mapInstance) return;
@@ -215,6 +262,10 @@ export const App: React.FC = () => {
         if (prop) {
           const [lng, lat] = prop.coordinates;
           mapInstance.panTo(new google.maps.LatLng(lat, lng));
+          const currentZoom = mapInstance.getZoom() || 14;
+          if (currentZoom < 16) {
+            mapInstance.setZoom(16);
+          }
         }
       },
       onApplyFilters: (filters) => {
@@ -645,6 +696,10 @@ export const App: React.FC = () => {
           if (prop && mapInstance && typeof window !== 'undefined' && window.google?.maps) {
             const [lng, lat] = prop.coordinates;
             mapInstance.panTo(new google.maps.LatLng(lat, lng));
+            const currentZoom = mapInstance.getZoom() || 14;
+            if (currentZoom < 16) {
+              mapInstance.setZoom(16);
+            }
           }
         }}
         onBoundsChange={handleBoundsChange}

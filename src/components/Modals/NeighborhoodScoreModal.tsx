@@ -170,7 +170,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
                   <span>Neighborhood Intelligence & Benchmark</span>
                   <span className="text-[10px] font-bold bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-2.5 py-0.5 rounded-full uppercase flex items-center gap-1 shadow-xs">
                     <Sparkles className="w-3 h-3 animate-spin" />
-                    <span>Gemini 2.5 Flash</span>
+                    <span>AI Intelligence</span>
                   </span>
                 </h3>
                 <p className="text-xs text-slate-500">
@@ -268,7 +268,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-slate-900 to-blue-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded">
-                      Gemini Comparative Assessment
+                      Comparative Intelligence Assessment
                     </span>
                     <h4 className="text-sm font-extrabold text-white mt-1.5">
                       {compareData.summaryVerdict}
@@ -366,7 +366,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
                       {isLoadingGemini && (
                         <span className="text-[10px] text-blue-300 font-semibold flex items-center gap-1">
                           <Sparkles className="w-3 h-3 animate-spin text-emerald-400" />
-                          Gemini 2.5 Flash Auditing...
+                          Auditing Neighborhood Intelligence...
                         </span>
                       )}
                     </div>
@@ -398,7 +398,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] font-bold text-slate-200 transition-colors disabled:opacity-50"
                     >
                       <RotateCcw className={`w-3 h-3 ${isLoadingGemini ? 'animate-spin' : ''}`} />
-                      <span>{isLoadingGemini ? 'Auditing...' : 'Re-audit Gemini'}</span>
+                      <span>{isLoadingGemini ? 'Auditing...' : 'Re-audit Locality'}</span>
                     </button>
                   </div>
                 </div>
