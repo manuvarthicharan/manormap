@@ -71,7 +71,7 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
       {/* 
         MAIN SAAS COMMAND BAR
       */}
-      <div className="bg-white/98 text-slate-900 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/90 p-2.5 sm:px-4 sm:py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+      <div className="bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200/90 p-2.5 sm:px-4 sm:py-2.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
 
         {/* Top/Left: Indicator, Title & Status */}
         <div className="flex items-center justify-between sm:justify-start gap-2.5 min-w-0">
@@ -245,7 +245,7 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
         EXPANDED DETAILED SAAS METRICS CARD (Standard Indian Land Units)
       */}
       {showDetailedMetrics && nodeCount >= 3 && (
-        <div className="mt-2 bg-white/98 text-slate-900 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200 p-3 sm:p-4 space-y-2.5 animate-in fade-in duration-150 max-h-[50vh] overflow-y-auto">
+        <div className="mt-2 bg-white text-slate-900 rounded-2xl shadow-2xl border border-slate-200 p-3 sm:p-4 space-y-2.5 animate-in fade-in duration-150 max-h-[50vh] overflow-y-auto">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />

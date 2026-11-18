@@ -329,7 +329,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto transition-all animate-bounce">
           <button
             onClick={onSearchThisArea}
-            className="flex items-center gap-2 px-4 py-2 bg-white/95 backdrop-blur-md text-slate-800 text-sm font-semibold rounded-full shadow-floating hover:bg-slate-50 hover:shadow-lg border border-slate-200/80 transition-all active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 bg-white text-slate-800 text-sm font-semibold rounded-full shadow-floating hover:bg-slate-50 hover:shadow-lg border border-slate-200/80 transition-all active:scale-95"
           >
             <span>Search this area</span>
           </button>
@@ -343,7 +343,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
           <button
             onClick={() => setIsLayerMenuOpen(!isLayerMenuOpen)}
             title="Switch Map Tile Source"
-            className="w-10 h-10 bg-white/95 backdrop-blur-md rounded-xl shadow-floating flex items-center justify-center text-slate-700 hover:text-blue-600 hover:bg-white border border-slate-200/80 transition-all active:scale-95"
+            className="w-10 h-10 bg-white rounded-xl shadow-floating flex items-center justify-center text-slate-700 hover:text-blue-600 hover:bg-white border border-slate-200/80 transition-all active:scale-95"
             aria-label="Map layers"
           >
             <Layers className="w-5 h-5" />
@@ -381,7 +381,7 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         <button
           onClick={handleLocateMe}
           title="Current Location"
-          className="w-10 h-10 bg-white/95 backdrop-blur-md rounded-xl shadow-floating flex items-center justify-center text-slate-700 hover:text-blue-600 hover:bg-white border border-slate-200/80 transition-all active:scale-95"
+          className="w-10 h-10 bg-white rounded-xl shadow-floating flex items-center justify-center text-slate-700 hover:text-blue-600 hover:bg-white border border-slate-200/80 transition-all active:scale-95"
           aria-label="Current Location"
         >
           <Locate className="w-5 h-5" />
@@ -391,14 +391,14 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
         <button
           onClick={handleResetNorth}
           title="Reset North"
-          className="w-10 h-10 bg-white/95 backdrop-blur-md rounded-xl shadow-floating flex items-center justify-center text-slate-700 hover:text-blue-600 hover:bg-white border border-slate-200/80 transition-all active:scale-95"
+          className="w-10 h-10 bg-white rounded-xl shadow-floating flex items-center justify-center text-slate-700 hover:text-blue-600 hover:bg-white border border-slate-200/80 transition-all active:scale-95"
           aria-label="Reset orientation"
         >
           <Navigation className="w-4 h-4" />
         </button>
 
         {/* Zoom Controls group */}
-        <div className="bg-white/95 backdrop-blur-md rounded-xl shadow-floating border border-slate-200/80 overflow-hidden flex flex-col">
+        <div className="bg-white rounded-xl shadow-floating border border-slate-200/80 overflow-hidden flex flex-col">
           <button
             onClick={handleZoomIn}
             title="Zoom in"

@@ -23,7 +23,7 @@ export const PinDropOverlay: React.FC<PinDropOverlayProps> = ({
     <div className="fixed inset-0 pointer-events-none z-30 select-none">
       {/* Top Banner with Instruction */}
       <div className="absolute top-6 left-1/2 -translate-x-1/2 pointer-events-auto max-w-md w-full px-4 animate-in slide-in-from-top duration-200">
-        <div className="bg-white/95 text-slate-900 rounded-2xl p-3.5 shadow-xl shadow-slate-900/10 border border-slate-200 backdrop-blur-md flex items-center gap-3">
+        <div className="bg-white text-slate-900 rounded-2xl p-3.5 shadow-xl shadow-slate-900/10 border border-slate-200 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center flex-shrink-0">
             <MapPin className="w-5 h-5 stroke-[2.2]" />
           </div>

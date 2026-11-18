@@ -40,11 +40,18 @@ export const AuthRequiredModal: React.FC<AuthRequiredModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/50 transition-opacity animate-in fade-in"
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-center justify-center p-4 text-center">
+      <div 
+        className="min-h-full flex items-center justify-center p-4 text-center"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100 p-6 space-y-5">
           {/* Close button */}
           <button

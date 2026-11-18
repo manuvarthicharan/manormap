@@ -19,7 +19,8 @@ import {
   LogOut,
   TrendingUp,
   CheckCheck,
-  ExternalLink
+  ExternalLink,
+  Zap
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
@@ -36,6 +37,7 @@ interface ActivityModalProps {
   onToggleFavorite: (id: string) => void;
   onDeleteProperty?: (id: string) => void;
   onSelectLocationCoords?: (coords: [number, number]) => void;
+  onOpenPricing?: (category: any, property?: Property) => void;
 }
 
 interface SavedSearchItem {
@@ -60,7 +62,8 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   onSelectProperty,
   onToggleFavorite,
   onDeleteProperty,
-  onSelectLocationCoords
+  onSelectLocationCoords,
+  onOpenPricing
 }) => {
   // User Profile state
   const [profile, setProfile] = useState<UserProfile>(() => getUserProfile());
@@ -184,7 +187,14 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-center justify-center p-4 text-center">
+      <div 
+        className="min-h-full flex items-center justify-center p-4 text-center"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-200">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white">
@@ -357,6 +367,20 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                           >
                             <Navigation className="w-4 h-4" />
                           </button>
+                          {onOpenPricing && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onOpenPricing('seller_boost', p);
+                                onClose();
+                              }}
+                              className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl"
+                              title="Boost with Spotlight Pro (Razorpay)"
+                            >
+                              <Zap className="w-4 h-4" />
+                            </button>
+                          )}
                           {onDeleteProperty && (
                             <button
                               onClick={(e) => {

@@ -209,7 +209,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-50 transition-opacity"
+        className="fixed inset-0 bg-slate-900/40 z-50 transition-opacity"
         onClick={onClose}
       />
 

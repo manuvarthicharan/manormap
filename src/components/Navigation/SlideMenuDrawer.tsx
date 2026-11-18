@@ -12,7 +12,8 @@ import {
   ShieldCheck,
   ChevronRight,
   Calculator,
-  LogOut
+  LogOut,
+  CreditCard
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
@@ -209,6 +210,27 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                   </div>
                   <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
                     DCF
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* MONETIZATION & PLANS */}
+            <div>
+              <div className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                Monetization & Passes
+              </div>
+              <div className="space-y-0.5">
+                <button
+                  onClick={() => handleAction('pricing')}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-slate-900 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 hover:from-blue-100 hover:to-indigo-100 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <CreditCard className="w-4 h-4 text-blue-600" />
+                    <span>Plans & Owner Passes</span>
+                  </div>
+                  <span className="text-[10px] font-black uppercase bg-blue-600 text-white px-2 py-0.5 rounded-full">
+                    Razorpay
                   </span>
                 </button>
               </div>

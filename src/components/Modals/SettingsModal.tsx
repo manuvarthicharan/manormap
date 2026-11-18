@@ -30,11 +30,18 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-center justify-center p-4 text-center">
+      <div 
+        className="min-h-full flex items-center justify-center p-4 text-center"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200">
           {/* Header */}
           <div className="p-4 border-b border-slate-100 flex items-center justify-between">

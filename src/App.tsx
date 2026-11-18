@@ -42,6 +42,8 @@ import { AdvancedFilterModal } from './components/Navigation/AdvancedFilterModal
 import { PropertyComparisonModal } from './components/Modals/PropertyComparisonModal';
 import { InvestmentCalculatorModal } from './components/Modals/InvestmentCalculatorModal';
 import { AIAssistantDrawer } from './components/AI/AIAssistantDrawer';
+import { PricingPlansModal } from './components/Modals/PricingPlansModal';
+import { MonetizationCategory } from './services/razorpayService';
 import { Map as MapIcon, Sparkles, Plus, Scale } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -149,6 +151,17 @@ export const App: React.FC = () => {
   // Navigation drawer state (Hidden by default)
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  // Monetization & Razorpay Pricing Plans Modal state
+  const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
+  const [pricingInitialCategory, setPricingInitialCategory] = useState<MonetizationCategory>('buyer_pass');
+  const [pricingTargetProperty, setPricingTargetProperty] = useState<Property | null>(null);
+
+  const handleOpenPricing = useCallback((category: MonetizationCategory = 'buyer_pass', targetProp?: Property | null) => {
+    setPricingInitialCategory(category);
+    setPricingTargetProperty(targetProp || null);
+    setIsPricingModalOpen(true);
+  }, []);
 
   // Authentication prompt modal state
   const [authModalState, setAuthModalState] = useState<{
@@ -788,6 +801,7 @@ export const App: React.FC = () => {
             setAreaUnit(unit);
             setStoredAreaUnit(unit);
           }}
+          onOpenPricing={() => handleOpenPricing('buyer_pass')}
         />
       )}
 
@@ -881,6 +895,9 @@ export const App: React.FC = () => {
           } else if (key === 'investment-roi') {
             setIsMenuOpen(false);
             setIsRoiModalOpen(true);
+          } else if (key === 'pricing') {
+            setIsMenuOpen(false);
+            handleOpenPricing('buyer_pass');
           } else {
             setActiveModal(key);
           }
@@ -925,6 +942,7 @@ export const App: React.FC = () => {
         isCompared={selectedProperty ? comparedPropertyIds.includes(selectedProperty.id) : false}
         onOpenAIAdvisor={() => handleOpenAIAdvisor(selectedProperty!)}
         onOpenRoiCalculator={handleOpenRoiCalculator}
+        onOpenPricing={(cat, prop) => handleOpenPricing(cat, prop)}
         areaUnit={areaUnit}
       />
 
@@ -1024,6 +1042,7 @@ export const App: React.FC = () => {
             mapInstance.setZoom(14);
           }
         }}
+        onOpenPricing={(cat, prop) => handleOpenPricing(cat, prop)}
       />
 
       {/* 
@@ -1043,6 +1062,16 @@ export const App: React.FC = () => {
         onClose={() => setAuthModalState((prev) => ({ ...prev, isOpen: false }))}
         reason={authModalState.reason}
         propertyTitle={authModalState.propertyTitle}
+      />
+
+      {/* 
+        15. MONETIZATION & RAZORPAY PRICING PLANS MODAL
+      */}
+      <PricingPlansModal
+        isOpen={isPricingModalOpen}
+        onClose={() => setIsPricingModalOpen(false)}
+        initialCategory={pricingInitialCategory}
+        targetProperty={pricingTargetProperty}
       />
     </main>
   );

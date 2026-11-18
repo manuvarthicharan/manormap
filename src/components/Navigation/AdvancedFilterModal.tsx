@@ -90,11 +90,18 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center">
+      <div 
+        className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
+      >
         <div className="relative w-full max-w-xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-100 flex flex-col max-h-[92dvh] sm:max-h-[90vh]">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0">

@@ -153,11 +153,16 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
         onClick={onClose}
       />
 
-      <div className="min-h-full flex items-center justify-center p-3 sm:p-4 text-center">
+      <div
+        className="min-h-full flex items-center justify-center p-3 sm:p-4 text-center"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+      >
         <div className="relative w-full max-w-4xl bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-100 flex flex-col max-h-[92vh]">
           {/* Header */}
           <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0">
@@ -383,7 +388,7 @@ export const NeighborhoodScoreModal: React.FC<NeighborhoodScoreModalProps> = ({
                   </div>
 
                   <div className="flex flex-col items-center sm:items-end gap-2 flex-shrink-0">
-                    <div className="text-center sm:text-right bg-white/10 backdrop-blur-md p-3.5 rounded-2xl border border-white/10 min-w-[140px]">
+                    <div className="text-center sm:text-right bg-slate-800/90 p-3.5 rounded-2xl border border-slate-700 min-w-[140px]">
                       <div className="text-[10px] font-bold text-slate-300 uppercase">Civic Intelligence Score</div>
                       <div className="text-3xl font-black text-emerald-400 mt-0.5">
                         {overallScore}

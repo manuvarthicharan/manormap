@@ -17,7 +17,8 @@ import {
   Loader2,
   Check,
   Mic,
-  Ruler
+  Ruler,
+  CreditCard
 } from 'lucide-react';
 import { searchLocations } from '../../services/geocoding';
 import { SearchResult, FilterState, Property, PropertyCategory, AreaUnit } from '../../types';
@@ -42,6 +43,7 @@ interface FloatingHeaderProps {
   activeMapTypeId?: string;
   areaUnit?: AreaUnit;
   onAreaUnitChange?: (unit: AreaUnit) => void;
+  onOpenPricing?: () => void;
 }
 
 const TRENDING_HUBS = [
@@ -106,7 +108,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   onOpenAIAdvisor,
   activeMapTypeId = 'hybrid',
   areaUnit = 'sqft',
-  onAreaUnitChange
+  onAreaUnitChange,
+  onOpenPricing
 }) => {
   const isDarkMap = activeMapTypeId === 'hybrid' || activeMapTypeId === 'satellite';
   const [query, setQuery] = useState('');
@@ -369,11 +372,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               onClick={onOpenMenu}
               title="Open Navigation Menu"
-              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl transition-all active:scale-95 flex-shrink-0 ${
-                isDarkMap
-                  ? 'text-slate-200 hover:text-white hover:bg-slate-800/80'
-                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
-              }`}
+              className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl transition-all active:scale-95 flex-shrink-0 ${isDarkMap
+                ? 'text-slate-200 hover:text-white hover:bg-slate-800/80'
+                : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+                }`}
               aria-label="Menu"
             >
               <Menu className="w-5 h-5" />
@@ -382,9 +384,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* ManorMap Brand Logo */}
             <div
               onClick={onOpenMenu}
-              className={`flex items-center pr-1.5 sm:pr-2 border-r cursor-pointer select-none group flex-shrink-0 ${
-                isDarkMap ? 'border-slate-800' : 'border-slate-200/80'
-              }`}
+              className={`flex items-center pr-1.5 sm:pr-2 border-r cursor-pointer select-none group flex-shrink-0 ${isDarkMap ? 'border-slate-800' : 'border-slate-200/80'
+                }`}
               title="ManorMap Menu"
             >
               <div className="sm:hidden">
@@ -398,10 +399,9 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
           {/* Omnisearch Hero Input Field */}
           <div className="relative flex-1 flex items-center min-w-0">
-            <Search className={`w-4 h-4 ml-1 mr-1.5 pointer-events-none flex-shrink-0 transition-colors ${
-              query ? 'text-blue-500' : (isDarkMap ? 'text-slate-400' : 'text-slate-400')
-            }`} />
-            
+            <Search className={`w-4 h-4 ml-1 mr-1.5 pointer-events-none flex-shrink-0 transition-colors ${query ? 'text-blue-500' : (isDarkMap ? 'text-slate-400' : 'text-slate-400')
+              }`} />
+
             <input
               ref={inputRef}
               type="text"
@@ -414,11 +414,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               onFocus={() => setShowDropdown(true)}
               onKeyDown={handleKeyDown}
               placeholder="Search locality, project, or PIN..."
-              className={`w-full bg-transparent text-xs sm:text-sm focus:outline-none pr-7 py-1 font-medium truncate ${
-                isDarkMap
-                  ? 'text-white placeholder-slate-400'
-                  : 'text-slate-900 placeholder-slate-400'
-              }`}
+              className={`w-full bg-transparent text-xs sm:text-sm focus:outline-none pr-7 py-1 font-medium truncate ${isDarkMap
+                ? 'text-white placeholder-slate-400'
+                : 'text-slate-900 placeholder-slate-400'
+                }`}
               autoComplete="off"
               spellCheck="false"
             />
@@ -427,13 +426,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={handleToggleVoiceSearch}
-              className={`p-1 mr-1 rounded-lg transition-all flex items-center justify-center ${
-                isListening
-                  ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-400'
-                  : isDarkMap
-                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                    : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'
-              }`}
+              className={`p-1 mr-1 rounded-lg transition-all flex items-center justify-center ${isListening
+                ? 'bg-rose-500 text-white animate-pulse ring-2 ring-rose-400'
+                : isDarkMap
+                  ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  : 'text-slate-400 hover:text-blue-600 hover:bg-slate-100'
+                }`}
               title={isListening ? 'Listening (Speak now in Indian English)...' : 'Search by Voice'}
             >
               <Mic className="w-3.5 h-3.5" />
@@ -444,11 +442,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               <button
                 type="button"
                 onClick={handleClear}
-                className={`absolute right-0.5 p-1 rounded-lg transition-colors ${
-                  isDarkMap
-                    ? 'text-slate-400 hover:text-white hover:bg-slate-800'
-                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
-                }`}
+                className={`absolute right-0.5 p-1 rounded-lg transition-colors ${isDarkMap
+                  ? 'text-slate-400 hover:text-white hover:bg-slate-800'
+                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100'
+                  }`}
                 title="Clear search"
               >
                 <X className="w-3.5 h-3.5" />
@@ -457,11 +454,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
             {/* Cmd/Ctrl + K Indicator */}
             {!query && (
-              <span className={`hidden xl:flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold select-none mr-1 ${
-                isDarkMap
-                  ? 'bg-slate-800 text-slate-300 border border-slate-700/60'
-                  : 'bg-slate-100 text-slate-400'
-              }`}>
+              <span className={`hidden xl:flex items-center px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold select-none mr-1 ${isDarkMap
+                ? 'bg-slate-800 text-slate-300 border border-slate-700/60'
+                : 'bg-slate-100 text-slate-400'
+                }`}>
                 ⌘K
               </span>
             )}
@@ -472,13 +468,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             type="button"
             onClick={onOpenAdvancedFilters}
             title="Advanced Filters"
-            className={`relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl transition-all flex-shrink-0 active:scale-95 ${
-              activeFilterCount > 0
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-2 ring-blue-400/40'
-                : isDarkMap
-                  ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-            }`}
+            className={`relative w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-xl transition-all flex-shrink-0 active:scale-95 ${activeFilterCount > 0
+              ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25 ring-2 ring-blue-400/40'
+              : isDarkMap
+                ? 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+              }`}
           >
             <SlidersHorizontal className="w-4 h-4" />
             {activeFilterCount > 0 && (
@@ -515,9 +510,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
             {/* Live Search Spinner */}
             {isSearching && (
-              <div className={`p-3 text-xs flex items-center gap-2 ${
-                isDarkMap ? 'text-slate-400 bg-slate-900/60' : 'text-slate-500 bg-slate-50/50'
-              }`}>
+              <div className={`p-3 text-xs flex items-center gap-2 ${isDarkMap ? 'text-slate-400 bg-slate-900/60' : 'text-slate-500 bg-slate-50/50'
+                }`}>
                 <Loader2 className="w-3.5 h-3.5 text-blue-500 animate-spin" />
                 <span>Searching Google Maps & real estate database...</span>
               </div>
@@ -526,9 +520,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 1: MATCHING PROPERTIES & PROJECTS */}
             {matchingProperties.length > 0 && (
               <div className="p-2 sm:p-2.5">
-                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center justify-between ${
-                  isDarkMap ? 'text-slate-400' : 'text-slate-400'
-                }`}>
+                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center justify-between ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                  }`}>
                   <div className="flex items-center gap-1.5">
                     <Building2 className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                     <span>Matching Listings ({matchingProperties.length})</span>
@@ -543,33 +536,29 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                       <div
                         key={prop.id}
                         onClick={() => handleSelectMatchingProperty(prop)}
-                        className={`p-2 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all ${
-                          isSelected
-                            ? isDarkMap
-                              ? 'bg-blue-950/70 ring-1 ring-blue-500/60'
-                              : 'bg-blue-50 ring-1 ring-blue-500/40'
-                            : isDarkMap
-                              ? 'hover:bg-slate-900/80'
-                              : 'hover:bg-slate-50'
-                        }`}
+                        className={`p-2 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all ${isSelected
+                          ? isDarkMap
+                            ? 'bg-blue-950/70 ring-1 ring-blue-500/60'
+                            : 'bg-blue-50 ring-1 ring-blue-500/40'
+                          : isDarkMap
+                            ? 'hover:bg-slate-900/80'
+                            : 'hover:bg-slate-50'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-xs ${
-                            isDarkMap
-                              ? 'bg-blue-950/80 text-blue-400 border border-blue-800/80'
-                              : 'bg-blue-50 text-blue-600 border border-blue-100'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 font-bold text-xs ${isDarkMap
+                            ? 'bg-blue-950/80 text-blue-400 border border-blue-800/80'
+                            : 'bg-blue-50 text-blue-600 border border-blue-100'
+                            }`}>
                             <Building2 className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className={`text-xs sm:text-sm font-bold truncate ${
-                              isDarkMap ? 'text-white' : 'text-slate-900'
-                            }`}>
+                            <div className={`text-xs sm:text-sm font-bold truncate ${isDarkMap ? 'text-white' : 'text-slate-900'
+                              }`}>
                               {prop.title}
                             </div>
-                            <div className={`text-[11px] truncate flex items-center gap-1.5 ${
-                              isDarkMap ? 'text-slate-300' : 'text-slate-500'
-                            }`}>
+                            <div className={`text-[11px] truncate flex items-center gap-1.5 ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
+                              }`}>
                               <span>{prop.area || prop.address}, {prop.city}</span>
                               <span>•</span>
                               <span className={isDarkMap ? 'text-slate-400' : 'text-slate-400'}>{prop.category}</span>
@@ -578,11 +567,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <span className={`text-xs font-black px-2 py-0.5 rounded-lg shadow-2xs ${
-                            isDarkMap
-                              ? 'text-emerald-300 bg-emerald-950/80 border border-emerald-800/80'
-                              : 'text-emerald-700 bg-emerald-50 border border-emerald-200'
-                          }`}>
+                          <span className={`text-xs font-black px-2 py-0.5 rounded-lg shadow-2xs ${isDarkMap
+                            ? 'text-emerald-300 bg-emerald-950/80 border border-emerald-800/80'
+                            : 'text-emerald-700 bg-emerald-50 border border-emerald-200'
+                            }`}>
                             {formatIndianCurrency(prop.price, prop.type)}
                           </span>
                           <ArrowRight className={`w-3.5 h-3.5 ${isDarkMap ? 'text-slate-500' : 'text-slate-300'}`} />
@@ -597,9 +585,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 2: LOCALITY & CITY SUGGESTIONS */}
             {suggestions.length > 0 && (
               <div className="p-2 sm:p-2.5">
-                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center gap-1.5 ${
-                  isDarkMap ? 'text-slate-400' : 'text-slate-400'
-                }`}>
+                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center gap-1.5 ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                  }`}>
                   <MapPin className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                   <span>Localities, Cities & PIN Codes</span>
                 </div>
@@ -612,22 +599,20 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                       <div
                         key={item.id}
                         onClick={() => handleSelectLocation(item)}
-                        className={`p-2 sm:p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all text-left ${
-                          isSelected
-                            ? isDarkMap
-                              ? 'bg-blue-950/70 ring-1 ring-blue-500/60'
-                              : 'bg-blue-50 ring-1 ring-blue-500/40'
-                            : isDarkMap
-                              ? 'hover:bg-slate-900/80'
-                              : 'hover:bg-slate-50'
-                        }`}
+                        className={`p-2 sm:p-2.5 rounded-xl cursor-pointer flex items-center justify-between gap-2.5 transition-all text-left ${isSelected
+                          ? isDarkMap
+                            ? 'bg-blue-950/70 ring-1 ring-blue-500/60'
+                            : 'bg-blue-50 ring-1 ring-blue-500/40'
+                          : isDarkMap
+                            ? 'hover:bg-slate-900/80'
+                            : 'hover:bg-slate-50'
+                          }`}
                       >
                         <div className="flex items-center gap-2.5 min-w-0">
-                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${
-                            isDarkMap
-                              ? 'bg-blue-950/80 text-blue-400 border border-blue-800/80'
-                              : 'bg-blue-50 text-blue-600 border border-blue-100'
-                          }`}>
+                          <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${isDarkMap
+                            ? 'bg-blue-950/80 text-blue-400 border border-blue-800/80'
+                            : 'bg-blue-50 text-blue-600 border border-blue-100'
+                            }`}>
                             {item.type === 'city' ? (
                               <Building2 className="w-4 h-4" />
                             ) : (
@@ -635,26 +620,23 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             )}
                           </div>
                           <div className="min-w-0">
-                            <div className={`text-xs sm:text-sm font-bold truncate ${
-                              isDarkMap ? 'text-white' : 'text-slate-900'
-                            }`}>
+                            <div className={`text-xs sm:text-sm font-bold truncate ${isDarkMap ? 'text-white' : 'text-slate-900'
+                              }`}>
                               {item.title}
                             </div>
                             {item.subTitle && (
-                              <div className={`text-[11px] truncate ${
-                                isDarkMap ? 'text-slate-300' : 'text-slate-500'
-                              }`}>
+                              <div className={`text-[11px] truncate ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
+                                }`}>
                                 {item.subTitle}
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md flex-shrink-0 ${
-                          isDarkMap
-                            ? 'bg-slate-800 text-slate-300 border border-slate-700/70'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md flex-shrink-0 ${isDarkMap
+                          ? 'bg-slate-800 text-slate-300 border border-slate-700/70'
+                          : 'bg-slate-100 text-slate-600'
+                          }`}>
                           {item.type}
                         </span>
                       </div>
@@ -670,9 +652,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
                 {/* Micro-Markets Grid */}
                 <div>
-                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center justify-between ${
-                    isDarkMap ? 'text-slate-400' : 'text-slate-400'
-                  }`}>
+                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center justify-between ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                    }`}>
                     <div className="flex items-center gap-1.5">
                       <TrendingUp className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                       <span>Premier Indian Micro-Markets</span>
@@ -693,30 +674,26 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             type: 'area'
                           })
                         }
-                        className={`p-2 rounded-xl cursor-pointer text-left transition-all flex items-center gap-2 group border ${
-                          isDarkMap
-                            ? 'hover:bg-slate-900/90 border-slate-800/80 bg-slate-900/40'
-                            : 'hover:bg-blue-50/70 border-slate-100 bg-white'
-                        }`}
+                        className={`p-2 rounded-xl cursor-pointer text-left transition-all flex items-center gap-2 group border ${isDarkMap
+                          ? 'hover:bg-slate-900/90 border-slate-800/80 bg-slate-900/40'
+                          : 'hover:bg-blue-50/70 border-slate-100 bg-white'
+                          }`}
                       >
-                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${
-                          isDarkMap
-                            ? 'bg-slate-800 text-slate-300 group-hover:bg-blue-900 group-hover:text-blue-300'
-                            : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
-                        }`}>
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isDarkMap
+                          ? 'bg-slate-800 text-slate-300 group-hover:bg-blue-900 group-hover:text-blue-300'
+                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
+                          }`}>
                           <Compass className="w-3.5 h-3.5" />
                         </div>
                         <div className="truncate flex-1 min-w-0">
-                          <div className={`text-xs font-bold truncate ${
-                            isDarkMap
-                              ? 'text-white group-hover:text-blue-400'
-                              : 'text-slate-900 group-hover:text-blue-600'
-                          }`}>
+                          <div className={`text-xs font-bold truncate ${isDarkMap
+                            ? 'text-white group-hover:text-blue-400'
+                            : 'text-slate-900 group-hover:text-blue-600'
+                            }`}>
                             {loc.title}
                           </div>
-                          <div className={`text-[10px] font-semibold truncate ${
-                            isDarkMap ? 'text-emerald-400' : 'text-emerald-600'
-                          }`}>
+                          <div className={`text-[10px] font-semibold truncate ${isDarkMap ? 'text-emerald-400' : 'text-emerald-600'
+                            }`}>
                             {loc.priceTrend}
                           </div>
                         </div>
@@ -727,9 +704,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
                 {/* Quick Explore by Property Type */}
                 <div className={`pt-2 border-t ${isDarkMap ? 'border-slate-800' : 'border-slate-100'}`}>
-                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${
-                    isDarkMap ? 'text-slate-400' : 'text-slate-400'
-                  }`}>
+                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                    }`}>
                     <Tag className={`w-3.5 h-3.5 ${isDarkMap ? 'text-indigo-400' : 'text-indigo-600'}`} />
                     <span>Explore by Asset Class</span>
                   </div>
@@ -747,13 +723,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             });
                             setShowDropdown(false);
                           }}
-                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95 ${
-                            isActive
-                              ? 'bg-blue-600 text-white shadow-xs'
-                              : isDarkMap
-                                ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60'
-                                : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                          }`}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95 ${isActive
+                            ? 'bg-blue-600 text-white shadow-xs'
+                            : isDarkMap
+                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                            }`}
                         >
                           <span>{cat.icon}</span>
                           <span>{cat.label}</span>
@@ -769,19 +744,16 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 4: NO RESULTS STATE */}
             {query.trim().length >= 2 && !isSearching && suggestions.length === 0 && matchingProperties.length === 0 && (
               <div className="p-4 text-center space-y-2">
-                <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center ${
-                  isDarkMap ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-400'
-                }`}>
+                <div className={`w-8 h-8 rounded-full mx-auto flex items-center justify-center ${isDarkMap ? 'bg-slate-800 text-slate-400' : 'bg-slate-100 text-slate-400'
+                  }`}>
                   <Search className="w-4 h-4" />
                 </div>
-                <div className={`text-xs font-bold ${
-                  isDarkMap ? 'text-slate-200' : 'text-slate-800'
-                }`}>
+                <div className={`text-xs font-bold ${isDarkMap ? 'text-slate-200' : 'text-slate-800'
+                  }`}>
                   No exact match for "{query}"
                 </div>
-                <p className={`text-[11px] max-w-xs mx-auto ${
-                  isDarkMap ? 'text-slate-400' : 'text-slate-500'
-                }`}>
+                <p className={`text-[11px] max-w-xs mx-auto ${isDarkMap ? 'text-slate-400' : 'text-slate-500'
+                  }`}>
                   Try a locality (e.g. Kokapet, Tellapur) or press Enter to trigger AI search.
                 </p>
                 <button
@@ -805,34 +777,31 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
       */}
       <div className="hidden sm:flex items-center gap-2 fixed top-4 right-6 z-30 pointer-events-auto">
         {/* Inline Segmented Switch: Buy vs Rent */}
-        <div className={`flex items-center p-1 rounded-2xl border shadow-md text-xs font-bold h-10 ${
-          isDarkMap
-            ? 'bg-slate-950/92 backdrop-blur-xl border-slate-700/80 shadow-black/40 text-slate-300'
-            : 'bg-white/95 backdrop-blur-xl border-slate-200/90 shadow-slate-900/5 text-slate-600'
-        }`}>
+        <div className={`flex items-center p-1 rounded-2xl border shadow-md text-xs font-bold h-10 ${isDarkMap
+          ? 'bg-slate-950 border-slate-700 shadow-black/40 text-slate-300'
+          : 'bg-white border-slate-200 shadow-slate-900/10 text-slate-600'
+          }`}>
           <button
             type="button"
             onClick={() => onFilterChange({ ...filterState, type: filterState.type === 'sale' ? 'all' : 'sale' })}
-            className={`h-8 px-3 rounded-xl transition-all ${
-              filterState.type === 'sale'
-                ? 'bg-blue-600 text-white shadow-xs font-bold'
-                : isDarkMap
-                  ? 'hover:text-white'
-                  : 'hover:text-slate-900'
-            }`}
+            className={`h-8 px-3 rounded-xl transition-all ${filterState.type === 'sale'
+              ? 'bg-blue-600 text-white shadow-xs font-bold'
+              : isDarkMap
+                ? 'hover:text-white'
+                : 'hover:text-slate-900'
+              }`}
           >
             Buy
           </button>
           <button
             type="button"
             onClick={() => onFilterChange({ ...filterState, type: filterState.type === 'rent' ? 'all' : 'rent' })}
-            className={`h-8 px-3 rounded-xl transition-all ${
-              filterState.type === 'rent'
-                ? 'bg-blue-600 text-white shadow-xs font-bold'
-                : isDarkMap
-                  ? 'hover:text-white'
-                  : 'hover:text-slate-900'
-            }`}
+            className={`h-8 px-3 rounded-xl transition-all ${filterState.type === 'rent'
+              ? 'bg-blue-600 text-white shadow-xs font-bold'
+              : isDarkMap
+                ? 'hover:text-white'
+                : 'hover:text-slate-900'
+              }`}
           >
             Rent
           </button>
@@ -852,11 +821,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={() => onAreaUnitChange('sqft')}
-              className={`h-8 px-2.5 rounded-xl transition-all ${
-                areaUnit === 'sqft'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
-              }`}
+              className={`h-8 px-2.5 rounded-xl transition-all ${areaUnit === 'sqft'
+                ? 'bg-blue-600 text-white shadow-xs font-bold'
+                : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
+                }`}
               title="Carpet & Built-Up Sq. Ft."
             >
               Sq. Ft.
@@ -864,11 +832,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={() => onAreaUnitChange('sqyard')}
-              className={`h-8 px-2.5 rounded-xl transition-all ${
-                areaUnit === 'sqyard'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
-              }`}
+              className={`h-8 px-2.5 rounded-xl transition-all ${areaUnit === 'sqyard'
+                ? 'bg-blue-600 text-white shadow-xs font-bold'
+                : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
+                }`}
               title="Plots & Land in Sq. Yards (Gaj)"
             >
               Sq. Yds (Gaj)
@@ -876,11 +843,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             <button
               type="button"
               onClick={() => onAreaUnitChange('acre_gunta')}
-              className={`h-8 px-2.5 rounded-xl transition-all ${
-                areaUnit === 'acre_gunta'
-                  ? 'bg-blue-600 text-white shadow-xs font-bold'
-                  : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
-              }`}
+              className={`h-8 px-2.5 rounded-xl transition-all ${areaUnit === 'acre_gunta'
+                ? 'bg-blue-600 text-white shadow-xs font-bold'
+                : isDarkMap ? 'hover:text-white' : 'hover:text-slate-900'
+                }`}
               title="Farmland in Acres & Guntas"
             >
               Acres & Gts
@@ -893,15 +859,30 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           <button
             type="button"
             onClick={onOpenCompare}
-            className={`flex items-center gap-1.5 h-10 px-3 rounded-2xl text-xs font-bold transition-all shadow-md active:scale-95 border ${
-              isDarkMap
-                ? 'bg-indigo-950/80 border-indigo-800 text-indigo-300 hover:bg-indigo-900/80'
-                : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
-            }`}
+            className={`flex items-center gap-1.5 h-10 px-3 rounded-2xl text-xs font-bold transition-all shadow-md active:scale-95 border ${isDarkMap
+              ? 'bg-indigo-950/80 border-indigo-800 text-indigo-300 hover:bg-indigo-900/80'
+              : 'bg-indigo-50 border-indigo-200 text-indigo-700 hover:bg-indigo-100'
+              }`}
             title="Open Property Comparison"
           >
             <Scale className="w-4 h-4 text-indigo-400" />
             <span>Compare ({comparedCount})</span>
+          </button>
+        )}
+
+        {/* Razorpay Plans & Passes Button */}
+        {onOpenPricing && (
+          <button
+            type="button"
+            onClick={onOpenPricing}
+            title="Monetization Plans & Owner Passes (Razorpay)"
+            className={`hidden md:flex items-center gap-1.5 h-10 px-3 rounded-2xl text-xs font-bold transition-all shadow-md active:scale-95 border ${isDarkMap
+              ? 'bg-slate-950 border-slate-700 text-amber-300 hover:bg-slate-900 shadow-black/40'
+              : 'bg-white border-slate-200 text-amber-600 hover:bg-amber-50 shadow-slate-900/5'
+              }`}
+          >
+            <CreditCard className="w-3.5 h-3.5 text-amber-500" />
+            <span>Plans</span>
           </button>
         )}
 
@@ -911,11 +892,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             type="button"
             onClick={onOpenAIAdvisor}
             title="Open AI Real Estate Advisor"
-            className={`w-10 h-10 flex items-center justify-center rounded-2xl shadow-md transition-all active:scale-95 border ${
-              isDarkMap
-                ? 'bg-slate-950/92 backdrop-blur-xl border-slate-700/80 text-emerald-400 hover:bg-slate-900 shadow-black/40'
-                : 'bg-white/95 backdrop-blur-xl border-slate-200/90 text-emerald-600 hover:bg-emerald-50 shadow-slate-900/5'
-            }`}
+            className={`w-10 h-10 flex items-center justify-center rounded-2xl shadow-md transition-all active:scale-95 border ${isDarkMap
+              ? 'bg-slate-950 border-slate-700 text-emerald-400 hover:bg-slate-900 shadow-black/40'
+              : 'bg-white border-slate-200 text-emerald-600 hover:bg-emerald-50 shadow-slate-900/5'
+              }`}
           >
             <Sparkles className="w-4 h-4" />
           </button>
@@ -936,9 +916,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
           type="button"
           onClick={onOpenProfile}
           title="Account & Settings"
-          className={`relative w-10 h-10 rounded-2xl overflow-hidden border hover:ring-2 hover:ring-blue-500/30 transition-all flex items-center justify-center text-xs font-bold shadow-md active:scale-95 ${
-            isDarkMap ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700'
-          }`}
+          className={`relative w-10 h-10 rounded-2xl overflow-hidden border hover:ring-2 hover:ring-blue-500/30 transition-all flex items-center justify-center text-xs font-bold shadow-md active:scale-95 ${isDarkMap ? 'border-slate-700 text-slate-200' : 'border-slate-200 text-slate-700'
+            }`}
           aria-label="Profile"
         >
           <img

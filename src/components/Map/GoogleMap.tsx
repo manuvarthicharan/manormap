@@ -1032,7 +1032,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* Load Error State */}
       {loadError && (
-        <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-md">
+        <div className="absolute inset-0 z-20 flex items-center justify-center p-4 bg-slate-900/50">
           <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl text-center space-y-3">
             <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto">
               <AlertTriangle className="w-6 h-6" />
@@ -1112,7 +1112,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* RADIUS SEARCH CONTROL OVERLAY */}
       {radiusSearch.active && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2 sm:p-2.5 flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 animate-in fade-in overflow-x-auto">
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white rounded-2xl shadow-xl border border-slate-200 p-2 sm:p-2.5 flex items-center justify-between sm:justify-start gap-1.5 sm:gap-2 animate-in fade-in overflow-x-auto">
           <div className="flex items-center gap-1 sm:gap-1.5 px-1 sm:px-2 text-xs font-bold text-slate-800 flex-shrink-0">
             <CircleDot className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <span className="hidden sm:inline">Radius:</span>
@@ -1144,7 +1144,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* DRAW-TO-SEARCH POLYGON BANNER */}
       {polygonSearch.active && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200 p-2.5 sm:p-3 flex items-center justify-between gap-2.5 animate-in fade-in">
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-white rounded-2xl shadow-xl border border-slate-200 p-2.5 sm:p-3 flex items-center justify-between gap-2.5 animate-in fade-in">
           <div className="flex items-center gap-2 min-w-0">
             <PenTool className="w-4 h-4 text-blue-600 flex-shrink-0" />
             <div className="text-xs min-w-0">
@@ -1445,7 +1445,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       {isMobileToolsOpen && (
         <>
           <div
-            className="sm:hidden fixed inset-0 bg-slate-900/30 backdrop-blur-xs z-40 transition-opacity"
+            className="sm:hidden fixed inset-0 bg-slate-900/40 z-40 transition-opacity"
             onClick={() => setIsMobileToolsOpen(false)}
           />
           <div className="sm:hidden fixed inset-x-0 bottom-0 z-50 bg-white rounded-t-3xl shadow-2xl border-t border-slate-200 p-5 pb-8 animate-in slide-in-from-bottom duration-200 space-y-4 max-h-[85dvh] overflow-y-auto">

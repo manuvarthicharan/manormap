@@ -5,35 +5,42 @@ interface LogoProps {
   variant?: 'full' | 'icon';
   theme?: 'dark' | 'light' | 'auto';
   className?: string;
+  bare?: boolean; // if true, don't add the light capsule wrapper
 }
 
 export const Logo: React.FC<LogoProps> = ({
   size = 'md',
-  className = ''
+  className = '',
+  bare = false
 }) => {
   const [hasError, setHasError] = useState(false);
 
-  // Generous height dimensions preserving 3:1 aspect ratio of logo.png (2172 x 724)
+  // Height dimensions preserving 3:1 aspect ratio of logo.png
   const sizeClasses = {
-    xs: 'h-6 sm:h-7 max-w-[85px]',
-    sm: 'h-9 sm:h-10 max-w-[150px]',
-    md: 'h-11 sm:h-14 max-w-[210px]',
-    lg: 'h-16 sm:h-20 max-w-[280px]',
-    xl: 'h-20 sm:h-24 max-w-[340px]'
-  }[size] || 'h-11 sm:h-14 max-w-[210px]';
+    xs: 'h-5 sm:h-6 max-w-[80px]',
+    sm: 'h-7 sm:h-8 max-w-[125px]',
+    md: 'h-9 sm:h-10 max-w-[160px]',
+    lg: 'h-12 sm:h-14 max-w-[220px]',
+    xl: 'h-16 sm:h-18 max-w-[280px]'
+  }[size] || 'h-9 sm:h-10 max-w-[160px]';
+
+  // Safeguard: Never let the logo background be dark so the dark emblem/text never gets mixed
+  const capsuleClasses = bare
+    ? ''
+    : 'bg-white px-2 py-0.5 rounded-xl border border-slate-200/80 shadow-2xs';
 
   return (
-    <div className={`inline-flex items-center select-none ${className}`}>
+    <div className={`inline-flex items-center select-none ${capsuleClasses} ${className}`}>
       {!hasError ? (
         <img
           src="/logo.png"
-          alt="Logo"
+          alt="ManorMap Logo"
           onError={() => setHasError(true)}
-          className={`w-auto object-contain transition-transform duration-200 group-hover:scale-105 filter drop-shadow-xs ${sizeClasses}`}
+          className={`w-auto object-contain transition-transform duration-200 group-hover:scale-102 filter drop-shadow-2xs ${sizeClasses}`}
         />
       ) : (
-        <div className="h-10 px-3.5 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-sm">
-          Radar
+        <div className="h-7 px-2.5 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs tracking-tight">
+          ManorMap
         </div>
       )}
     </div>

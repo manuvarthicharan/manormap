@@ -38,14 +38,11 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
   onToggleFavorite,
   onToggleCompare,
   isCompared = false,
-  onOpenAIAdvisor,
-  areaUnit
+  onOpenAIAdvisor
 }) => {
   const [copied, setCopied] = React.useState(false);
 
   if (!property) return null;
-
-  const activeUnit = areaUnit || getStoredAreaUnit();
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -176,11 +173,10 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     )}
                     <button
                       onClick={handleShare}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        copied
-                          ? 'text-emerald-600 bg-emerald-50'
-                          : 'text-slate-400 bg-slate-100 hover:text-slate-700'
-                      }`}
+                      className={`p-1.5 rounded-lg transition-colors ${copied
+                        ? 'text-emerald-600 bg-emerald-50'
+                        : 'text-slate-400 bg-slate-100 hover:text-slate-700'
+                        }`}
                       title={copied ? 'Link Copied!' : 'Share Personalized Link'}
                     >
                       {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
@@ -221,11 +217,10 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     )}
                     <button
                       onClick={handleShare}
-                      className={`p-1.5 rounded-lg transition-colors ${
-                        copied
-                          ? 'text-emerald-600 bg-emerald-50'
-                          : 'text-slate-400 bg-slate-100 hover:text-slate-700'
-                      }`}
+                      className={`p-1.5 rounded-lg transition-colors ${copied
+                        ? 'text-emerald-600 bg-emerald-50'
+                        : 'text-slate-400 bg-slate-100 hover:text-slate-700'
+                        }`}
                       title={copied ? 'Link Copied!' : 'Share Personalized Link'}
                     >
                       {copied ? <Check className="w-4 h-4" /> : <Share2 className="w-4 h-4" />}
@@ -257,7 +252,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 {property.category === 'Agricultural Land' || property.category === 'Plot' ? (
                   <div className="flex items-center gap-2 text-xs text-slate-700 font-semibold flex-wrap">
                     <div className="flex items-center gap-1 text-emerald-700 font-bold">
-                      🌾 <span>{formatAreaByUnit(property.areaSqFt, activeUnit).formatted}</span>
+                      🌾 <span>{formatAreaByUnit(property.areaSqFt, getStoredAreaUnit()).formatted}</span>
                     </div>
                     <div className="flex items-center gap-1 text-slate-500">
                       <span>•</span>
@@ -280,7 +275,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     </div>
                     <div className="flex items-center gap-1 font-bold text-slate-800">
                       <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
-                      <span>{formatAreaByUnit(property.areaSqFt, activeUnit).formatted}</span>
+                      <span>{formatAreaByUnit(property.areaSqFt, getStoredAreaUnit()).formatted}</span>
                     </div>
                   </div>
                 )}
