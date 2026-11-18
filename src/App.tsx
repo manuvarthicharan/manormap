@@ -26,6 +26,7 @@ import { isSupabaseConfigured, onAuthStateChange } from './services/supabaseClie
 import { syncProfileFromSupabaseUser, getUserProfile } from './services/userService';
 import { fetchSupabaseFavorites, toggleSupabaseFavorite } from './services/supabasePropertyService';
 import { getStoredAreaUnit, setStoredAreaUnit } from './services/areaUnitService';
+import { notificationService } from './services/notificationService';
 import { GoogleMap } from './components/Map/GoogleMap';
 import { PinDropOverlay } from './components/Map/PinDropOverlay';
 import { FloatingHeader } from './components/Navigation/FloatingHeader';
@@ -595,6 +596,16 @@ export const App: React.FC = () => {
       };
       setCurrentBounds(immediateBounds);
     }
+
+    // Trigger real location-based notification
+    notificationService.addNotification({
+      title: 'New Property Listed Nearby',
+      message: `Fresh ${saved.category} added in ${saved.area || saved.address}, ${saved.city}: "${saved.title}" at ${saved.priceDisplay}.`,
+      type: 'new_listing',
+      propertyId: saved.id,
+      locality: saved.area,
+      city: saved.city
+    });
   };
 
   // Delete custom property
@@ -810,7 +821,7 @@ export const App: React.FC = () => {
         Interactive Pin Drop Overlay (Active during property location selection)
       */}
       {!isDroppingPin && !selectedProperty && !isAnyGeospatialToolActive && (
-        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-white/95 backdrop-blur-md text-slate-800 rounded-2xl shadow-xl shadow-slate-900/10 border border-slate-200/90 p-1.5 animate-in slide-in-from-bottom duration-200">
+        <nav className="sm:hidden fixed bottom-3 inset-x-3 z-20 pointer-events-auto flex items-center justify-around bg-white text-slate-800 rounded-2xl shadow-xl border border-slate-200 p-1.5 animate-in slide-in-from-bottom duration-200">
           {/* Map / Recenter */}
           <button
             onClick={() => {

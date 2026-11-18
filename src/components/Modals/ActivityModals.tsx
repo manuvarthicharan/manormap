@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Property } from '../../types';
 import {
   X,
@@ -16,12 +16,16 @@ import {
   Edit2,
   Save,
   Check,
-  LogOut
+  LogOut,
+  TrendingUp,
+  CheckCheck,
+  ExternalLink
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
 import { getUserProfile, saveUserProfile, cycleNextAvatar, syncProfileFromSupabaseUser, UserProfile } from '../../services/userService';
 import { signInWithGoogle, signOut, isSupabaseConfigured } from '../../services/supabaseClient';
+import { notificationService, AppNotification } from '../../services/notificationService';
 
 interface ActivityModalProps {
   modalType: string | null;
@@ -70,6 +74,37 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   const [avatarUrlInput, setAvatarUrlInput] = useState(profile.avatarUrl);
   const [saveSuccessMessage, setSaveSuccessMessage] = useState('');
   const supabaseOnline = isSupabaseConfigured();
+
+  // Real Notifications State
+  const [notifications, setNotifications] = useState<AppNotification[]>(() =>
+    notificationService.getNotifications()
+  );
+  const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'new_listing'>('all');
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setNotifications(notificationService.getNotifications());
+    };
+    window.addEventListener('manormap_notifications_updated', handleUpdate);
+    return () => window.removeEventListener('manormap_notifications_updated', handleUpdate);
+  }, []);
+
+  const formatTimeAgo = (timestamp: number) => {
+    const diffMs = Date.now() - timestamp;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    const diffHours = Math.floor(diffMins / 60);
+    if (diffHours < 24) return `${diffHours}h ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays}d ago`;
+  };
+
+  const filteredNotifications = notifications.filter((n) => {
+    if (notifFilter === 'unread') return !n.read;
+    if (notifFilter === 'new_listing') return n.type === 'new_listing';
+    return true;
+  });
 
   // Saved Searches & Alerts state with localStorage persistence
   const [savedSearches, setSavedSearches] = useState<SavedSearchItem[]>(() => {
@@ -145,14 +180,14 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
         onClick={onClose}
       />
 
       <div className="min-h-full flex items-center justify-center p-4 text-center">
-        <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-100">
+        <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 border border-slate-200">
           {/* Header */}
-          <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white/95 backdrop-blur-md">
+          <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between bg-white">
             <div className="flex items-center gap-2.5">
               <Logo size="sm" variant="icon" />
               <h3 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-2">
@@ -604,28 +639,181 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
               </div>
             )}
 
-            {/* NOTIFICATIONS */}
+            {/* REAL ACTIVITY & NEW LISTING NOTIFICATIONS */}
             {modalType === 'notifications' && (
-              <div className="space-y-3">
-                <div className="p-3.5 rounded-2xl border border-slate-100 bg-blue-50/50">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-slate-900">Price Appreciation Alert</span>
-                    <span className="text-[10px] text-slate-400">2 hours ago</span>
+              <div className="space-y-3.5">
+                {/* Notification Controls & Filters */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100">
+                  <div className="flex items-center gap-1.5 overflow-x-auto text-xs">
+                    <button
+                      type="button"
+                      onClick={() => setNotifFilter('all')}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                        notifFilter === 'all'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      All ({notifications.length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotifFilter('unread')}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                        notifFilter === 'unread'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      Unread ({notifications.filter((n) => !n.read).length})
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNotifFilter('new_listing')}
+                      className={`px-2.5 py-1 rounded-lg font-bold transition-all ${
+                        notifFilter === 'new_listing'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      New Listings ({notifications.filter((n) => n.type === 'new_listing').length})
+                    </button>
                   </div>
-                  <p className="text-xs text-slate-600">
-                    Properties in Madhapur & Hitec City corridor rose by +14.2% YoY according to Q3 RERA market index.
-                  </p>
+
+                  <div className="flex items-center gap-2">
+                    {notifications.some((n) => !n.read) && (
+                      <button
+                        type="button"
+                        onClick={() => notificationService.markAllAsRead()}
+                        className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                        title="Mark all notifications as read"
+                      >
+                        <CheckCheck className="w-3.5 h-3.5" />
+                        <span>Mark all read</span>
+                      </button>
+                    )}
+                    {notifications.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => notificationService.clearAll()}
+                        className="text-[11px] font-bold text-slate-400 hover:text-rose-600 flex items-center gap-1"
+                        title="Clear notification history"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Clear</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
 
-                <div className="p-3.5 rounded-2xl border border-slate-100">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="text-xs font-bold text-slate-900">New Direct Inquiries</span>
-                    <span className="text-[10px] text-slate-400">1 day ago</span>
+                {/* Notifications List */}
+                {filteredNotifications.length === 0 ? (
+                  <div className="text-center py-10 px-4">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2">
+                      <Bell className="w-6 h-6" />
+                    </div>
+                    <p className="font-bold text-slate-800 text-sm">No notifications found</p>
+                    <p className="text-xs text-slate-500 mt-1 max-w-xs mx-auto">
+                      Whenever new properties or price alerts occur in your selected location, you'll receive real-time updates here.
+                    </p>
                   </div>
-                  <p className="text-xs text-slate-600">
-                    3 verified buyers viewed your listing in Financial District.
-                  </p>
-                </div>
+                ) : (
+                  <div className="space-y-2.5 max-h-[55vh] overflow-y-auto pr-1">
+                    {filteredNotifications.map((notif) => {
+                      const matchedProp = notif.propertyId
+                        ? properties.find((p) => p.id === notif.propertyId)
+                        : null;
+
+                      return (
+                        <div
+                          key={notif.id}
+                          className={`p-3.5 rounded-2xl border transition-all ${
+                            !notif.read
+                              ? 'bg-blue-50/60 border-blue-200'
+                              : 'bg-white border-slate-200 hover:bg-slate-50'
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2 mb-1.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <div
+                                className={`w-7 h-7 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                  notif.type === 'new_listing'
+                                    ? 'bg-emerald-100 text-emerald-700'
+                                    : notif.type === 'price_alert'
+                                    ? 'bg-indigo-100 text-indigo-700'
+                                    : 'bg-blue-100 text-blue-700'
+                                }`}
+                              >
+                                {notif.type === 'new_listing' ? (
+                                  <Building2 className="w-4 h-4" />
+                                ) : notif.type === 'price_alert' ? (
+                                  <TrendingUp className="w-4 h-4" />
+                                ) : (
+                                  <Bell className="w-4 h-4" />
+                                )}
+                              </div>
+                              <span className="text-xs font-bold text-slate-900 truncate">
+                                {notif.title}
+                              </span>
+                              {!notif.read && (
+                                <span className="w-2 h-2 rounded-full bg-blue-600 flex-shrink-0" />
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-1 flex-shrink-0">
+                              <span className="text-[10px] text-slate-400 font-medium">
+                                {formatTimeAgo(notif.timestamp)}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => notificationService.deleteNotification(notif.id)}
+                                className="p-1 text-slate-300 hover:text-rose-600 rounded transition-colors ml-1"
+                                title="Delete notification"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <p className="text-xs text-slate-600 pl-9 leading-relaxed">
+                            {notif.message}
+                          </p>
+
+                          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-slate-100/80 pl-9">
+                            {matchedProp ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  notificationService.markAsRead(notif.id);
+                                  onSelectProperty(matchedProp);
+                                  onClose();
+                                }}
+                                className="text-xs font-bold text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors"
+                              >
+                                <span>View Property on Map</span>
+                                <ExternalLink className="w-3 h-3" />
+                              </button>
+                            ) : (
+                              <span className="text-[10px] text-slate-400">
+                                {notif.locality ? `Location: ${notif.locality}` : 'System Broadcast'}
+                              </span>
+                            )}
+
+                            {!notif.read && (
+                              <button
+                                type="button"
+                                onClick={() => notificationService.markAsRead(notif.id)}
+                                className="text-[11px] font-semibold text-slate-500 hover:text-slate-800"
+                              >
+                                Mark read
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 

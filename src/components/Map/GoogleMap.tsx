@@ -4,15 +4,12 @@ import {
   MapBounds,
   RadiusSearchState,
   PolygonSearchState,
-  LandSurveyState,
-  VenturePlot,
-  VentureLayout
+  LandSurveyState
 } from '../../types';
 import { loadGoogleMaps } from '../../services/googleMapsLoader';
 import { CustomOverlayMarker } from './CustomOverlayMarker';
 import { computeDisplacedPinLayout } from './pinDeconfliction';
 import { calculateLandParcelMetrics, computeLandSurveyMetrics } from '../../services/propertyService';
-import { SAMPLE_VENTURE_LAYOUTS } from '../../services/ventureLayoutService';
 import { LandBoundarySurveyorHUD, SurveyDrawMode } from './LandBoundarySurveyorHUD';
 import { mapActionBridge } from '../../services/mapActionBridge';
 import {
@@ -31,10 +28,7 @@ import {
   Check,
   Sparkles,
   RotateCcw,
-  Building2,
-  MessageCircle,
-  ExternalLink,
-  ShieldCheck
+  Loader2
 } from 'lucide-react';
 
 const CLEAN_LIGHT_STYLE: google.maps.MapTypeStyle[] = [
@@ -148,9 +142,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
   const [activeMapTypeId, setActiveMapTypeId] = useState<string>(propsActiveMapTypeId || 'hybrid');
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [showTransitLayer, setShowTransitLayer] = useState(false);
-  const [showVentureLayouts, setShowVentureLayouts] = useState(true);
-  const [selectedVenturePlot, setSelectedVenturePlot] = useState<{ plot: VenturePlot; layout: VentureLayout } | null>(null);
-  const venturePolygonsRef = useRef<google.maps.Polygon[]>([]);
+  const [isLocatingUser, setIsLocatingUser] = useState(false);
   const [isMobileToolsOpen, setIsMobileToolsOpen] = useState(false);
 
   useEffect(() => {
@@ -671,76 +663,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     });
   }, [properties, selectedProperty, hoveredPropertyId, isDrawingLandForProperty, mapLoaded]);
 
-  // Multi-Plot Venture Master Plan Overlay (HMDA & BMRDA Plotted Layouts)
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapLoaded || !window.google?.maps) return;
 
-    // Clear existing venture polygons
-    venturePolygonsRef.current.forEach((poly) => poly.setMap(null));
-    venturePolygonsRef.current = [];
-
-    if (!showVentureLayouts) return;
-
-    SAMPLE_VENTURE_LAYOUTS.forEach((layout) => {
-      layout.plots.forEach((plot) => {
-        const paths = plot.coordinates.map(([lng, lat]) => new google.maps.LatLng(lat, lng));
-        const isPlotAvailable = plot.status === 'available';
-        const isPlotHold = plot.status === 'hold';
-
-        const fillColor = isPlotAvailable ? '#10b981' : isPlotHold ? '#f59e0b' : '#64748b';
-        const strokeColor = isPlotAvailable ? '#047857' : isPlotHold ? '#b45309' : '#334155';
-        const fillOpacity = isPlotAvailable ? 0.45 : isPlotHold ? 0.40 : 0.28;
-
-        const poly = new google.maps.Polygon({
-          paths,
-          fillColor,
-          fillOpacity,
-          strokeColor,
-          strokeWeight: 2,
-          strokeOpacity: 0.95,
-          zIndex: 40,
-          map,
-          clickable: true
-        });
-
-        // Hover effect
-        poly.addListener('mouseover', () => {
-          poly.setOptions({
-            strokeColor: '#2563eb',
-            strokeWeight: 3.5,
-            fillOpacity: 0.65,
-            zIndex: 80
-          });
-        });
-
-        poly.addListener('mouseout', () => {
-          poly.setOptions({
-            strokeColor,
-            strokeWeight: 2,
-            fillOpacity,
-            zIndex: 40
-          });
-        });
-
-        // Click to view plot intelligence HUD
-        poly.addListener('click', (e: any) => {
-          if (e && e.stop) e.stop();
-          setSelectedVenturePlot({ plot, layout });
-          if (map) {
-            map.panTo(new google.maps.LatLng(plot.center[1], plot.center[0]));
-          }
-        });
-
-        venturePolygonsRef.current.push(poly);
-      });
-    });
-
-    return () => {
-      venturePolygonsRef.current.forEach((poly) => poly.setMap(null));
-      venturePolygonsRef.current = [];
-    };
-  }, [showVentureLayouts, mapLoaded]);
 
   // User location marker
   useEffect(() => {
@@ -794,19 +717,30 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
     mapRef.current.setZoom(current - 1);
   };
 
-  // Geolocation (Locate Me)
+  // Geolocation (Locate Me with Full Screen Loading HUD)
   const handleLocateMe = () => {
     if (!navigator.geolocation) {
       alert('Geolocation is not supported by your browser');
       return;
     }
 
+    setIsLocatingUser(true);
+
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        if (!mapRef.current || !window.google?.maps) return;
+        if (!mapRef.current || !window.google?.maps) {
+          setIsLocatingUser(false);
+          return;
+        }
         const coords = new google.maps.LatLng(pos.coords.latitude, pos.coords.longitude);
         mapRef.current.panTo(coords);
-        mapRef.current.setZoom(15);
+        mapRef.current.setZoom(16);
+        if (onMapCenterChangeRef.current) {
+          onMapCenterChangeRef.current([pos.coords.longitude, pos.coords.latitude]);
+        }
+        setTimeout(() => {
+          setIsLocatingUser(false);
+        }, 450);
       },
       (err) => {
         console.warn('Geolocation failed or denied, centering on Hyderabad tech corridor', err);
@@ -814,8 +748,13 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
           mapRef.current.panTo(new google.maps.LatLng(17.4474, 78.3820));
           mapRef.current.setZoom(14);
         }
+        setIsLocatingUser(false);
       },
-      { timeout: 7000 }
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
     );
   };
 
@@ -1114,7 +1053,7 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
 
       {/* Selected Property Cadastral Land Boundary Indicator */}
       {selectedProperty?.boundaryPolygon && selectedProperty.boundaryPolygon.length >= 3 && !isDroppingPin && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-white/95 text-slate-900 backdrop-blur-md rounded-2xl shadow-xl shadow-slate-900/10 border border-emerald-500/50 px-4 py-2 flex items-center gap-2.5 animate-in fade-in">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-20 pointer-events-auto bg-white text-slate-900 rounded-2xl shadow-xl border border-emerald-500/50 px-4 py-2 flex items-center gap-2.5 animate-in fade-in">
           <Ruler className="w-4 h-4 text-emerald-600 flex-shrink-0" />
           <div className="flex items-center gap-2 text-xs">
             <span className="font-bold text-slate-800">Shaded Land Boundary:</span>
@@ -1128,104 +1067,31 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         </div>
       )}
 
-      {/* MULTI-PLOT VENTURE MASTER PLAN PLOT DETAILS HUD */}
-      {selectedVenturePlot && (
-        <div className="fixed bottom-20 left-3 right-3 sm:bottom-6 sm:left-6 sm:right-auto sm:w-[420px] z-30 pointer-events-auto bg-white/98 text-slate-900 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-200/90 p-4 animate-in slide-in-from-bottom duration-300">
-          <div className="flex items-start justify-between gap-2 border-b border-slate-100 pb-3">
+      {/* GEOLOCATION LOADING SCREEN (Displays until current location is acquired) */}
+      {isLocatingUser && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 animate-in fade-in duration-200">
+          <div className="bg-white text-slate-900 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-slate-200 text-center space-y-3.5 animate-in zoom-in-95 duration-200">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto relative border border-blue-100">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-2xl bg-blue-400 opacity-25" />
+              <Locate className="w-8 h-8 relative animate-pulse text-blue-600" />
+            </div>
             <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] font-black px-2 py-0.5 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
-                  {selectedVenturePlot.layout.authority} Approved
-                </span>
-                <span
-                  className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border uppercase tracking-wider ${
-                    selectedVenturePlot.plot.status === 'available'
-                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                      : selectedVenturePlot.plot.status === 'hold'
-                      ? 'bg-amber-50 text-amber-700 border-amber-200'
-                      : 'bg-slate-100 text-slate-600 border-slate-300'
-                  }`}
-                >
-                  {selectedVenturePlot.plot.status}
-                </span>
-              </div>
-              <h3 className="text-base font-extrabold text-slate-900 mt-1">
-                {selectedVenturePlot.plot.plotNumber} • {selectedVenturePlot.layout.name}
-              </h3>
-              <p className="text-[11px] text-slate-500 font-medium">
-                {selectedVenturePlot.layout.developerName} • {selectedVenturePlot.layout.lpNumber}
+              <h3 className="text-base font-extrabold text-slate-900">Locating Your Position</h3>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                Connecting to GPS sensor to acquire accurate coordinates and center your map view.
               </p>
             </div>
-            <button
-              onClick={() => setSelectedVenturePlot(null)}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 my-3 text-xs">
-            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Plot Area</span>
-              <span className="font-extrabold text-slate-900 text-sm">
-                {selectedVenturePlot.plot.areaSqYards} Sq. Yards
-              </span>
-              <span className="text-[10px] text-slate-500 block">({(selectedVenturePlot.plot.areaSqYards * 9).toLocaleString('en-IN')} Sq.Ft)</span>
+            <div className="flex items-center justify-center gap-2 text-xs text-blue-700 font-bold bg-blue-50 py-2 px-3 rounded-xl border border-blue-100">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
+              <span>Acquiring GPS lock...</span>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Dimensions & Facing</span>
-              <span className="font-extrabold text-slate-900 text-sm">
-                {selectedVenturePlot.plot.dimensions}
-              </span>
-              <span className="text-[10px] text-slate-500 block">{selectedVenturePlot.plot.facing}</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-100">
-              <span className="text-[10px] text-slate-400 font-bold uppercase block">Rate / Sq. Yd</span>
-              <span className="font-extrabold text-blue-700 text-sm">
-                ₹{selectedVenturePlot.plot.pricePerSqYd.toLocaleString('en-IN')}
-              </span>
-              <span className="text-[10px] text-slate-500 block">{selectedVenturePlot.plot.surveyNo}</span>
-            </div>
-            <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
-              <span className="text-[10px] text-emerald-800 font-bold uppercase block">Total Price</span>
-              <span className="font-black text-emerald-800 text-sm">
-                ₹{(selectedVenturePlot.plot.totalPrice / 100000).toFixed(2)} Lakh
-              </span>
-              <span className="text-[10px] text-emerald-600 block">All-in approx quote</span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 pt-1 border-t border-slate-100">
-            <a
-              href={`https://wa.me/${selectedVenturePlot.layout.contactPhone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(
-                `Hi, I'm interested in ${selectedVenturePlot.plot.plotNumber} (${selectedVenturePlot.plot.areaSqYards} sq.yds, ${selectedVenturePlot.plot.facing}, ₹${(selectedVenturePlot.plot.totalPrice / 100000).toFixed(2)} Lakh) in ${selectedVenturePlot.layout.name} (${selectedVenturePlot.layout.authority}). Please share master layout plan and spot booking quote.`
-              )}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all active:scale-95"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>WhatsApp Booking Quote</span>
-            </a>
-
-            <a
-              href="https://bhubharati.telangana.gov.in/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1 transition-colors"
-              title="Verify on Telangana Bhu Bharati Portal"
-            >
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
-              <span>Bhu Bharati</span>
-              <ExternalLink className="w-3 h-3 text-slate-400" />
-            </a>
           </div>
         </div>
       )}
 
       {/* AI POLYGON OVERLAY BANNER */}
       {aiPolygon && (
-        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-blue-50/95 text-blue-950 backdrop-blur-md rounded-2xl shadow-xl shadow-blue-900/5 border border-blue-200 p-2.5 flex items-center justify-between sm:justify-start gap-2 animate-in fade-in">
+        <div className="absolute top-16 sm:top-20 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:w-auto z-20 pointer-events-auto bg-blue-50 text-blue-950 rounded-2xl shadow-xl border border-blue-200 p-2.5 flex items-center justify-between sm:justify-start gap-2 animate-in fade-in">
           <div className="flex items-center gap-2 min-w-0">
             <Sparkles className="w-4 h-4 text-emerald-600 flex-shrink-0" />
             <span className="text-xs font-bold truncate">
@@ -1487,26 +1353,6 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
                     showTransitLayer ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'
                   }`}>
                     {showTransitLayer ? 'ON' : 'OFF'}
-                  </span>
-                </button>
-
-                {/* Plotted Layout Master Plans (HMDA & BMRDA) */}
-                <button
-                  onClick={() => setShowVentureLayouts(!showVentureLayouts)}
-                  className={`w-full px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition-colors ${
-                    showVentureLayouts
-                      ? 'bg-emerald-50 text-emerald-800'
-                      : 'text-slate-700 hover:bg-slate-50'
-                  }`}
-                >
-                  <span className="flex items-center gap-2">
-                    <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Plotted Master Plans (HMDA)</span>
-                  </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
-                    showVentureLayouts ? 'bg-emerald-200 text-emerald-900' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {showVentureLayouts ? 'ON' : 'OFF'}
                   </span>
                 </button>
               </div>

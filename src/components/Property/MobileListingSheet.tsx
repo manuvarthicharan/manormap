@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import {
   ChevronUp,
-  ChevronDown,
   MapPin,
   MessageCircle,
-  Compass
+  Compass,
+  X
 } from 'lucide-react';
 import { Property, AreaUnit } from '../../types';
 import { formatIndianCurrency } from '../../services/propertyService';
@@ -58,14 +58,14 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
     else setSheetState('peek');
   };
 
-  const getContainerHeightClass = () => {
+  const getContainerLayoutClass = () => {
     switch (sheetState) {
       case 'peek':
-        return 'h-16';
+        return 'bottom-[72px] inset-x-3 rounded-2xl border border-slate-200 bg-white shadow-xl h-14 z-20';
       case 'half':
-        return 'h-[50vh]';
+        return 'bottom-0 inset-x-0 rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl z-40 h-[52vh]';
       case 'full':
-        return 'h-[88vh]';
+        return 'bottom-0 inset-x-0 rounded-t-3xl border-t border-slate-200 bg-white shadow-2xl z-40 h-[90vh]';
       case 'closed':
         return 'h-0 hidden';
     }
@@ -73,15 +73,15 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
 
   return (
     <div
-      className={`sm:hidden fixed inset-x-0 bottom-14 z-25 pointer-events-auto transition-all duration-300 ease-out bg-white/98 backdrop-blur-xl border-t border-slate-200/90 shadow-2xl shadow-slate-950/20 rounded-t-3xl flex flex-col overflow-hidden ${getContainerHeightClass()}`}
+      className={`sm:hidden fixed pointer-events-auto transition-all duration-300 ease-out bg-white flex flex-col overflow-hidden ${getContainerLayoutClass()}`}
     >
       {/* DRAG HANDLE & HEADER BAR */}
       <div
         onClick={cycleSheetState}
-        className="w-full flex-shrink-0 pt-2.5 pb-2 px-4 flex flex-col items-center cursor-pointer select-none border-b border-slate-100/80 hover:bg-slate-50/50 transition-colors"
+        className="w-full flex-shrink-0 pt-2 pb-2 px-3.5 flex flex-col items-center cursor-pointer select-none border-b border-slate-100 hover:bg-slate-50 transition-colors"
       >
         {/* Grab bar pill */}
-        <div className="w-10 h-1 rounded-full bg-slate-300 mb-2" />
+        <div className="w-9 h-1 rounded-full bg-slate-300 mb-1.5" />
 
         <div className="w-full flex items-center justify-between">
           <div className="flex items-center gap-2 min-w-0">
@@ -90,23 +90,33 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
             <span className="text-xs font-extrabold text-slate-900 truncate">
-              {filteredProperties.length} Properties in {localityName}
+              {filteredProperties.length} Listings in {localityName}
             </span>
             {minPrice > 0 && sheetState === 'peek' && (
-              <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 flex-shrink-0">
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 flex-shrink-0">
                 From {formatIndianCurrency(minPrice, 'sale')}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-1 text-slate-500 flex-shrink-0">
-            <span className="text-[10px] font-bold text-slate-400">
-              {sheetState === 'peek' ? 'Swipe up' : sheetState === 'half' ? 'Expand' : 'Collapse'}
-            </span>
-            {sheetState === 'full' ? (
-              <ChevronDown className="w-4 h-4 text-slate-600" />
+          <div className="flex items-center gap-1.5 text-slate-500 flex-shrink-0">
+            {sheetState !== 'peek' ? (
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSheetState('peek');
+                }}
+                className="p-1 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                title="Collapse sheet"
+              >
+                <X className="w-4 h-4" />
+              </button>
             ) : (
-              <ChevronUp className="w-4 h-4 text-slate-600" />
+              <div className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                <span>View</span>
+                <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+              </div>
             )}
           </div>
         </div>
@@ -114,7 +124,7 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
 
       {/* QUICK CATEGORY PILLS (Visible in half and full states) */}
       {sheetState !== 'peek' && (
-        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 overflow-x-auto flex-shrink-0 bg-slate-50/50">
+        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-slate-100 overflow-x-auto flex-shrink-0 bg-slate-50">
           {[
             { id: 'all', label: 'All Listings' },
             { id: 'villa', label: 'Villas' },

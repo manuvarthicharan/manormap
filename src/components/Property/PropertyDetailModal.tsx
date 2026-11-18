@@ -216,7 +216,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Full-Screen Lightbox for High-Res Image Inspection */}
       {isLightboxOpen && (
-        <div className="fixed inset-0 z-[60] bg-slate-950/95 backdrop-blur-md flex flex-col justify-between p-4 animate-in fade-in">
+        <div className="fixed inset-0 z-[60] bg-slate-950 flex flex-col justify-between p-4 animate-in fade-in">
           <div className="flex items-center justify-between text-white pb-2">
             <span className="text-sm font-bold">
               {property.title} — Photo {selectedImageIndex + 1} of {property.images.length}
@@ -281,7 +281,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-slate-900/35 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/50 transition-opacity"
         onClick={onClose}
       />
 
@@ -385,13 +385,13 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                   {/* Fullscreen Expansion Pill */}
                   <button
                     onClick={() => setIsLightboxOpen(true)}
-                    className="absolute top-3 right-3 px-3 py-1.5 bg-slate-950/70 hover:bg-slate-950 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 backdrop-blur-md shadow-md transition-colors"
+                    className="absolute top-3 right-3 px-3 py-1.5 bg-slate-950 hover:bg-black text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md transition-colors"
                   >
                     <Maximize className="w-3.5 h-3.5" />
                     <span>Expand Gallery</span>
                   </button>
 
-                  <div className="absolute bottom-3 right-3 px-3 py-1 bg-slate-950/80 backdrop-blur-md rounded-lg text-xs font-semibold text-white">
+                  <div className="absolute bottom-3 right-3 px-3 py-1 bg-slate-900 rounded-lg text-xs font-semibold text-white shadow-md">
                     {selectedImageIndex + 1} / {property.images.length}
                   </div>
                 </div>

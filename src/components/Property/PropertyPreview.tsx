@@ -111,7 +111,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 >
                   {property.type === 'sale' ? 'For Sale' : 'For Rent'}
                 </span>
-                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white/95 backdrop-blur-sm text-slate-800 border border-slate-200/90 shadow-xs">
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-white text-slate-800 border border-slate-200 shadow-xs">
                   {property.category}
                 </span>
                 {property.contact.type === 'Owner' && (
@@ -130,7 +130,7 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
               {/* Close Button on Image for Mobile */}
               <button
                 onClick={onClose}
-                className="sm:hidden absolute top-2 right-2 w-7 h-7 rounded-full bg-white/95 text-slate-700 hover:text-slate-900 flex items-center justify-center backdrop-blur-sm shadow-md border border-slate-200"
+                className="sm:hidden absolute top-2 right-2 w-7 h-7 rounded-full bg-white text-slate-700 hover:text-slate-900 flex items-center justify-center shadow-md border border-slate-200"
                 aria-label="Dismiss preview"
               >
                 <X className="w-4 h-4" />

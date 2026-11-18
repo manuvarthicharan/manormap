@@ -360,8 +360,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
       >
         <div className={`flex items-center gap-1.5 sm:gap-2 rounded-2xl shadow-xl transition-all focus-within:ring-2 focus-within:ring-blue-500/30 ${
           isDarkMap
-            ? 'bg-slate-950/92 backdrop-blur-xl border border-slate-700/80 shadow-black/50 text-white focus-within:border-blue-500'
-            : 'bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-slate-900/5 text-slate-900 focus-within:border-blue-500'
+            ? 'bg-slate-950 border border-slate-700 shadow-black/50 text-white focus-within:border-blue-500'
+            : 'bg-white border border-slate-200 shadow-slate-900/10 text-slate-900 focus-within:border-blue-500'
         } p-1.5 sm:p-2`}>
 
           {/* Logo & Navigation Menu Button */}
@@ -507,10 +507,10 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
         {/* Omnisearch Enhanced Dropdown Menu - Aligned directly with Searchbar */}
         {showDropdown && (
-          <div className={`mt-2 w-full rounded-2xl shadow-2xl border overflow-hidden divide-y animate-in fade-in slide-in-from-top-1 duration-150 max-h-[70dvh] sm:max-h-[460px] overflow-y-auto ${
+          <div className={`mt-2 w-full rounded-2xl shadow-2xl border overflow-hidden divide-y animate-in fade-in slide-from-top-1 duration-150 max-h-[70dvh] sm:max-h-[460px] overflow-y-auto ${
             isDarkMap
-              ? 'bg-slate-950/96 backdrop-blur-2xl border-slate-700/90 shadow-black/70 divide-slate-800/80 text-slate-100'
-              : 'bg-white/98 backdrop-blur-2xl border-slate-200/90 divide-slate-100 text-slate-900'
+              ? 'bg-slate-950 border-slate-700 shadow-black/80 divide-slate-800 text-slate-100'
+              : 'bg-white border-slate-200 divide-slate-100 text-slate-900 shadow-slate-900/15'
           }`}>
 
             {/* Live Search Spinner */}
@@ -842,8 +842,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
         {onAreaUnitChange && (
           <div className={`hidden md:flex items-center p-1 rounded-2xl border shadow-md text-xs font-bold h-10 ${
             isDarkMap
-              ? 'bg-slate-950/92 backdrop-blur-xl border-slate-700/80 shadow-black/40 text-slate-300'
-              : 'bg-white/95 backdrop-blur-xl border-slate-200/90 shadow-slate-900/5 text-slate-600'
+              ? 'bg-slate-950 border-slate-700 shadow-black/40 text-slate-300'
+              : 'bg-white border-slate-200 shadow-slate-900/10 text-slate-600'
           }`}>
             <span className="px-2 text-[10px] uppercase font-extrabold text-slate-400 flex items-center gap-1">
               <Ruler className="w-3.5 h-3.5 text-blue-500" />

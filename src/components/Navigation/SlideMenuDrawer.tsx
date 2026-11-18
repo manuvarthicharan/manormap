@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   X,
   Compass,
@@ -18,6 +18,7 @@ import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
 import { getUserProfile, syncProfileFromSupabaseUser } from '../../services/userService';
 import { signInWithGoogle, signOut, isSupabaseConfigured } from '../../services/supabaseClient';
+import { notificationService } from '../../services/notificationService';
 
 interface SlideMenuDrawerProps {
   isOpen: boolean;
@@ -52,6 +53,16 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
   const userProfile = getUserProfile();
   const supabaseOnline = isSupabaseConfigured();
 
+  const [unreadNotifs, setUnreadNotifs] = useState(() => notificationService.getUnreadCount());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setUnreadNotifs(notificationService.getUnreadCount());
+    };
+    window.addEventListener('manormap_notifications_updated', handleUpdate);
+    return () => window.removeEventListener('manormap_notifications_updated', handleUpdate);
+  }, []);
+
   const handleAction = (key: string) => {
     onSelectOption(key);
     onClose();
@@ -80,7 +91,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
     <div className="fixed inset-0 z-50 overflow-hidden">
       {/* Backdrop (closes on click) */}
       <div
-        className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs transition-opacity duration-300 ease-out animate-in fade-in"
+        className="fixed inset-0 bg-slate-900/40 transition-opacity duration-300 ease-out animate-in fade-in"
         onClick={onClose}
       />
 
@@ -255,9 +266,11 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                     <Bell className="w-4 h-4 text-slate-500" />
                     <span>Notifications</span>
                   </div>
-                  <span className="text-[10px] bg-amber-100 text-amber-700 font-bold px-1.5 py-0.5 rounded">
-                    2 NEW
-                  </span>
+                  {unreadNotifs > 0 && (
+                    <span className="text-[10px] bg-blue-100 text-blue-700 font-extrabold px-1.5 py-0.5 rounded-full">
+                      {unreadNotifs} NEW
+                    </span>
+                  )}
                 </button>
               </div>
             </div>
