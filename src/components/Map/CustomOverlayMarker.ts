@@ -1,5 +1,6 @@
 import { Property } from '../../types';
 import { PinDisplayMode } from './pinDeconfliction';
+import { razorpayService } from '../../services/razorpayService';
 
 export class CustomOverlayMarker {
   private overlay: google.maps.OverlayView;
@@ -208,15 +209,19 @@ export class CustomOverlayMarker {
     this.pillWrapper.style.left = `${this.dx}px`;
     this.pillWrapper.style.top = `${this.dy}px`;
 
+    const isSpotlight = razorpayService.isPropertyBoosted(this.property.id);
+
     const isAgri =
       this.property.category === 'Agricultural Land' || this.property.category === 'Plot';
-    const dotColor = isAgri
+    const dotColor = isSpotlight
+      ? '#f59e0b'
+      : isAgri
       ? '#10b981'
       : this.property.type === 'sale'
       ? '#2563eb'
       : '#059669';
 
-    // Must show as full pill if selected, hovered, or highlighted
+    // Must show as full pill if selected, hovered, highlighted, or spotlight boosted
     const forceFull = this.isSelected || this.isHovered || this.isHighlighted;
 
     // 1. MICRO-DOT STATE (Clean, non-overlapping location dot when zoomed out)
@@ -224,19 +229,24 @@ export class CustomOverlayMarker {
       this.container.style.opacity = '0.95';
       this.container.style.pointerEvents = 'auto';
       this.container.style.transform = 'scale(1)';
+      if (isSpotlight) {
+        this.container.style.zIndex = '150';
+      }
 
       this.pillWrapper.style.transform = 'translate(-50%, -50%)';
-      this.pillWrapper.setAttribute('title', `${this.property.title} • ${this.property.priceDisplay}`);
+      this.pillWrapper.setAttribute('title', `${isSpotlight ? '⭐ Spotlight: ' : ''}${this.property.title} • ${this.property.priceDisplay}`);
       if (this.tip) this.tip.style.display = 'none';
 
       this.pill.innerHTML = '';
       this.pill.className = 'marker-dot';
-      this.pill.style.width = '11px';
-      this.pill.style.height = '11px';
+      this.pill.style.width = isSpotlight ? '13px' : '11px';
+      this.pill.style.height = isSpotlight ? '13px' : '11px';
       this.pill.style.borderRadius = '9999px';
       this.pill.style.backgroundColor = dotColor;
-      this.pill.style.border = '2px solid #ffffff';
-      this.pill.style.boxShadow = '0 1.5px 5px rgba(0,0,0,0.35)';
+      this.pill.style.border = isSpotlight ? '2.5px solid #ffffff' : '2px solid #ffffff';
+      this.pill.style.boxShadow = isSpotlight
+        ? '0 0 12px rgba(245, 158, 11, 0.9), 0 2px 6px rgba(0,0,0,0.45)'
+        : '0 1.5px 5px rgba(0,0,0,0.35)';
       this.pill.style.cursor = 'pointer';
       this.pill.style.transition = 'transform 0.2s ease, box-shadow 0.2s ease';
       return;
@@ -253,11 +263,15 @@ export class CustomOverlayMarker {
       ? 'translate(-50%, -112%) scale(1.12)'
       : 'translate(-50%, -100%)';
 
-    this.pillWrapper.setAttribute('title', `${this.property.title} • ${this.property.priceDisplay}`);
+    this.pillWrapper.setAttribute('title', `${isSpotlight ? '⭐ Spotlight: ' : ''}${this.property.title} • ${this.property.priceDisplay}`);
 
     if (this.tip) this.tip.style.display = 'block';
 
     const isCompact = this.displayMode === 'compact' && !forceFull;
+
+    const spotlightBadge = isSpotlight
+      ? '<span class="font-black text-[9.5px] bg-amber-400 text-slate-950 px-1 py-0.2 rounded-sm mr-1 border border-amber-500 shadow-2xs">⭐ TOP</span>'
+      : '';
 
     if (!isCompact && this.zoomMode === 'full') {
       const acresDisplay =
@@ -268,6 +282,7 @@ export class CustomOverlayMarker {
           : `<span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${dotColor};"></span>`;
 
       this.pill.innerHTML = `
+        ${spotlightBadge}
         ${acresDisplay}
         <span class="price-text font-bold text-xs tracking-tight">${this.property.priceDisplay}</span>
       `;
@@ -279,6 +294,7 @@ export class CustomOverlayMarker {
         : `<span class="w-1.5 h-1.5 rounded-full flex-shrink-0 mr-0.5" style="background-color: ${dotColor};"></span>`;
 
       this.pill.innerHTML = `
+        ${spotlightBadge}
         ${tagDisplay}
         <span class="price-text font-bold text-[11.5px] tracking-tight">${this.property.priceDisplay}</span>
       `;
@@ -290,8 +306,15 @@ export class CustomOverlayMarker {
     this.pill.style.height = '';
     this.pill.style.borderRadius = '';
     this.pill.style.backgroundColor = '';
-    this.pill.style.border = '';
-    this.pill.style.boxShadow = '';
+
+    if (isSpotlight) {
+      this.pill.style.border = '2px solid #f59e0b';
+      this.pill.style.boxShadow = '0 0 14px rgba(245, 158, 11, 0.65), 0 3px 8px rgba(0, 0, 0, 0.2)';
+      this.container.style.zIndex = this.isSelected ? '260' : '150';
+    } else {
+      this.pill.style.border = '';
+      this.pill.style.boxShadow = '';
+    }
   }
 
   public forceRedraw() {

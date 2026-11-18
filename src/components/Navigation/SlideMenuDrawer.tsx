@@ -38,6 +38,16 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
   myPropertiesCount,
   favoritesCount
 }) => {
+  const [unreadNotifs, setUnreadNotifs] = useState(() => notificationService.getUnreadCount());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setUnreadNotifs(notificationService.getUnreadCount());
+    };
+    window.addEventListener('manormap_notifications_updated', handleUpdate);
+    return () => window.removeEventListener('manormap_notifications_updated', handleUpdate);
+  }, []);
+
   // Close on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,16 +63,6 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
 
   const userProfile = getUserProfile();
   const supabaseOnline = isSupabaseConfigured();
-
-  const [unreadNotifs, setUnreadNotifs] = useState(() => notificationService.getUnreadCount());
-
-  useEffect(() => {
-    const handleUpdate = () => {
-      setUnreadNotifs(notificationService.getUnreadCount());
-    };
-    window.addEventListener('manormap_notifications_updated', handleUpdate);
-    return () => window.removeEventListener('manormap_notifications_updated', handleUpdate);
-  }, []);
 
   const handleAction = (key: string) => {
     onSelectOption(key);

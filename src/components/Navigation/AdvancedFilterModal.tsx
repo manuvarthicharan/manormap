@@ -94,7 +94,7 @@ export const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({
         onClick={onClose}
       />
 
-      <div 
+      <div
         className="min-h-full flex items-end sm:items-center justify-center p-0 sm:p-4 text-center"
         onClick={(e) => {
           if (e.target === e.currentTarget) {

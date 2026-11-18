@@ -17,6 +17,7 @@ import {
   Navigation
 } from 'lucide-react';
 import { formatAreaByUnit, getStoredAreaUnit } from '../../services/areaUnitService';
+import { razorpayService } from '../../services/razorpayService';
 
 interface PropertyPreviewProps {
   property: Property | null;
@@ -43,6 +44,8 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
   const [copied, setCopied] = React.useState(false);
 
   if (!property) return null;
+
+  const isSpotlight = razorpayService.isPropertyBoosted(property.id);
 
   const handleShare = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -84,7 +87,22 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
     <div className="z-30 pointer-events-auto">
       {/* Mobile: Bottom Sheet | Desktop: Floating Card near bottom left */}
       <div className="fixed inset-x-0 bottom-0 sm:bottom-6 sm:left-6 sm:right-auto sm:max-w-md w-full animate-in slide-in-from-bottom duration-200 ease-out z-30">
-        <div className="bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto">
+        <div className={`bg-white rounded-t-3xl sm:rounded-2xl shadow-2xl overflow-hidden pb-3 sm:pb-0 max-h-[85dvh] overflow-y-auto ${
+          isSpotlight ? 'border-2 border-amber-400 shadow-[0_0_24px_rgba(245,158,11,0.25)]' : 'border border-slate-200'
+        }`}>
+
+          {/* Spotlight Promoted Header Ribbon */}
+          {isSpotlight && (
+            <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 px-3.5 py-1 text-[11px] font-black flex items-center justify-between shadow-xs">
+              <span className="flex items-center gap-1.5">
+                <span>⭐</span>
+                <span>Featured Spotlight Property &bull; #1 Locality Rank</span>
+              </span>
+              <span className="bg-slate-950 text-amber-300 text-[9.5px] px-1.5 py-0.2 rounded-sm uppercase tracking-wide">
+                Boosted
+              </span>
+            </div>
+          )}
 
           {/* Mobile Drag Indicator */}
           <div className="sm:hidden w-12 h-1.5 bg-slate-200 rounded-full mx-auto my-2.5" />

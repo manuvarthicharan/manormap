@@ -693,8 +693,20 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
         : undefined
     };
 
-    // If Spotlight Boost was selected, trigger Razorpay payment first!
+    // If Spotlight Boost was selected, use credit or trigger Razorpay payment!
     if (enableSpotlightBoost) {
+      const credits = razorpayService.getSpotlightCredits();
+      if (credits > 0) {
+        razorpayService.boostProperty(newPropertyId);
+        onAddProperty({ ...newProperty, isFeatured: true });
+        try {
+          localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
+        } catch { }
+        setIsPublishing(false);
+        onClose();
+        return;
+      }
+
       const boostPlan = {
         id: 'boost_spotlight_30',
         category: 'seller_boost' as const,
@@ -3035,7 +3047,13 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
             ) : isQuickListMode || currentStep === 12 ? (
               <>
                 <Sparkles className="w-4 h-4" />
-                <span>{enableSpotlightBoost ? 'Pay ₹999 & Publish Live' : 'Publish Property Live'}</span>
+                <span>
+                  {enableSpotlightBoost
+                    ? razorpayService.getSpotlightCredits() > 0
+                      ? 'Use 1 Spotlight Credit & Publish'
+                      : 'Pay ₹999 & Publish Live'
+                    : 'Publish Property Live'}
+                </span>
               </>
             ) : (
               <>

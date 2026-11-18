@@ -62,7 +62,7 @@ interface PropertyDetailModalProps {
   isCompared?: boolean;
   onOpenAIAdvisor?: (property: Property) => void;
   onOpenRoiCalculator?: (property: Property) => void;
-  onOpenPricing?: (category: 'buyer_pass' | 'seller_boost' | 'due_diligence' | 'agent_sub' | 'legal_agreement', property: Property) => void;
+  onOpenPricing?: (category: 'buyer_pass' | 'seller_boost', property: Property) => void;
   areaUnit?: AreaUnit;
 }
 
@@ -91,6 +91,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const activeAreaUnit = getStoredAreaUnit();
   const allInCost = useMemo(() => (property ? calculateAllInLandingCost(property) : null), [property]);
   const commuteRings = useMemo(() => (property ? computeInfrastructureCommuteRings(property) : []), [property]);
+  const isSpotlight = property ? razorpayService.isPropertyBoosted(property.id) : false;
 
   // Contact Unlock State powered by Razorpay
   const [isContactUnlocked, setIsContactUnlocked] = useState<boolean>(() => {
@@ -335,6 +336,19 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
       >
         <div className="relative w-full max-w-4xl bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl text-left overflow-hidden transform transition-all border border-slate-200 max-h-[94dvh] sm:max-h-[90vh] flex flex-col">
 
+          {/* Spotlight Active Ribbon */}
+          {isSpotlight && (
+            <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-amber-500 text-slate-950 px-4 sm:px-6 py-1.5 text-xs font-black flex items-center justify-between shadow-xs flex-shrink-0">
+              <span className="flex items-center gap-1.5">
+                <span>⭐</span>
+                <span>Verified Spotlight Property &bull; Top Rank Placement Active</span>
+              </span>
+              <span className="bg-slate-950 text-amber-300 text-[10px] px-2 py-0.5 rounded-md uppercase font-extrabold tracking-wide">
+                Promoted
+              </span>
+            </div>
+          )}
+
           {/* Header Bar */}
           <div className="h-16 px-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-20 flex-shrink-0">
             <div className="flex items-center gap-2 flex-wrap">
@@ -509,7 +523,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 { id: 'overview', label: 'Overview & Cost' },
                 { id: 'approvals', label: 'Verify Approvals & Bhu-dhaar' },
                 { id: 'commute', label: 'Commute & Metro Rings' },
-                { id: 'ai-risk', label: 'AI Risk Audit' },
+                { id: 'ai-risk', label: 'Civic & Risk Audit' },
                 { id: 'amenities', label: `Amenities (${property.features.length})` },
                 { id: 'emi', label: 'Loan EMI' }
               ].map((tab) => (
@@ -936,10 +950,10 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-extrabold text-sm text-white">Live Institutional Audit</span>
+                  <span className="font-extrabold text-sm text-white">Institutional Property Audit</span>
                   <span className="text-[10px] font-bold bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-900 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-900 animate-ping" />
-                    Verified AI Advisory
+                    Verified Intelligence
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-300 mt-0.5">

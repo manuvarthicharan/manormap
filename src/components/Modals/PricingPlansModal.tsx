@@ -38,6 +38,8 @@ export const PricingPlansModal: React.FC<PricingPlansModalProps> = ({
   const [completedTx, setCompletedTx] = useState<RazorpayTransaction | null>(null);
   const [viewHistory, setViewHistory] = useState<boolean>(false);
   const [transactions, setTransactions] = useState<RazorpayTransaction[]>([]);
+  const [buyerPass, setBuyerPass] = useState(() => razorpayService.getActiveBuyerPass());
+  const [spotlightCredits, setSpotlightCredits] = useState(() => razorpayService.getSpotlightCredits());
 
   useEffect(() => {
     setActiveCategory(initialCategory);
@@ -47,6 +49,8 @@ export const PricingPlansModal: React.FC<PricingPlansModalProps> = ({
     if (isOpen) {
       setTransactions(razorpayService.getTransactions());
       setCompletedTx(null);
+      setBuyerPass(razorpayService.getActiveBuyerPass());
+      setSpotlightCredits(razorpayService.getSpotlightCredits());
     }
   }, [isOpen]);
 
@@ -71,6 +75,8 @@ export const PricingPlansModal: React.FC<PricingPlansModalProps> = ({
         setIsProcessing(false);
         setCompletedTx(tx);
         setTransactions(razorpayService.getTransactions());
+        setBuyerPass(razorpayService.getActiveBuyerPass());
+        setSpotlightCredits(razorpayService.getSpotlightCredits());
         onPaymentSuccess?.(tx);
       },
       onDismiss: () => {
@@ -276,14 +282,32 @@ export const PricingPlansModal: React.FC<PricingPlansModalProps> = ({
           {/* VIEW: BUSINESS PLANS TABS & CARDS */}
           {!viewHistory && !completedTx && (
             <>
+              {/* Active User Balances Banner */}
+              <div className="flex flex-wrap items-center gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span className="text-slate-500">Buyer Pass:</span>
+                  <span className="font-extrabold text-slate-900">
+                    {buyerPass && buyerPass.contactsRemaining > 0
+                      ? `${buyerPass.contactsRemaining} Owner Unlocks Left`
+                      : '0 Unlocks Available'}
+                  </span>
+                </div>
+                <div className="h-4 w-px bg-slate-300 hidden sm:block" />
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="text-slate-500">Spotlight Credits:</span>
+                  <span className="font-extrabold text-amber-900 bg-amber-100 px-2 py-0.5 rounded-full">
+                    {spotlightCredits} {spotlightCredits === 1 ? 'Credit' : 'Credits'} Available
+                  </span>
+                </div>
+              </div>
+
               {/* Category Nav Tabs */}
               <div className="flex items-center gap-2 border-b border-slate-200 pb-3 overflow-x-auto no-scrollbar">
                 {[
-                  { id: 'buyer_pass', label: '🔑 Buyer & Tenant Pass', sub: 'Unlock Owner Phone & WhatsApp' },
-                  { id: 'seller_boost', label: '🚀 Spotlight Boost', sub: '10x Inquiries on Map' },
-                  { id: 'due_diligence', label: '📜 Legal Due Diligence', sub: 'Bhu-Bharati & RERA Report' },
-                  { id: 'agent_sub', label: '💼 Agent & Builder Club', sub: 'Pro Listings & Leads' },
-                  { id: 'legal_agreement', label: '📑 E-Stamp Agreement', sub: 'Digital Legal Stamp Paper' }
+                  { id: 'buyer_pass', label: '🔑 Buyer & Tenant Pass' },
+                  { id: 'seller_boost', label: '⭐ Spotlight Boost (Map Pin Glow)' }
                 ].map((tab) => (
                   <button
                     key={tab.id}
@@ -292,7 +316,7 @@ export const PricingPlansModal: React.FC<PricingPlansModalProps> = ({
                       setActiveCategory(tab.id as MonetizationCategory);
                       setSelectedPlanId('');
                     }}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all ${
+                    className={`px-4 py-2 rounded-xl text-xs font-bold flex-shrink-0 transition-all ${
                       activeCategory === tab.id
                         ? 'bg-blue-600 text-white shadow-xs'
                         : 'bg-slate-100 text-slate-700 hover:bg-slate-200'

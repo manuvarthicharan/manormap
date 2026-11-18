@@ -27,8 +27,7 @@ import {
   Trash2,
   Check,
   Sparkles,
-  RotateCcw,
-  Loader2
+  RotateCcw
 } from 'lucide-react';
 
 const CLEAN_LIGHT_STYLE: google.maps.MapTypeStyle[] = [
@@ -402,6 +401,17 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
       marker.setHovered(id === hoveredPropertyId);
     });
   }, [hoveredPropertyId]);
+
+  // Listen for property boost events to immediately update pin styling
+  useEffect(() => {
+    const handleBoost = () => {
+      markersRef.current.forEach((marker) => {
+        marker.forceRedraw();
+      });
+    };
+    window.addEventListener('manormap_property_boosted', handleBoost);
+    return () => window.removeEventListener('manormap_property_boosted', handleBoost);
+  }, []);
 
   // Toggle Transit Layer (Google Maps TransitLayer)
   useEffect(() => {
@@ -1067,24 +1077,12 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         </div>
       )}
 
-      {/* GEOLOCATION LOADING SCREEN (Displays until current location is acquired) */}
+      {/* GEOLOCATION LOADING SCREEN: Clean, simple dark overlay with rounding loading spinner */}
       {isLocatingUser && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 animate-in fade-in duration-200">
-          <div className="bg-white text-slate-900 rounded-3xl p-6 sm:p-7 max-w-sm w-full shadow-2xl border border-slate-200 text-center space-y-3.5 animate-in zoom-in-95 duration-200">
-            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto relative border border-blue-100">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-2xl bg-blue-400 opacity-25" />
-              <Locate className="w-8 h-8 relative animate-pulse text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-base font-extrabold text-slate-900">Locating Your Position</h3>
-              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
-                Connecting to GPS sensor to acquire accurate coordinates and center your map view.
-              </p>
-            </div>
-            <div className="flex items-center justify-center gap-2 text-xs text-blue-700 font-bold bg-blue-50 py-2 px-3 rounded-xl border border-blue-100">
-              <Loader2 className="w-4 h-4 animate-spin text-blue-600" />
-              <span>Acquiring GPS lock...</span>
-            </div>
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-950/75 animate-in fade-in duration-150 pointer-events-auto">
+          <div className="flex flex-col items-center gap-3.5">
+            <div className="w-12 h-12 rounded-full border-4 border-white/20 border-t-white animate-spin" />
+            <span className="text-xs font-bold text-white/90 tracking-wide">Locating your position...</span>
           </div>
         </div>
       )}

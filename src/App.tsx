@@ -43,7 +43,7 @@ import { PropertyComparisonModal } from './components/Modals/PropertyComparisonM
 import { InvestmentCalculatorModal } from './components/Modals/InvestmentCalculatorModal';
 import { AIAssistantDrawer } from './components/AI/AIAssistantDrawer';
 import { PricingPlansModal } from './components/Modals/PricingPlansModal';
-import { MonetizationCategory } from './services/razorpayService';
+import { MonetizationCategory, razorpayService } from './services/razorpayService';
 import { Map as MapIcon, Sparkles, Plus, Scale } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -470,6 +470,14 @@ export const App: React.FC = () => {
     }
   };
 
+  // Listen for property boost events to immediately sort Spotlight properties to the top
+  const [boostVersion, setBoostVersion] = useState(0);
+  useEffect(() => {
+    const handleBoost = () => setBoostVersion((v) => v + 1);
+    window.addEventListener('manormap_property_boosted', handleBoost);
+    return () => window.removeEventListener('manormap_property_boosted', handleBoost);
+  }, []);
+
   // Filter properties in visible area + radius + polygon + advanced filters
   const visibleProperties = useMemo(() => {
     let list = filterPropertiesByBounds(allProps, currentBounds, filterState);
@@ -484,12 +492,22 @@ export const App: React.FC = () => {
       list = filterPropertiesByPolygon(list, polygonSearch.coordinates);
     }
 
+    // Prioritize and rank boosted Spotlight properties at the top of list view
+    const boostedIds = razorpayService.getBoostedPropertyIds();
+    if (boostedIds.length > 0) {
+      list = [...list].sort((a, b) => {
+        const aBoost = boostedIds.includes(a.id) ? 1 : 0;
+        const bBoost = boostedIds.includes(b.id) ? 1 : 0;
+        return bBoost - aBoost;
+      });
+    }
+
     // Always include selectedProperty so clicked marker remains visible
     if (selectedProperty && !list.some((p) => p.id === selectedProperty.id)) {
       return [selectedProperty, ...list];
     }
     return list;
-  }, [allProps, currentBounds, filterState, radiusSearch, polygonSearch, selectedProperty]);
+  }, [allProps, currentBounds, filterState, radiusSearch, polygonSearch, selectedProperty, boostVersion]);
 
   // Handle bounds change when map moves
   const handleBoundsChange = useCallback((bounds: MapBounds) => {

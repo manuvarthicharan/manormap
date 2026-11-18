@@ -116,11 +116,10 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
               type="button"
               onClick={() => onDrawModeChange('freehand')}
               title="Freehand Mouse Masking (Drag around boundary)"
-              className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                drawMode === 'freehand'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
+              className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${drawMode === 'freehand'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
             >
               <PenTool className="w-3 h-3" />
               <span className="text-[11px]">Freehand</span>
@@ -130,11 +129,10 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
               type="button"
               onClick={() => onDrawModeChange('pegs')}
               title="Click Corner Pegs (Multi-point polygon)"
-              className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                drawMode === 'pegs'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
+              className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${drawMode === 'pegs'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
             >
               <MapPin className="w-3 h-3" />
               <span className="text-[11px]">Pegs</span>
@@ -144,11 +142,10 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
               type="button"
               onClick={() => onDrawModeChange('box')}
               title="Box Drag (4-corner rectangle)"
-              className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                drawMode === 'box'
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-              }`}
+              className={`px-2 py-1 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${drawMode === 'box'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                }`}
             >
               <Square className="w-3 h-3" />
               <span className="text-[11px]">Box</span>
@@ -205,11 +202,10 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
                 type="button"
                 disabled={!isComplete}
                 onClick={onSaveListingBoundary}
-                className={`h-7 px-2.5 text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all ${
-                  isComplete
-                    ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
-                    : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
-                }`}
+                className={`h-7 px-2.5 text-xs font-bold rounded-lg flex items-center gap-1 shadow-sm transition-all ${isComplete
+                  ? 'bg-emerald-600 hover:bg-emerald-500 text-white active:scale-95'
+                  : 'bg-slate-100 text-slate-400 cursor-not-allowed border border-slate-200'
+                  }`}
               >
                 <Check className="w-3 h-3" />
                 <span>Save</span>

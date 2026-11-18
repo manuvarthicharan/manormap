@@ -19,10 +19,7 @@ export const RAZORPAY_CONFIG = {
 
 export type MonetizationCategory = 
   | 'buyer_pass' 
-  | 'seller_boost' 
-  | 'due_diligence' 
-  | 'agent_sub' 
-  | 'legal_agreement';
+  | 'seller_boost';
 
 export interface MonetizationPlan {
   id: string;
@@ -34,6 +31,7 @@ export interface MonetizationPlan {
   description: string;
   features: string[];
   contactsIncluded?: number;
+  boostsIncluded?: number;
   durationDays?: number;
   isPopular?: boolean;
 }
@@ -55,7 +53,7 @@ export interface RazorpayTransaction {
   userPhone: string;
 }
 
-// Available Business Model Plans
+// Available Business Model Plans (Focused on High-Intent Indian Real Estate Transactions)
 export const MONETIZATION_PLANS: MonetizationPlan[] = [
   // 1. Direct Owner Contact Unlocks (Buyer/Tenant Pass)
   {
@@ -65,12 +63,12 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
     badge: 'Starter',
     price: 499,
     originalPrice: 999,
-    description: 'Directly connect with 5 verified property owners on WhatsApp & phone with zero brokerage.',
+    description: 'Directly view verified phone numbers & WhatsApp chat links of property owners with zero brokerage.',
     features: [
-      'Unlock 5 direct owner mobile numbers',
-      'Instant direct WhatsApp chat button',
-      'Zero brokerage guarantee',
-      '30-day validity across all Indian cities'
+      'Unlock 5 direct owner mobile numbers & WhatsApp chats',
+      'Instant direct calling button & chat prefill',
+      'Zero brokerage guarantee across all listings',
+      '30-day validity with rollover balance'
     ],
     contactsIncluded: 5,
     durationDays: 30
@@ -82,12 +80,11 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
     badge: 'Most Popular',
     price: 1499,
     originalPrice: 2999,
-    description: 'Comprehensive buyer & tenant pass with assisted calling and legal rental draft agreement.',
+    description: 'Comprehensive buyer & tenant pass with priority notifications and assisted calling.',
     features: [
       'Unlock 25 direct owner phone numbers & WhatsApp',
       'Assisted relationship manager call coordination',
-      'Free customized legal rental / sale agreement draft',
-      'Instant SMS alert when matching properties are listed',
+      'Instant alert notifications when matching properties are listed',
       '60-day validity'
     ],
     contactsIncluded: 25,
@@ -101,13 +98,12 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
     badge: 'VIP Elite',
     price: 3999,
     originalPrice: 7999,
-    description: 'Unlimited owner unlocks for serious real estate investors and relocation professionals.',
+    description: 'Unlimited owner unlocks for active real estate investors and relocation clients.',
     features: [
       'Unlimited owner phone numbers & WhatsApp for 90 days',
-      'Priority access to newly listed distress/hot deals',
-      'Dedicated relationship manager for site visits',
-      'Comprehensive property comparison dossier',
-      'VIP badge on your buyer inquiries'
+      'Priority access to newly listed deals',
+      'Dedicated relationship manager for site visit assistance',
+      'VIP verified badge on your inquiries'
     ],
     contactsIncluded: 999,
     durationDays: 90
@@ -121,113 +117,43 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
     badge: '10x Visibility',
     price: 999,
     originalPrice: 1999,
-    description: 'Boost your property to the top of map pins & locality search results with a glowing gold pin.',
+    description: 'Elevate your property to the top of map pins & locality search results with a glowing gold pin.',
     features: [
       'Golden glowing pin on live Google Satellite Map',
       'Ranked #1 in locality search results & list view',
-      'Promoted badge: "⭐ Verified Featured Property"',
-      'Promoted in AI Advisor recommendations',
-      'Instant WhatsApp notifications for new buyer leads'
+      'Promoted badge: "⭐ Verified Spotlight Property"',
+      'Instant WhatsApp notifications for new buyer leads',
+      '1 Property Spotlight Boost included (30 Days)'
     ],
+    boostsIncluded: 1,
     durationDays: 30,
     isPopular: true
   },
   {
     id: 'boost_vip_90',
     category: 'seller_boost',
-    title: '90-Day VIP Citywide Domination',
-    badge: 'Max Inquiries',
+    title: '3-Property Spotlight Multi-Pack',
+    badge: 'Best Value',
     price: 2499,
     originalPrice: 4999,
-    description: 'Guaranteed maximum buyer reach across the entire metropolitan area for 90 days.',
+    description: 'Multi-pack for property owners and brokers with multiple listings across the city.',
     features: [
-      'Promoted across all adjacent localities & citywide search',
-      'Top banner featured placement on ManorMap radar',
-      'Video tour & layout plan highlighted in 3D card',
-      'Direct WhatsApp inquiry lead capture widget',
-      'Weekly buyer impression & click analytics report'
+      '3 Property Spotlight Boost credits included',
+      'Golden glowing pins & #1 rank across all 3 properties',
+      'High priority visibility on Google Hybrid map',
+      '90-day multi-pack validity with on-demand activation',
+      'Save 17% compared to individual boosts'
     ],
+    boostsIncluded: 3,
     durationDays: 90
-  },
-
-  // 3. Due Diligence Legal Report
-  {
-    id: 'report_dossier',
-    category: 'due_diligence',
-    title: 'Certified Land & Title Due Diligence Dossier',
-    badge: '100% Title Safety',
-    price: 1999,
-    originalPrice: 3499,
-    description: 'Official legal audit matching state land records (Bhu-Bharati, Dharani, Bhoomi) & RERA verification.',
-    features: [
-      'Pahani & ROR-1B Land Record ownership match',
-      'Prohibited / Government land list cross-check',
-      '30-Year Encumbrance Certificate (EC) audit',
-      'HMDA / DTCP / BDA layout approval validation',
-      'Certified downloadable PDF report with seal'
-    ],
-    durationDays: 365,
-    isPopular: true
-  },
-
-  // 4. Pro Broker / Builder Subscription
-  {
-    id: 'agent_silver',
-    category: 'agent_sub',
-    title: 'Pro Agent Monthly Club',
-    badge: 'Agent Pro',
-    price: 1999,
-    originalPrice: 3999,
-    description: 'Essential toolkit for active real estate brokers and channel partners.',
-    features: [
-      'List up to 15 properties active simultaneously',
-      'Official "Verified Channel Partner" badge',
-      '50 direct buyer lead inquiries delivered monthly',
-      'Dedicated agent profile page on ManorMap'
-    ],
-    durationDays: 30
-  },
-  {
-    id: 'builder_gold',
-    category: 'agent_sub',
-    title: 'Enterprise Builder & Developer Suite',
-    badge: 'Enterprise',
-    price: 6999,
-    originalPrice: 12999,
-    description: 'Full-scale listing & lead engine for project builders and venture developers.',
-    features: [
-      'Unlimited property and plotted layout listings',
-      'Custom project banner & branded virtual tour',
-      'Direct API lead sync with your CRM (Salesforce / Zoho)',
-      'Dedicated relationship account manager'
-    ],
-    durationDays: 30
-  },
-
-  // 5. Digital Rental Agreement & E-Stamp
-  {
-    id: 'legal_agreement_stamp',
-    category: 'legal_agreement',
-    title: 'Govt. E-Stamped Rental Agreement',
-    badge: 'Legally Binding',
-    price: 999,
-    originalPrice: 1599,
-    description: 'Legally valid residential/commercial rental agreement on official government stamp paper with Aadhaar e-sign.',
-    features: [
-      'Official state government e-stamp certificate included',
-      'Lawyer-vetted legal agreement clauses',
-      'Instant digital Aadhaar biometric e-sign for both parties',
-      'Legally admissible in all Indian courts'
-    ],
-    durationDays: 365
   }
 ];
 
 const LOCAL_STORAGE_TRANSACTIONS_KEY = 'manormap_razorpay_transactions_v1';
 const LOCAL_STORAGE_UNLOCKED_CONTACTS_KEY = 'manormap_unlocked_contacts_v1';
 const LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY = 'manormap_boosted_properties_v1';
-const LOCAL_STORAGE_PURCHASED_REPORTS_KEY = 'manormap_purchased_reports_v1';
 const LOCAL_STORAGE_ACTIVE_PASS_KEY = 'manormap_active_buyer_pass_v1';
+const LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY = 'manormap_spotlight_credits_v1';
 
 export const razorpayService = {
   /**
@@ -320,6 +246,84 @@ export const razorpayService = {
   },
 
   /**
+   * Get remaining Spotlight Boost credits
+   */
+  getSpotlightCredits(): number {
+    try {
+      const raw = localStorage.getItem(LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY);
+      if (raw === null) return 1; // Starter complimentary credit for demonstration
+      return Math.max(0, parseInt(raw, 10) || 0);
+    } catch {
+      return 0;
+    }
+  },
+
+  /**
+   * Add spotlight credits to balance
+   */
+  addSpotlightCredits(amount: number): number {
+    try {
+      const current = this.getSpotlightCredits();
+      const updated = current + amount;
+      localStorage.setItem(LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY, updated.toString());
+      window.dispatchEvent(new CustomEvent('manormap_spotlight_credits_updated', { detail: { credits: updated } }));
+      return updated;
+    } catch {
+      return 0;
+    }
+  },
+
+  /**
+   * Boost a property using 1 spotlight credit from balance
+   */
+  boostProperty(propertyId: string, durationDays: number = 30): boolean {
+    try {
+      const credits = this.getSpotlightCredits();
+      if (credits <= 0) {
+        return false;
+      }
+      const updatedCredits = credits - 1;
+      localStorage.setItem(LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY, updatedCredits.toString());
+
+      const expires = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+      const raw = localStorage.getItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY);
+      const dict: Record<string, string> = raw ? JSON.parse(raw) : {};
+      dict[propertyId] = expires;
+      localStorage.setItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY, JSON.stringify(dict));
+
+      window.dispatchEvent(new CustomEvent('manormap_property_boosted', { detail: { propertyId, expires } }));
+      window.dispatchEvent(new CustomEvent('manormap_spotlight_credits_updated', { detail: { credits: updatedCredits } }));
+
+      notificationService.addNotification({
+        title: '⭐ Property Boosted with Spotlight',
+        message: 'Your property is now featured with #1 rank and a glowing gold pin on the map for 30 days.',
+        type: 'system',
+        propertyId
+      });
+
+      return true;
+    } catch {
+      return false;
+    }
+  },
+
+  /**
+   * Force boost property (used on direct Razorpay payment)
+   */
+  forceBoostProperty(propertyId: string, durationDays: number = 30): void {
+    try {
+      const expires = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString();
+      const raw = localStorage.getItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY);
+      const dict: Record<string, string> = raw ? JSON.parse(raw) : {};
+      dict[propertyId] = expires;
+      localStorage.setItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY, JSON.stringify(dict));
+      window.dispatchEvent(new CustomEvent('manormap_property_boosted', { detail: { propertyId, expires } }));
+    } catch {
+      // ignore
+    }
+  },
+
+  /**
    * Check if a property is boosted to Featured / Spotlight
    */
   isPropertyBoosted(propertyId: string): boolean {
@@ -335,15 +339,18 @@ export const razorpayService = {
   },
 
   /**
-   * Check if title due diligence report was purchased for property
+   * Get all actively boosted property IDs
    */
-  hasPurchasedReport(propertyId: string): boolean {
+  getBoostedPropertyIds(): string[] {
     try {
-      const raw = localStorage.getItem(LOCAL_STORAGE_PURCHASED_REPORTS_KEY);
-      const list: string[] = raw ? JSON.parse(raw) : [];
-      return list.includes(propertyId);
+      const raw = localStorage.getItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY);
+      const dict: Record<string, string> = raw ? JSON.parse(raw) : {};
+      const now = Date.now();
+      return Object.entries(dict)
+        .filter(([_, exp]) => new Date(exp).getTime() > now)
+        .map(([id]) => id);
     } catch {
-      return false;
+      return [];
     }
   },
 
@@ -438,20 +445,16 @@ export const razorpayService = {
           if (propertyId) {
             this.unlockContact(propertyId);
           }
-        } else if (plan.category === 'seller_boost' && propertyId) {
+        } else if (plan.category === 'seller_boost') {
+          const boosts = plan.boostsIncluded || 1;
           const days = plan.durationDays || 30;
-          const expires = new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-          const raw = localStorage.getItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY);
-          const dict = raw ? JSON.parse(raw) : {};
-          dict[propertyId] = expires;
-          localStorage.setItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY, JSON.stringify(dict));
-          window.dispatchEvent(new CustomEvent('manormap_property_boosted', { detail: { propertyId } }));
-        } else if (plan.category === 'due_diligence' && propertyId) {
-          const raw = localStorage.getItem(LOCAL_STORAGE_PURCHASED_REPORTS_KEY);
-          const list = raw ? JSON.parse(raw) : [];
-          if (!list.includes(propertyId)) {
-            list.push(propertyId);
-            localStorage.setItem(LOCAL_STORAGE_PURCHASED_REPORTS_KEY, JSON.stringify(list));
+          if (propertyId && propertyId !== 'general') {
+            this.forceBoostProperty(propertyId, days);
+            if (boosts > 1) {
+              this.addSpotlightCredits(boosts - 1);
+            }
+          } else {
+            this.addSpotlightCredits(boosts);
           }
         }
 

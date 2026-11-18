@@ -25,6 +25,7 @@ import { SearchResult, FilterState, Property, PropertyCategory, AreaUnit } from 
 import { getUserProfile } from '../../services/userService';
 import { parseNaturalLanguageQuery } from '../../services/aiIntelligenceService';
 import { formatIndianCurrency } from '../../services/propertyService';
+import { notificationService } from '../../services/notificationService';
 import { Logo } from '../Common/Logo';
 
 interface FloatingHeaderProps {
@@ -125,45 +126,93 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
   const searchContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Web Speech API Voice Search
-  const handleToggleVoiceSearch = () => {
+  // Web Speech API Voice Search with mic verification & live real-time speech feedback
+  const handleToggleVoiceSearch = async () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Voice Search is supported on Chrome, Edge, and modern mobile browsers with Web Speech API.');
+      notificationService.addNotification({
+        title: 'Voice Search Unsupported',
+        message: 'Your current browser does not support the Web Speech API. Please use Google Chrome or Microsoft Edge.',
+        type: 'system'
+      });
       return;
     }
 
     if (isListening) {
-      speechRecognitionRef.current?.stop();
+      try {
+        speechRecognitionRef.current?.stop();
+      } catch (_) { }
       setIsListening(false);
       return;
     }
 
+    // Proactively verify / prompt microphone permission
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+      } catch (permErr: any) {
+        if (permErr?.name === 'NotAllowedError' || permErr?.name === 'PermissionDeniedError') {
+          notificationService.addNotification({
+            title: 'Microphone Permission Needed',
+            message: 'Please allow microphone access in your browser address bar to use voice search.',
+            type: 'system'
+          });
+          return;
+        }
+      }
+    }
+
     try {
+      if (speechRecognitionRef.current) {
+        try { speechRecognitionRef.current.abort(); } catch (_) { }
+      }
+
       const recognition = new SpeechRecognition();
       speechRecognitionRef.current = recognition;
       recognition.lang = 'en-IN'; // Indian English recognition
       recognition.continuous = false;
-      recognition.interimResults = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
 
       recognition.onstart = () => {
         setIsListening(true);
+        setShowDropdown(true);
       };
 
       recognition.onresult = (event: any) => {
-        const transcript = event.results?.[0]?.[0]?.transcript;
-        if (transcript) {
-          setQuery(transcript);
-          setShowDropdown(true);
+        let currentTranscript = '';
+        let isFinal = false;
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          currentTranscript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            isFinal = true;
+          }
+        }
+
+        if (currentTranscript) {
+          setQuery(currentTranscript);
+        }
+
+        if (isFinal && currentTranscript.trim()) {
           setIsListening(false);
+          const finalQ = currentTranscript.trim();
           setTimeout(() => {
-            handleExecuteAISearch(transcript);
+            handleExecuteAISearch(finalQ);
           }, 350);
         }
       };
 
-      recognition.onerror = () => {
+      recognition.onerror = (e: any) => {
         setIsListening(false);
+        if (e.error === 'not-allowed') {
+          notificationService.addNotification({
+            title: 'Microphone Blocked',
+            message: 'Please allow microphone permission in your browser address bar to use voice search.',
+            type: 'system'
+          });
+        }
       };
 
       recognition.onend = () => {
@@ -172,7 +221,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
       recognition.start();
     } catch (err) {
-      console.warn('Voice recognition error:', err);
+      console.warn('Voice recognition startup error:', err);
       setIsListening(false);
     }
   };
@@ -483,6 +532,26 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             )}
           </button>
         </div>
+
+        {/* Active Live Voice Search Listening Banner */}
+        {isListening && (
+          <div className="mt-2 p-2.5 bg-rose-600 text-white rounded-xl shadow-xl flex items-center justify-between gap-2 text-xs font-bold animate-in fade-in duration-150">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-white animate-ping" />
+              <span>Listening... Speak property search (e.g. Kokapet 3 BHK under 2 Cr)</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                try { speechRecognitionRef.current?.stop(); } catch (_) { }
+                setIsListening(false);
+              }}
+              className="px-2.5 py-1 rounded-lg bg-white text-rose-700 font-extrabold text-[11px] shadow-xs hover:bg-rose-50"
+            >
+              Stop & Search
+            </button>
+          </div>
+        )}
 
         {/* AI Natural Language Query Feedback Banner */}
         {aiFeedbackMessage && (

@@ -19,14 +19,14 @@ import {
   LogOut,
   TrendingUp,
   CheckCheck,
-  ExternalLink,
-  Zap
+  ExternalLink
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
 import { getUserProfile, saveUserProfile, cycleNextAvatar, syncProfileFromSupabaseUser, UserProfile } from '../../services/userService';
 import { signInWithGoogle, signOut, isSupabaseConfigured } from '../../services/supabaseClient';
 import { notificationService, AppNotification } from '../../services/notificationService';
+import { razorpayService } from '../../services/razorpayService';
 
 interface ActivityModalProps {
   modalType: string | null;
@@ -83,6 +83,19 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     notificationService.getNotifications()
   );
   const [notifFilter, setNotifFilter] = useState<'all' | 'unread' | 'new_listing'>('all');
+  const [spotlightCredits, setSpotlightCredits] = useState(() => razorpayService.getSpotlightCredits());
+
+  useEffect(() => {
+    const handleUpdate = () => {
+      setSpotlightCredits(razorpayService.getSpotlightCredits());
+    };
+    window.addEventListener('manormap_spotlight_credits_updated', handleUpdate);
+    window.addEventListener('manormap_property_boosted', handleUpdate);
+    return () => {
+      window.removeEventListener('manormap_spotlight_credits_updated', handleUpdate);
+      window.removeEventListener('manormap_property_boosted', handleUpdate);
+    };
+  }, []);
 
   useEffect(() => {
     const handleUpdate = () => {
@@ -331,71 +344,121 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    {myListedProps.map((p) => (
-                      <div
-                        key={p.id}
-                        className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
-                        onClick={() => {
-                          onSelectProperty(p);
-                          onClose();
-                        }}
-                      >
-                        <img
-                          src={p.images[0]}
-                          alt={p.title}
-                          className="w-16 h-16 rounded-xl object-cover"
-                        />
-                        <div className="flex-1 min-w-0">
-                          <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                            {p.priceDisplay}
+                    {/* Spotlight Boost Credit Balance Banner */}
+                    <div className="p-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs text-amber-950">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">⭐</span>
+                        <div>
+                          <div className="font-extrabold text-slate-900">Spotlight Boost Balance</div>
+                          <div className="text-[11px] text-amber-800">
+                            {spotlightCredits > 0
+                              ? `${spotlightCredits} Boost ${spotlightCredits === 1 ? 'Credit' : 'Credits'} Available`
+                              : '0 Credits (Recharge to pin property at #1 with glowing gold pin)'}
                           </div>
-                          <div className="text-xs font-medium text-slate-700 truncate">{p.title}</div>
-                          <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                            <MapPin className="w-3 h-3" />
-                            <span>{p.area}, {p.city} &bull; {p.type === 'sale' ? 'For Sale' : 'For Rent'}</span>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSelectProperty(p);
-                              onClose();
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl"
-                            title="Fly to location on map"
-                          >
-                            <Navigation className="w-4 h-4" />
-                          </button>
-                          {onOpenPricing && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onOpenPricing('seller_boost', p);
-                                onClose();
-                              }}
-                              className="p-2 text-amber-600 hover:bg-amber-50 rounded-xl"
-                              title="Boost with Spotlight Pro (Razorpay)"
-                            >
-                              <Zap className="w-4 h-4" />
-                            </button>
-                          )}
-                          {onDeleteProperty && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onDeleteProperty(p.id);
-                              }}
-                              className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl"
-                              title="Delete listing"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
                         </div>
                       </div>
-                    ))}
+
+                      {onOpenPricing && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            onOpenPricing('seller_boost');
+                            onClose();
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-xs transition-colors flex items-center gap-1"
+                        >
+                          + Buy Credits
+                        </button>
+                      )}
+                    </div>
+
+                    {myListedProps.map((p) => {
+                      const isBoosted = razorpayService.isPropertyBoosted(p.id);
+                      return (
+                        <div
+                          key={p.id}
+                          className="flex items-center gap-3 p-3 rounded-2xl border border-slate-100 hover:bg-slate-50 transition-colors cursor-pointer group"
+                          onClick={() => {
+                            onSelectProperty(p);
+                            onClose();
+                          }}
+                        >
+                          <img
+                            src={p.images[0]}
+                            alt={p.title}
+                            className="w-16 h-16 rounded-xl object-cover"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <div className="text-xs font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                              {p.priceDisplay}
+                            </div>
+                            <div className="text-xs font-medium text-slate-700 truncate">{p.title}</div>
+                            <div className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3" />
+                              <span>{p.area}, {p.city} &bull; {p.type === 'sale' ? 'For Sale' : 'For Rent'}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {isBoosted ? (
+                              <span className="px-2.5 py-1 rounded-xl bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black uppercase flex items-center gap-1 shadow-2xs">
+                                ⭐ Active
+                              </span>
+                            ) : spotlightCredits > 0 ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  razorpayService.boostProperty(p.id);
+                                  setSpotlightCredits(razorpayService.getSpotlightCredits());
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-[11px] shadow-xs flex items-center gap-1 transition-all active:scale-95"
+                                title="Use 1 Credit to activate Spotlight"
+                              >
+                                ⭐ Use 1 Credit
+                              </button>
+                            ) : onOpenPricing ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onOpenPricing('seller_boost', p);
+                                  onClose();
+                                }}
+                                className="px-2.5 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-amber-400 font-bold text-[11px] flex items-center gap-1 shadow-xs transition-all active:scale-95"
+                                title="Boost with Spotlight Pro (Razorpay)"
+                              >
+                                ⭐ Boost
+                              </button>
+                            ) : null}
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectProperty(p);
+                                onClose();
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-xl"
+                              title="Fly to location on map"
+                            >
+                              <Navigation className="w-4 h-4" />
+                            </button>
+                            {onDeleteProperty && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDeleteProperty(p.id);
+                                }}
+                                className="p-2 text-rose-500 hover:bg-rose-50 rounded-xl"
+                                title="Delete listing"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
