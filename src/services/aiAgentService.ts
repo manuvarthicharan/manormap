@@ -238,7 +238,7 @@ OPERATIONAL INSTRUCTIONS ON PROPERTIES:
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${this.openRouterKey}`,
-            'HTTP-Referer': 'https://realtyradar.internal',
+            'HTTP-Referer': 'https://mapestate.internal',
             'X-Title': 'Real Estate Intelligence'
           },
           body: JSON.stringify({

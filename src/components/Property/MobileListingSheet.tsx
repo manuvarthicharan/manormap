@@ -138,11 +138,10 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
                 e.stopPropagation();
                 setActiveCategoryFilter(cat.id);
               }}
-              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${
-                activeCategoryFilter === cat.id
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all whitespace-nowrap flex-shrink-0 ${activeCategoryFilter === cat.id
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-              }`}
+                }`}
             >
               {cat.label}
             </button>
@@ -168,9 +167,8 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
                   onClick={() => onSelectProperty(prop)}
                   onMouseEnter={() => onHoverProperty(prop.id)}
                   onMouseLeave={() => onHoverProperty(null)}
-                  className={`pt-2.5 first:pt-0 flex gap-3 cursor-pointer group transition-all rounded-2xl p-2 ${
-                    isHovered ? 'bg-blue-50/80 ring-1 ring-blue-500/40' : 'hover:bg-slate-50'
-                  }`}
+                  className={`pt-2.5 first:pt-0 flex gap-3 cursor-pointer group transition-all rounded-2xl p-2 ${isHovered ? 'bg-blue-50/80 ring-1 ring-blue-500/40' : 'hover:bg-slate-50'
+                    }`}
                 >
                   {/* Property Image & Badges */}
                   <div className="relative w-24 h-24 rounded-xl overflow-hidden flex-shrink-0 bg-slate-100">

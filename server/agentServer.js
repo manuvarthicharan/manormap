@@ -82,7 +82,7 @@ const server = http.createServer(async (req, res) => {
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://realtyradar.internal',
+          'HTTP-Referer': 'https://mapestate.internal',
           'X-Title': 'Real Estate Radar Autonomous Agent'
         },
         body: JSON.stringify(requestBody)
@@ -147,7 +147,7 @@ You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, n
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://realtyradar.internal',
+          'HTTP-Referer': 'https://mapestate.internal',
           'X-Title': 'Real Estate Intelligence'
         },
         body: JSON.stringify({
@@ -216,7 +216,7 @@ Respond ONLY with valid, raw JSON (no backticks, no markdown fencing, no comment
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-          'HTTP-Referer': 'https://realtyradar.internal',
+          'HTTP-Referer': 'https://mapestate.internal',
           'X-Title': 'Real Estate Intelligence'
         },
         body: JSON.stringify({

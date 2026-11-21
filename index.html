@@ -5,17 +5,35 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>MapEstate — Real Estate Discovery & Land Cadastral Engine</title>
-    <!-- Canonical Host Safeguard: automatically redirect preview hashes to permanent workers.dev origin while preserving auth hash -->
+    <!-- Canonical URL and Meta Tags -->
+    <link rel="canonical" href="https://mapestate.pages.dev/" />
+    <meta property="og:title" content="MapEstate — Real Estate Discovery & Land Cadastral Engine" />
+    <meta property="og:description" content="Map-first Indian real estate discovery platform with live cadastral boundary surveying, verified owner listings, and AI advisory." />
+    <meta property="og:url" content="https://mapestate.pages.dev/" />
+    <meta property="og:image" content="/logo.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://mapestate.pages.dev/" />
+    <!-- Canonical Host Safeguard: automatically redirect preview hashes and legacy URLs to permanent origin while preserving auth hash -->
     <script>
       (function() {
         try {
           var h = window.location.hostname;
-          if (h.indexOf('-mapestate.mkcharan77.workers.dev') !== -1) {
-            window.location.replace('https://mapestate.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
-          } else if (h.indexOf('-manormap.mkcharan77.workers.dev') !== -1) {
-            window.location.replace('https://mapestate.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
-          } else if (h.indexOf('manormap.pages.dev') !== -1) {
-            window.location.replace('https://mapestate.pages.dev' + window.location.pathname + window.location.search + window.location.hash);
+          var p = window.location.pathname;
+          // Legacy Cloudflare Workers origin
+          if (h.indexOf('manormap.mkcharan77.workers.dev') !== -1) {
+            window.location.replace('https://mapestate.mkcharan77.workers.dev' + p + window.location.search + window.location.hash);
+          }
+          // Cloudflare Workers preview hash subdomain
+          else if (h.indexOf('-mapestate.mkcharan77.workers.dev') !== -1) {
+            window.location.replace('https://mapestate.mkcharan77.workers.dev' + p + window.location.search + window.location.hash);
+          }
+          // Legacy Cloudflare Pages domain
+          else if (h.indexOf('manormap.pages.dev') !== -1) {
+            window.location.replace('https://mapestate.pages.dev' + p + window.location.search + window.location.hash);
+          }
+          // Legacy GitHub Pages path
+          else if (h.indexOf('github.io') !== -1 && p.indexOf('/manormap') !== -1) {
+            window.location.replace(window.location.href.replace('/manormap', '/mapestate'));
           }
         } catch (_) {}
       })();
