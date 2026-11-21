@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import mapEstateLogo from '../../assets/logo.png';
 
 interface LogoProps {
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
@@ -27,8 +28,8 @@ export const Logo: React.FC<LogoProps> = ({
     <div className={`inline-flex items-center select-none bg-transparent ${className}`}>
       {!hasError ? (
         <img
-          src="/logo.png"
-          alt="MapEstate Logo"
+          src={mapEstateLogo}
+          alt="MapEstate"
           onError={() => setHasError(true)}
           className={`w-auto object-contain transition-transform duration-200 group-hover:scale-102 ${sizeClasses}`}
         />
