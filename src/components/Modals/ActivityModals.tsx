@@ -38,6 +38,7 @@ interface ActivityModalProps {
   onDeleteProperty?: (id: string) => void;
   onSelectLocationCoords?: (coords: [number, number]) => void;
   onOpenPricing?: (category: any, property?: Property) => void;
+  onSignOut?: () => void;
 }
 
 interface SavedSearchItem {
@@ -63,7 +64,8 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   onToggleFavorite,
   onDeleteProperty,
   onSelectLocationCoords,
-  onOpenPricing
+  onOpenPricing,
+  onSignOut
 }) => {
   // User Profile state
   const [profile, setProfile] = useState<UserProfile>(() => getUserProfile());
@@ -158,7 +160,12 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     await signOut();
     const updated = syncProfileFromSupabaseUser(null);
     setProfile(updated);
-    window.location.reload();
+    if (onSignOut) {
+      onSignOut();
+      onClose();
+    } else {
+      window.location.replace(window.location.origin);
+    }
   };
 
   if (!modalType || modalType === 'map' || modalType === 'settings') return null;

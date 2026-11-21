@@ -22,7 +22,7 @@ import {
 } from './services/propertyService';
 import { reverseGeocodeLocation, ReverseGeocodeResult } from './services/geocoding';
 import { mapActionBridge } from './services/mapActionBridge';
-import { isSupabaseConfigured, onAuthStateChange } from './services/supabaseClient';
+import { isSupabaseConfigured, onAuthStateChange, signOut } from './services/supabaseClient';
 import { syncProfileFromSupabaseUser, getUserProfile } from './services/userService';
 import { fetchSupabaseFavorites, toggleSupabaseFavorite } from './services/supabasePropertyService';
 import { getStoredAreaUnit, setStoredAreaUnit } from './services/areaUnitService';
@@ -49,39 +49,46 @@ import { LandingPage } from './components/Landing/LandingPage';
 
 export const App: React.FC = () => {
   // Welcome / Landing page entry:
-  // Automatically bypass if user is an existing / returning user, or if deep-linked to property/app
+  // ONLY signed-in Google users go directly to the main map page.
+  // All other visitors are displayed the welcome screen.
   const [showLanding, setShowLanding] = useState<boolean>(() => {
     try {
-      const params = new URLSearchParams(window.location.search);
+      // Check if user is returning from OAuth callback in URL hash/query
+      const hasAuthHash = window.location.hash.includes('access_token') ||
+                          window.location.hash.includes('refresh_token') ||
+                          window.location.search.includes('code=');
+      if (hasAuthHash) {
+        return false;
+      }
+
       // Explicit manual override to view welcome page
+      const params = new URLSearchParams(window.location.search);
       if (params.get('welcome') === 'true' || params.get('landing') === 'true') {
         return true;
       }
-      // Direct deep links always skip welcome page
-      if (params.get('property') || params.get('app') === 'true' || params.get('view') === 'map') {
-        return false;
-      }
-      // Check if user is an existing / returning user
-      const isExistingUser =
-        localStorage.getItem('mapestate_existing_user') === 'true' ||
-        localStorage.getItem('mapestate_has_visited') === 'true' ||
-        localStorage.getItem('mapestate_user_profile') !== null ||
-        localStorage.getItem('india_prop_favorites') !== null ||
-        localStorage.getItem('custom_properties') !== null;
 
-      if (isExistingUser) {
+      // Check if user is signed in
+      const profile = getUserProfile();
+      if (profile && profile.isAuthenticated === true) {
         return false;
       }
     } catch (_) {}
-    return true;
+    return true; // Not signed in -> show welcome screen!
   });
 
-  // Handler to enter application and mark user as existing for future visits
-  const handleEnterAppFromLanding = useCallback(() => {
+  // Handler to sign out user and redirect to welcome page
+  const handleUserSignOut = useCallback(async () => {
     try {
-      localStorage.setItem('mapestate_existing_user', 'true');
-      localStorage.setItem('mapestate_has_visited', 'true');
+      await signOut();
     } catch (_) {}
+    syncProfileFromSupabaseUser(null);
+    setShowLanding(true);
+    setIsMenuOpen(false);
+    setActiveModal(null);
+  }, []);
+
+  // Handler to enter application when authenticated
+  const handleEnterAppFromLanding = useCallback(() => {
     setShowLanding(false);
   }, []);
 
@@ -248,15 +255,20 @@ export const App: React.FC = () => {
 
     const { unsubscribe } = onAuthStateChange((_event, session) => {
       syncProfileFromSupabaseUser(session?.user || null);
-      if (session?.user && isSupabaseConfigured()) {
-        syncPropertiesFromCloud().then((cloudProps) => {
-          if (cloudProps && cloudProps.length > 0) setAllProps(cloudProps);
-        });
-        fetchSupabaseFavorites().then((cloudFavs) => {
-          if (cloudFavs && cloudFavs.length > 0) {
-            setFavorites((prev) => Array.from(new Set([...prev, ...cloudFavs])));
-          }
-        });
+      if (session?.user) {
+        setShowLanding(false);
+        if (isSupabaseConfigured()) {
+          syncPropertiesFromCloud().then((cloudProps) => {
+            if (cloudProps && cloudProps.length > 0) setAllProps(cloudProps);
+          });
+          fetchSupabaseFavorites().then((cloudFavs) => {
+            if (cloudFavs && cloudFavs.length > 0) {
+              setFavorites((prev) => Array.from(new Set([...prev, ...cloudFavs])));
+            }
+          });
+        }
+      } else {
+        setShowLanding(true);
       }
     });
 
@@ -974,6 +986,7 @@ export const App: React.FC = () => {
           ).length
         }
         favoritesCount={favorites.length}
+        onSignOut={handleUserSignOut}
       />
 
       {/* 
@@ -1108,6 +1121,7 @@ export const App: React.FC = () => {
           }
         }}
         onOpenPricing={(cat, prop) => handleOpenPricing(cat, prop)}
+        onSignOut={handleUserSignOut}
       />
 
       {/* 

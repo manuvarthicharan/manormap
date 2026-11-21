@@ -38,7 +38,7 @@ export async function signInWithGoogle(): Promise<{ error: Error | null }> {
 
   try {
     // Canonical redirect target: always point to the active production URL on Cloudflare or custom domain
-    let redirectUrl = window.location.origin;
+    let redirectUrl = window.location.origin + window.location.pathname.replace(/\/$/, '') + '/';
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

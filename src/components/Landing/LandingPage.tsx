@@ -29,22 +29,70 @@ import {
   X
 } from 'lucide-react';
 import logoImg from '../../assets/logo.png';
+import { GoogleIcon } from '../Common/GoogleIcon';
+import { signInWithGoogle, isSupabaseConfigured } from '../../services/supabaseClient';
+import { saveUserProfile } from '../../services/userService';
+import { Loader2 } from 'lucide-react';
 
 export interface LandingPageProps {
   onEnterApp: () => void;
-  onOpenListing: () => void;
-  onOpenLogin?: () => void;
+  onOpenListing?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
   onEnterApp,
   onOpenListing,
-  onOpenLogin,
 }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [modalType, setModalType] = useState<'open-map' | 'list-land' | 'login' | 'privacy' | 'terms' | null>(null);
+  const [modalType, setModalType] = useState<'privacy' | 'terms' | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authActionReason, setAuthActionReason] = useState<'open-map' | 'list-land'>('open-map');
   const containerRef = useRef<HTMLDivElement>(null);
+
+  const handleOpenAuth = (reason: 'open-map' | 'list-land' = 'open-map') => {
+    setAuthActionReason(reason);
+    setAuthError(null);
+    setIsAuthModalOpen(true);
+    setMobileMenuOpen(false);
+  };
+
+  const handleGoogleSignIn = async () => {
+    setIsAuthenticating(true);
+    setAuthError(null);
+    if (!isSupabaseConfigured()) {
+      setAuthError('Supabase is not configured yet. Please check your credentials in .env.');
+      setIsAuthenticating(false);
+      return;
+    }
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        setAuthError(error.message);
+        setIsAuthenticating(false);
+      }
+    } catch (err: any) {
+      setAuthError(err?.message || 'Authentication error');
+      setIsAuthenticating(false);
+    }
+  };
+
+  const handleDemoSignIn = () => {
+    saveUserProfile({
+      name: 'MapEstate Explorer',
+      email: 'explorer@mapestate.com',
+      authProvider: 'google',
+      isAuthenticated: true
+    });
+    setIsAuthModalOpen(false);
+    if (authActionReason === 'list-land' && onOpenListing) {
+      onOpenListing();
+    } else {
+      onEnterApp();
+    }
+  };
 
   // Scroll listener for sticky header
   useEffect(() => {
@@ -134,24 +182,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   };
 
   const modalContent: Record<string, { title: string; body: string; action: string; onAction: () => void }> = {
-    'open-map': {
-      title: 'Open MapEstate',
-      body: 'This introductory page connects directly into the main MapEstate application where you can browse land on the live map, talk to the AI Guide, and run instant property scans.',
-      action: 'Launch Application',
-      onAction: onEnterApp,
-    },
-    'list-land': {
-      title: 'List Your Land',
-      body: 'Continue to the main MapEstate application to place your land on the map and share your contact details directly with buyers.',
-      action: 'Go to Listing Flow',
-      onAction: onOpenListing,
-    },
-    login: {
-      title: 'Log In to MapEstate',
-      body: 'Sign in inside the main MapEstate application to access your saved plots, AI scan reports, and active land listings.',
-      action: 'Continue to Sign In',
-      onAction: onOpenLogin || onEnterApp,
-    },
     privacy: {
       title: 'Privacy Overview',
       body: 'MapEstate only displays the land details and contact information that property owners choose to publish on the platform.',
@@ -205,8 +235,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="hidden md:flex items-center gap-3">
         <button
           type="button"
-          onClick={() => onEnterApp()}
-          className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-soft"
+          onClick={() => handleOpenAuth("open-map")}
+          className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-soft cursor-pointer"
         >
           <span>Open MapEstate</span>
           <ArrowRight className="w-4 h-4 text-slate-300" aria-hidden="true" />
@@ -240,8 +270,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="pt-3 mt-3 border-t border-slate-200 flex flex-col gap-2.5">
             <button
               type="button"
-              onClick={() => onEnterApp()}
-              className="w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-soft"
+              onClick={() => handleOpenAuth("open-map")}
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-soft cursor-pointer"
             >
               <span>Open MapEstate</span>
               <ArrowRight className="w-4 h-4 text-slate-300" aria-hidden="true" />
@@ -271,7 +301,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="reveal reveal-delay-2 mt-9 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3">
             <button
               type="button"
-              onClick={() => setModalType("open-map")}
+              onClick={() => handleOpenAuth("open-map")}
               className="inline-flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-6 py-3.5 rounded-xl transition-colors shadow-card"
             >
               <span>Open MapEstate</span>
@@ -279,7 +309,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setModalType("list-land")}
+              onClick={() => handleOpenAuth("list-land")}
               className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-900 border border-slate-200 hover:border-slate-300 text-sm font-medium px-6 py-3.5 rounded-xl transition-colors"
             >
               <span>List Your Land</span>
@@ -794,7 +824,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto shrink-0">
             <button
               type="button"
-              onClick={() => setModalType("open-map")}
+              onClick={() => handleOpenAuth("open-map")}
               className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-100 text-slate-900 text-sm font-medium px-6 py-3.5 rounded-xl transition-colors"
             >
               <span>Open MapEstate</span>
@@ -802,7 +832,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setModalType("list-land")}
+              onClick={() => handleOpenAuth("list-land")}
               className="inline-flex items-center justify-center bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 text-sm font-medium px-6 py-3.5 rounded-xl transition-colors"
             >
               List Your Land
@@ -861,53 +891,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
   {/*  =====================================================================
        CLEAN ACCESSIBLE ACTION MODAL
        =====================================================================  */}
-  <div
-    id="action-modal"
-    className="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/45 backdrop-blur-xs"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="modal-title"
-  >
-    <div className="w-full max-w-md rounded-2xl bg-white border border-slate-200 shadow-2xl p-6 sm:p-7">
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200/70 flex items-center justify-center text-emerald-700 shrink-0">
-            <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
-          </div>
-          <h3 id="modal-title" className="font-display font-bold text-lg tracking-tight text-slate-900">Open MapEstate</h3>
-        </div>
-        <button
-          type="button"
-          id="close-modal-btn"
-          aria-label="Close dialog"
-          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-        >
-          <X className="w-5 h-5" aria-hidden="true" />
-        </button>
-      </div>
-
-      <p id="modal-body" className="mt-4 text-sm text-slate-600 leading-relaxed">
-        This introductory page connects directly into the main MapEstate application.
-      </p>
-
-      <div className="mt-6 flex items-center justify-end gap-2.5">
-        <button
-          type="button"
-          id="modal-cancel-btn"
-          className="px-4 py-2.5 rounded-xl border border-slate-200 hover:bg-slate-50 text-sm font-medium text-slate-700 transition-colors"
-        >
-          Close
-        </button>
-        <button
-          type="button"
-          id="modal-primary-btn"
-          className="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium transition-colors"
-        >
-          Continue
-        </button>
-      </div>
-    </div>
-  </div>
+  
 
   {/*  =====================================================================
        INTERACTIVE BEHAVIORS:
@@ -919,6 +903,108 @@ export const LandingPage: React.FC<LandingPageProps> = ({
        6. Accessible modal dialogs (Escape + backdrop close)
        =====================================================================  */}
   
+
+      
+      {/* Google Authentication Dialog right on Welcome Screen */}
+      {isAuthModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-200"
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setIsAuthModalOpen(false)}
+        >
+          <div
+            className="w-full max-w-md rounded-3xl bg-white border border-slate-200/90 shadow-2xl p-6 sm:p-8 relative text-left transform transition-all animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              aria-label="Close dialog"
+              onClick={() => setIsAuthModalOpen(false)}
+              className="absolute top-5 right-5 p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            >
+              <X className="w-5 h-5" aria-hidden="true" />
+            </button>
+
+            {/* Header with Logo */}
+            <div className="flex items-center gap-3">
+              <img
+                src={logoImg}
+                alt="MapEstate Logo"
+                className="h-8 w-auto object-contain shrink-0"
+              />
+            </div>
+
+            <div className="mt-4">
+              <h3 className="font-display font-bold text-xl tracking-tight text-slate-900">
+                Sign in to Enter MapEstate
+              </h3>
+              <p className="mt-1.5 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Continue with your Google account to access interactive cadastral land maps, run AI property scans, and view verified plots.
+              </p>
+            </div>
+
+            {/* Value checklist */}
+            <div className="mt-5 space-y-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs text-slate-700">
+              <div className="flex items-center gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-medium">Cadastral plot boundaries & GPS land survey</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-medium">AI flood, slope, zoning & livability risk audits</span>
+              </div>
+              <div className="flex items-center gap-2.5">
+                <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                </div>
+                <span className="font-medium">Direct contact with verified land owners</span>
+              </div>
+            </div>
+
+            {authError && (
+              <div className="mt-3 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+                {authError}
+              </div>
+            )}
+
+            {/* Google Sign-In Action */}
+            <div className="mt-6 space-y-3">
+              <button
+                type="button"
+                onClick={handleGoogleSignIn}
+                disabled={isAuthenticating}
+                className="w-full py-3.5 px-4 bg-white hover:bg-slate-50 border border-slate-300 hover:border-slate-400 text-slate-800 rounded-2xl font-bold flex items-center justify-center gap-3 transition-all shadow-sm hover:shadow text-sm active:scale-[0.98] cursor-pointer"
+              >
+                {isAuthenticating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin text-slate-600" />
+                    <span>Connecting to Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <GoogleIcon className="w-5 h-5 flex-shrink-0" />
+                    <span>Continue with Google</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDemoSignIn}
+                className="w-full text-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors py-1 cursor-pointer"
+              >
+                Or preview as Guest Explorer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Action Modal */}
       {activeModalConfig && (

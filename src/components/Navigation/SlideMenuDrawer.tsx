@@ -31,6 +31,7 @@ interface SlideMenuDrawerProps {
   activeOption: string;
   myPropertiesCount: number;
   favoritesCount: number;
+  onSignOut?: () => void;
 }
 
 export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
@@ -39,7 +40,8 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
   onSelectOption,
   activeOption,
   myPropertiesCount,
-  favoritesCount
+  favoritesCount,
+  onSignOut
 }) => {
   const [unreadNotifs, setUnreadNotifs] = useState(() => notificationService.getUnreadCount());
 
@@ -88,7 +90,12 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
     e.stopPropagation();
     await signOut();
     syncProfileFromSupabaseUser(null);
-    window.location.reload();
+    if (onSignOut) {
+      onSignOut();
+      onClose();
+    } else {
+      window.location.replace(window.location.origin);
+    }
   };
 
   return (
