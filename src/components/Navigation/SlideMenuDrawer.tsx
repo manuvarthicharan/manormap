@@ -179,7 +179,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
           <div className="space-y-4">
             {/* DISCOVER */}
             <div>
-              <div className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 Discover
               </div>
               <button
@@ -196,7 +196,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
 
             {/* INTELLIGENCE & ANALYSIS */}
             <div>
-              <div className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 Intelligence & Analysis
               </div>
               <div className="space-y-0.5">
@@ -208,7 +208,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                     <Calculator className="w-4 h-4 text-emerald-600" />
                     <span>ROI & Buy vs Rent</span>
                   </div>
-                  <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     DCF
                   </span>
                 </button>
@@ -217,7 +217,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
 
             {/* MONETIZATION & PLANS */}
             <div>
-              <div className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 Monetization & Passes
               </div>
               <div className="space-y-0.5">
@@ -238,7 +238,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
 
             {/* MY ACTIVITY */}
             <div>
-              <div className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 My Activity
               </div>
               <div className="space-y-0.5">
@@ -299,7 +299,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
 
             {/* ACCOUNT & SETTINGS */}
             <div>
-              <div className="px-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+              <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 Account & Preferences
               </div>
               <div className="space-y-0.5">

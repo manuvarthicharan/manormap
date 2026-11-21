@@ -587,13 +587,13 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 1: MATCHING PROPERTIES & PROJECTS */}
             {matchingProperties.length > 0 && (
               <div className="p-2 sm:p-2.5">
-                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center justify-between ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center justify-between ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
                   }`}>
                   <div className="flex items-center gap-1.5">
                     <Building2 className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                     <span>Matching Listings ({matchingProperties.length})</span>
                   </div>
-                  <span className={`text-[9px] ${isDarkMap ? 'text-slate-400' : 'text-slate-400'}`}>Jump to property</span>
+                  <span className={`text-[9px] font-semibold ${isDarkMap ? 'text-slate-400' : 'text-slate-500'}`}>Jump to property</span>
                 </div>
 
                 <div className="space-y-1 mt-1">
@@ -620,15 +620,15 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             <Building2 className="w-4 h-4" />
                           </div>
                           <div className="min-w-0">
-                            <div className={`text-xs sm:text-sm font-bold truncate ${isDarkMap ? 'text-white' : 'text-slate-900'
+                            <div className={`text-xs sm:text-sm font-extrabold truncate ${isDarkMap ? 'text-white' : 'text-slate-900'
                               }`}>
                               {prop.title}
                             </div>
-                            <div className={`text-[11px] truncate flex items-center gap-1.5 ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
+                            <div className={`text-[11px] truncate flex items-center gap-1.5 font-medium ${isDarkMap ? 'text-slate-300' : 'text-slate-600'
                               }`}>
                               <span>{prop.area || prop.address}, {prop.city}</span>
                               <span>•</span>
-                              <span className={isDarkMap ? 'text-slate-400' : 'text-slate-400'}>{prop.category}</span>
+                              <span className={isDarkMap ? 'text-blue-300' : 'text-blue-700 font-semibold'}>{prop.category}</span>
                             </div>
                           </div>
                         </div>
@@ -640,7 +640,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             }`}>
                             {formatIndianCurrency(prop.price, prop.type)}
                           </span>
-                          <ArrowRight className={`w-3.5 h-3.5 ${isDarkMap ? 'text-slate-500' : 'text-slate-300'}`} />
+                          <ArrowRight className={`w-3.5 h-3.5 ${isDarkMap ? 'text-slate-400' : 'text-slate-400'}`} />
                         </div>
                       </div>
                     );
@@ -652,7 +652,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* SECTION 2: LOCALITY & CITY SUGGESTIONS */}
             {suggestions.length > 0 && (
               <div className="p-2 sm:p-2.5">
-                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center gap-1.5 ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                <div className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 flex items-center gap-1.5 ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
                   }`}>
                   <MapPin className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                   <span>Localities, Cities & PIN Codes</span>
@@ -687,12 +687,12 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                             )}
                           </div>
                           <div className="min-w-0">
-                            <div className={`text-xs sm:text-sm font-bold truncate ${isDarkMap ? 'text-white' : 'text-slate-900'
+                            <div className={`text-xs sm:text-sm font-extrabold truncate ${isDarkMap ? 'text-white' : 'text-slate-900'
                               }`}>
                               {item.title}
                             </div>
                             {item.subTitle && (
-                              <div className={`text-[11px] truncate ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
+                              <div className={`text-[11px] font-medium truncate ${isDarkMap ? 'text-slate-300' : 'text-slate-600'
                                 }`}>
                                 {item.subTitle}
                               </div>
@@ -701,8 +701,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                         </div>
 
                         <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md flex-shrink-0 ${isDarkMap
-                          ? 'bg-slate-800 text-slate-300 border border-slate-700/70'
-                          : 'bg-slate-100 text-slate-600'
+                          ? 'bg-slate-800 text-slate-200 border border-slate-700'
+                          : 'bg-slate-100 text-slate-700 border border-slate-200'
                           }`}>
                           {item.type}
                         </span>
@@ -719,13 +719,13 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
                 {/* Micro-Markets Grid */}
                 <div>
-                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center justify-between ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center justify-between ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
                     }`}>
                     <div className="flex items-center gap-1.5">
                       <TrendingUp className={`w-3.5 h-3.5 ${isDarkMap ? 'text-blue-400' : 'text-blue-600'}`} />
                       <span>Premier Indian Micro-Markets</span>
                     </div>
-                    <span className={`text-[9px] font-bold ${isDarkMap ? 'text-emerald-400' : 'text-emerald-600'}`}>Q4 Yield</span>
+                    <span className={`text-[9px] font-bold ${isDarkMap ? 'text-emerald-400' : 'text-emerald-700'}`}>Q4 Yield</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
@@ -742,24 +742,24 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                           })
                         }
                         className={`p-2 rounded-xl cursor-pointer text-left transition-all flex items-center gap-2 group border ${isDarkMap
-                          ? 'hover:bg-slate-900/90 border-slate-800/80 bg-slate-900/40'
-                          : 'hover:bg-blue-50/70 border-slate-100 bg-white'
+                          ? 'hover:bg-slate-900 border-slate-800 bg-slate-900/60'
+                          : 'hover:bg-blue-50/80 border-slate-200/90 bg-white shadow-2xs'
                           }`}
                       >
                         <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors ${isDarkMap
-                          ? 'bg-slate-800 text-slate-300 group-hover:bg-blue-900 group-hover:text-blue-300'
-                          : 'bg-slate-100 text-slate-600 group-hover:bg-blue-100 group-hover:text-blue-700'
+                          ? 'bg-slate-800 text-slate-200 group-hover:bg-blue-900 group-hover:text-blue-300'
+                          : 'bg-slate-100 text-slate-700 group-hover:bg-blue-100 group-hover:text-blue-700'
                           }`}>
                           <Compass className="w-3.5 h-3.5" />
                         </div>
                         <div className="truncate flex-1 min-w-0">
-                          <div className={`text-xs font-bold truncate ${isDarkMap
+                          <div className={`text-xs font-extrabold truncate ${isDarkMap
                             ? 'text-white group-hover:text-blue-400'
                             : 'text-slate-900 group-hover:text-blue-600'
                             }`}>
                             {loc.title}
                           </div>
-                          <div className={`text-[10px] font-semibold truncate ${isDarkMap ? 'text-emerald-400' : 'text-emerald-600'
+                          <div className={`text-[10px] font-bold truncate ${isDarkMap ? 'text-emerald-400' : 'text-emerald-700'
                             }`}>
                             {loc.priceTrend}
                           </div>
@@ -771,7 +771,7 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
 
                 {/* Quick Explore by Property Type */}
                 <div className={`pt-2 border-t ${isDarkMap ? 'border-slate-800' : 'border-slate-100'}`}>
-                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${isDarkMap ? 'text-slate-400' : 'text-slate-400'
+                  <div className={`text-[10px] font-extrabold uppercase tracking-wider mb-2 flex items-center gap-1.5 ${isDarkMap ? 'text-slate-300' : 'text-slate-500'
                     }`}>
                     <Tag className={`w-3.5 h-3.5 ${isDarkMap ? 'text-indigo-400' : 'text-indigo-600'}`} />
                     <span>Explore by Asset Class</span>
@@ -793,8 +793,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
                           className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95 ${isActive
                             ? 'bg-blue-600 text-white shadow-xs'
                             : isDarkMap
-                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60'
-                              : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                              ? 'bg-slate-800 hover:bg-slate-700 text-slate-100 border border-slate-700'
+                              : 'bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200/80'
                             }`}
                         >
                           <span>{cat.icon}</span>
@@ -943,8 +943,8 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             onClick={onOpenPricing}
             title="Monetization Plans & Owner Passes (Razorpay)"
             className={`hidden md:flex items-center gap-1.5 h-10 px-3 rounded-2xl text-xs font-bold transition-all shadow-md active:scale-95 border ${isDarkMap
-              ? 'bg-slate-950 border-slate-700 text-amber-300 hover:bg-slate-900 shadow-black/40'
-              : 'bg-white border-slate-200 text-amber-600 hover:bg-amber-50 shadow-slate-900/5'
+              ? 'bg-slate-950 border-slate-700 text-slate-100 hover:text-white hover:bg-slate-900 shadow-black/40'
+              : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-slate-900/5'
               }`}
           >
             <CreditCard className="w-3.5 h-3.5 text-amber-500" />
@@ -959,11 +959,11 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             onClick={onOpenAIAdvisor}
             title="Open AI Real Estate Advisor"
             className={`w-10 h-10 flex items-center justify-center rounded-2xl shadow-md transition-all active:scale-95 border ${isDarkMap
-              ? 'bg-slate-950 border-slate-700 text-emerald-400 hover:bg-slate-900 shadow-black/40'
-              : 'bg-white border-slate-200 text-emerald-600 hover:bg-emerald-50 shadow-slate-900/5'
+              ? 'bg-slate-950 border-slate-700 text-slate-100 hover:text-white hover:bg-slate-900 shadow-black/40'
+              : 'bg-white border-slate-200 text-slate-800 hover:bg-slate-50 shadow-slate-900/5'
               }`}
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-4 h-4 text-emerald-500" />
           </button>
         )}
 

@@ -1,6 +1,6 @@
 $ErrorActionPreference = "Stop"
 
-Write-Host "Building production bundle for MapEstate..." -ForegroundColor Cyan
+Write-Host "Building production bundle..." -ForegroundColor Cyan
 npm run build
 
 Write-Host "Deploying to GitHub Pages (gh-pages branch)..." -ForegroundColor Cyan
@@ -13,17 +13,9 @@ try {
     git checkout -b gh-pages
     git add -A
     git commit -m "Deploy latest build to GitHub Pages"
-    
-    # Push to mapestate if renamed, or fall back to manormap.git
-    try {
-        git push https://github.com/manuvarthicharan/mapestate.git gh-pages --force
-        Write-Host "Successfully deployed to https://manuvarthicharan.github.io/mapestate/" -ForegroundColor Green
-    } catch {
-        Write-Host "Pushing to https://github.com/manuvarthicharan/manormap.git..." -ForegroundColor Yellow
-        git push https://github.com/manuvarthicharan/manormap.git gh-pages --force
-        Write-Host "Successfully deployed to https://manuvarthicharan.github.io/manormap/" -ForegroundColor Green
-    }
+    git push https://github.com/manuvarthicharan/mapestate.git gh-pages --force
     Remove-Item -Recurse -Force .git
+    Write-Host "Successfully deployed to https://manuvarthicharan.github.io/mapestate/" -ForegroundColor Green
 } finally {
     Pop-Location
 }

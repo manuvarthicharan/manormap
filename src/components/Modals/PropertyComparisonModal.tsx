@@ -91,7 +91,7 @@ export const PropertyComparisonModal: React.FC<PropertyComparisonModalProps> = (
                 <table className="w-full border-collapse text-xs">
                   <thead>
                     <tr>
-                      <th className="p-3 text-left font-bold text-slate-400 uppercase tracking-wider w-40 min-w-[140px] bg-slate-50/50 rounded-l-2xl">
+                      <th className="p-3 text-left font-extrabold text-slate-600 uppercase tracking-wider w-40 min-w-[140px] bg-slate-50/50 rounded-l-2xl">
                         Metric / Feature
                       </th>
                       {comparedProperties.map((prop) => (

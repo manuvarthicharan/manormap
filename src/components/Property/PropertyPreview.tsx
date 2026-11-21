@@ -253,12 +253,12 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                 </div>
 
                 {/* Property Title */}
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 line-clamp-1 mb-1">
+                <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 line-clamp-1 mb-1">
                   {property.title}
                 </h3>
 
                 {/* Locality & Address */}
-                <div className="flex items-center gap-1 text-xs text-slate-500 mb-2">
+                <div className="flex items-center gap-1 text-xs text-slate-600 font-medium mb-2">
                   <MapPin className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
                   <span className="truncate">
                     {property.area || property.address}, {property.city}
@@ -279,19 +279,19 @@ export const PropertyPreview: React.FC<PropertyPreviewProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-2.5 text-xs text-slate-600 font-medium">
+                  <div className="flex items-center gap-2.5 text-xs text-slate-700 font-semibold">
                     {property.bhk ? (
                       <div className="flex items-center gap-1">
-                        <BedDouble className="w-3.5 h-3.5 text-slate-400" />
+                        <BedDouble className="w-3.5 h-3.5 text-slate-500" />
                         <span>{property.bhk} BHK</span>
                       </div>
                     ) : null}
                     <div className="flex items-center gap-1">
-                      <Bath className="w-3.5 h-3.5 text-slate-400" />
+                      <Bath className="w-3.5 h-3.5 text-slate-500" />
                       <span>{property.bathrooms} Baths</span>
                     </div>
-                    <div className="flex items-center gap-1 font-bold text-slate-800">
-                      <Maximize2 className="w-3.5 h-3.5 text-slate-400" />
+                    <div className="flex items-center gap-1 font-extrabold text-slate-900">
+                      <Maximize2 className="w-3.5 h-3.5 text-slate-500" />
                       <span>{formatAreaByUnit(property.areaSqFt, getStoredAreaUnit()).formatted}</span>
                     </div>
                   </div>

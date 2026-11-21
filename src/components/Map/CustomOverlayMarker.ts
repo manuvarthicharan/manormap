@@ -294,7 +294,7 @@ export class CustomOverlayMarker {
       this.pill.innerHTML = `
         ${spotlightBadge}
         ${acresDisplay}
-        <span class="price-text font-bold text-xs tracking-tight">${this.property.priceDisplay}</span>
+        <span class="price-text font-black text-xs tracking-tight text-slate-900">${this.property.priceDisplay}</span>
       `;
       this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-2.5 py-1`;
     } else {
@@ -306,7 +306,7 @@ export class CustomOverlayMarker {
       this.pill.innerHTML = `
         ${spotlightBadge}
         ${tagDisplay}
-        <span class="price-text font-bold text-[11.5px] tracking-tight">${this.property.priceDisplay}</span>
+        <span class="price-text font-black text-[11.5px] tracking-tight text-slate-900">${this.property.priceDisplay}</span>
       `;
       this.pill.className = `marker-pill ${this.property.type} ${isAgri ? 'agri-pill' : ''} px-2 py-0.5 text-xs`;
     }
