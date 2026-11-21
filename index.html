@@ -10,12 +10,10 @@
       (function() {
         try {
           var h = window.location.hostname;
-          if (h.indexOf('-mapestate.mkcharan77.workers.dev') !== -1) {
+          if (h.indexOf('-manormap.mkcharan77.workers.dev') !== -1) {
+            window.location.replace('https://manormap.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
+          } else if (h.indexOf('-mapestate.mkcharan77.workers.dev') !== -1) {
             window.location.replace('https://mapestate.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
-          } else if (h.indexOf('-manormap.mkcharan77.workers.dev') !== -1) {
-            window.location.replace('https://mapestate.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
-          } else if (h.indexOf('manormap.pages.dev') !== -1) {
-            window.location.replace('https://mapestate.pages.dev' + window.location.pathname + window.location.search + window.location.hash);
           }
         } catch (_) {}
       })();
