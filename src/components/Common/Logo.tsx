@@ -17,12 +17,12 @@ export const Logo: React.FC<LogoProps> = ({
 
   // Height dimensions preserving aspect ratio of MapEstate logo (913x305, ~3:1)
   const sizeClasses = {
-    xs: 'h-7 sm:h-8',
-    sm: 'h-8 sm:h-9',
-    md: 'h-9 sm:h-10',
-    lg: 'h-11 sm:h-12',
-    xl: 'h-14 sm:h-16'
-  }[size] || 'h-9 sm:h-10';
+    xs: 'h-8 sm:h-9',
+    sm: 'h-9 sm:h-10',
+    md: 'h-10 sm:h-11',
+    lg: 'h-12 sm:h-14',
+    xl: 'h-16 sm:h-20'
+  }[size] || 'h-10 sm:h-11';
 
   return (
     <div className={`inline-flex items-center select-none bg-transparent ${className}`}>

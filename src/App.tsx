@@ -910,6 +910,12 @@ export const App: React.FC = () => {
         onSelectOption={(key) => {
           if (key === 'map') {
             setIsMenuOpen(false);
+          } else if (key === 'ai-advisor') {
+            setIsMenuOpen(false);
+            handleOpenAIAdvisor();
+          } else if (key === 'add-property') {
+            setIsMenuOpen(false);
+            setIsAddPropertyOpen(true);
           } else if (key === 'investment-roi') {
             setIsMenuOpen(false);
             setIsRoiModalOpen(true);

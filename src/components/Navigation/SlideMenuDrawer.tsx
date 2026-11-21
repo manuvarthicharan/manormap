@@ -13,7 +13,9 @@ import {
   ChevronRight,
   Calculator,
   LogOut,
-  CreditCard
+  CreditCard,
+  Sparkles,
+  Plus
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
@@ -192,6 +194,19 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
                 <Compass className="w-4 h-4 text-blue-600" />
                 <span>Explore Map</span>
               </button>
+
+              <button
+                onClick={() => handleAction('add-property')}
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 transition-colors shadow-2xs mt-1 active:scale-[0.98]"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Plus className="w-4 h-4 text-white stroke-[2.5]" />
+                  <span>List Your Property</span>
+                </div>
+                <span className="text-[10px] bg-white/20 text-white font-extrabold px-1.5 py-0.2 rounded">
+                  Free
+                </span>
+              </button>
             </div>
 
             {/* INTELLIGENCE & ANALYSIS */}
@@ -199,7 +214,20 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
               <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 Intelligence & Analysis
               </div>
-              <div className="space-y-0.5">
+              <div className="space-y-1">
+                <button
+                  onClick={() => handleAction('ai-advisor')}
+                  className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 transition-all shadow-2xs active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Sparkles className="w-4 h-4 text-emerald-300 animate-pulse" />
+                    <span>AI Property Advisor</span>
+                  </div>
+                  <span className="text-[10px] font-black uppercase bg-white/20 text-white px-2 py-0.5 rounded-full">
+                    Instant
+                  </span>
+                </button>
+
                 <button
                   onClick={() => handleAction('investment-roi')}
                   className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"

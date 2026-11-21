@@ -390,6 +390,18 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
               </span>
             )}
           </button>
+
+          {/* Mobile AI Advisor Instant Access Button */}
+          {onOpenAIAdvisor && (
+            <button
+              type="button"
+              onClick={onOpenAIAdvisor}
+              title="Open AI Real Estate Advisor"
+              className="sm:hidden w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-xs flex-shrink-0 active:scale-95 hover:opacity-95"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-300" />
+            </button>
+          )}
         </div>
 
         {/* AI Natural Language Query Feedback Banner */}
