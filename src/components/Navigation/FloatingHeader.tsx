@@ -320,14 +320,14 @@ export const FloatingHeader: React.FC<FloatingHeaderProps> = ({
             {/* MapEstate Brand Logo */}
             <div
               onClick={onOpenMenu}
-              className="flex items-center pr-1.5 sm:pr-2 border-r cursor-pointer select-none group flex-shrink-0 border-slate-200/80"
+              className="flex items-center pr-2 sm:pr-3 border-r cursor-pointer select-none group flex-shrink-0 border-slate-200/80"
               title="MapEstate Menu"
             >
               <div className="sm:hidden">
-                <Logo size="xs" />
+                <Logo size="sm" />
               </div>
               <div className="hidden sm:block">
-                <Logo size="sm" />
+                <Logo size="md" />
               </div>
             </div>
           </div>

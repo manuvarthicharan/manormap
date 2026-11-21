@@ -100,7 +100,7 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
       <div className="fixed inset-y-0 left-0 w-[85vw] max-w-xs sm:max-w-sm bg-white shadow-2xl flex flex-col h-[100dvh] z-50 transform transition duration-300 ease-out animate-in slide-in-from-left border-r border-slate-200/80">
         {/* Sticky Top Header Bar */}
         <div className="p-4 flex items-center justify-between border-b border-slate-100 flex-shrink-0 bg-white">
-          <Logo size="md" />
+          <Logo size="lg" />
 
           <button
             onClick={onClose}
