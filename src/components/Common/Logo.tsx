@@ -15,14 +15,14 @@ export const Logo: React.FC<LogoProps> = ({
 }) => {
   const [hasError, setHasError] = useState(false);
 
-  // Height dimensions preserving aspect ratio of MapEstate logo (913x305, ~3:1)
+  // Height dimensions preserving aspect ratio of MapEstate logo (4.6:1)
   const sizeClasses = {
-    xs: 'h-8 sm:h-9',
-    sm: 'h-9 sm:h-10',
-    md: 'h-10 sm:h-11',
-    lg: 'h-12 sm:h-14',
-    xl: 'h-16 sm:h-20'
-  }[size] || 'h-10 sm:h-11';
+    xs: 'h-6 sm:h-7',
+    sm: 'h-7 sm:h-8',
+    md: 'h-8 sm:h-9',
+    lg: 'h-10 sm:h-11',
+    xl: 'h-12 sm:h-14'
+  }[size] || 'h-8 sm:h-9';
 
   return (
     <div className={`inline-flex items-center select-none bg-transparent ${className}`}>
