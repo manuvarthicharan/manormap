@@ -13,9 +13,9 @@ try {
     git checkout -b gh-pages
     git add -A
     git commit -m "Deploy latest build to GitHub Pages"
-    git push https://github.com/manuvarthicharan/mapestate.git gh-pages --force
+    git push https://github.com/manuvarthicharan/manormap.git gh-pages --force
     Remove-Item -Recurse -Force .git
-    Write-Host "Successfully deployed to https://manuvarthicharan.github.io/mapestate/" -ForegroundColor Green
+    Write-Host "Successfully deployed to https://manuvarthicharan.github.io/manormap/" -ForegroundColor Green
 } finally {
     Pop-Location
 }
