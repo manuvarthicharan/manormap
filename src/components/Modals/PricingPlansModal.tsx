@@ -69,7 +69,7 @@ export const PricingPlansModal: React.FC<PricingPlansModalProps> = ({
       propertyId: targetProperty?.id,
       propertyTitle: targetProperty?.title,
       userName: 'Keerthi Charan',
-      userEmail: 'charan@manormap.in',
+      userEmail: 'charan@mapestate.in',
       userPhone: '+91 98490 12345',
       onSuccess: (tx) => {
         setIsProcessing(false);

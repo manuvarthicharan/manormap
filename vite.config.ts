@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'manormap-agent-api',
+      name: 'mapestate-agent-api',
       configureServer(server) {
         server.middlewares.use(async (req, res, next) => {
           // Health check
@@ -19,7 +19,7 @@ export default defineConfig({
             res.end(
               JSON.stringify({
                 status: 'online',
-                agent: 'ManorMap Real Estate Autonomous Agent',
+                agent: 'MapEstate Real Estate Autonomous Agent',
                 model: OPENROUTER_MODEL,
                 timestamp: new Date().toISOString()
               })
@@ -64,8 +64,8 @@ export default defineConfig({
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${OPENROUTER_KEY}`,
-                  'HTTP-Referer': 'https://manormap.internal',
-                  'X-Title': 'ManorMap Real Estate Intelligence'
+                  'HTTP-Referer': 'https://mapestate.internal',
+                  'X-Title': 'MapEstate Real Estate Intelligence'
                 },
                 body: JSON.stringify(requestBody)
               });
@@ -89,7 +89,7 @@ export default defineConfig({
               const locality = payload.localityName || 'Local Area';
               const city = payload.city || 'India';
 
-              const prompt = `You are ManorMap's Principal Geospatial & Real Estate Intelligence AI.
+              const prompt = `You are MapEstate's Principal Geospatial & Real Estate Intelligence AI.
 Perform an in-depth, rigorous neighborhood intelligence audit of: "${locality}, ${city}".
 You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, no commentary) matching this schema:
 {
@@ -131,8 +131,8 @@ You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, n
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${OPENROUTER_KEY}`,
-                  'HTTP-Referer': 'https://manormap.internal',
-                  'X-Title': 'ManorMap Real Estate Intelligence'
+                  'HTTP-Referer': 'https://mapestate.internal',
+                  'X-Title': 'MapEstate Real Estate Intelligence'
                 },
                 body: JSON.stringify({
                   model: OPENROUTER_MODEL,
@@ -163,7 +163,7 @@ You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, n
               const payload = await parseBody();
               const p = payload.property;
 
-              const prompt = `You are ManorMap's Senior Real Estate Investment Analyst & Geospatial Auditor.
+              const prompt = `You are MapEstate's Senior Real Estate Investment Analyst & Geospatial Auditor.
 Conduct a deep institutional audit of this property:
 - Title: "${p.title}"
 - Price: ₹${p.price} (${p.priceDisplay})
@@ -201,8 +201,8 @@ Respond ONLY with valid, raw JSON (no backticks, no markdown fencing, no comment
                 headers: {
                   'Content-Type': 'application/json',
                   Authorization: `Bearer ${OPENROUTER_KEY}`,
-                  'HTTP-Referer': 'https://manormap.internal',
-                  'X-Title': 'ManorMap Real Estate Intelligence'
+                  'HTTP-Referer': 'https://mapestate.internal',
+                  'X-Title': 'MapEstate Real Estate Intelligence'
                 },
                 body: JSON.stringify({
                   model: OPENROUTER_MODEL,

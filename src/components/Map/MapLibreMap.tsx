@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import maplibregl from 'maplibre-gl';
 import { Property, MapBounds, TileProvider } from '../../types';
 import { Locate, ZoomIn, ZoomOut, Layers, Navigation } from 'lucide-react';
+import { razorpayService } from '../../services/razorpayService';
 
 interface MapLibreMapProps {
   properties: Property[];
@@ -173,18 +174,19 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
     properties.forEach(prop => {
       currentMarkerIds.add(prop.id);
       const isSelected = selectedProperty?.id === prop.id;
+      const isFeatured = !!(prop.isFeatured || razorpayService.isPropertyBoosted(prop.id));
 
       let marker = markersRef.current.get(prop.id);
 
       if (!marker) {
         // Create custom HTML DOM marker
         const el = document.createElement('div');
-        el.className = `prop-marker ${isSelected ? 'selected' : ''}`;
+        el.className = `prop-marker ${isSelected ? 'selected' : ''} ${isFeatured ? 'featured-pin' : ''}`;
         el.id = `marker-${prop.id}`;
 
         const pill = document.createElement('div');
         pill.className = `marker-pill ${prop.type}`;
-        pill.innerHTML = `<span>${prop.priceDisplay}</span>`;
+        pill.innerHTML = `${isFeatured ? '<span class="font-black text-[9px] bg-amber-400 text-slate-950 px-1 py-0.2 rounded-sm mr-1">⭐</span>' : ''}<span>${prop.priceDisplay}</span>`;
 
         const tip = document.createElement('div');
         tip.className = 'marker-tip';
@@ -211,13 +213,9 @@ export const MapLibreMap: React.FC<MapLibreMapProps> = ({
 
         markersRef.current.set(prop.id, marker);
       } else {
-        // Update selection state
+        // Update selection and featured state
         const el = marker.getElement();
-        if (isSelected) {
-          el.classList.add('selected');
-        } else {
-          el.classList.remove('selected');
-        }
+        el.className = `prop-marker ${isSelected ? 'selected' : ''} ${isFeatured ? 'featured-pin' : ''}`;
       }
     });
 

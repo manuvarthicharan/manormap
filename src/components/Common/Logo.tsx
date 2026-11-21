@@ -5,42 +5,36 @@ interface LogoProps {
   variant?: 'full' | 'icon';
   theme?: 'dark' | 'light' | 'auto';
   className?: string;
-  bare?: boolean; // if true, don't add the light capsule wrapper
+  bare?: boolean;
 }
 
 export const Logo: React.FC<LogoProps> = ({
   size = 'md',
   className = '',
-  bare = false
 }) => {
   const [hasError, setHasError] = useState(false);
 
-  // Height dimensions preserving 3:1 aspect ratio of logo.png
+  // Height dimensions preserving aspect ratio of MapEstate logo (1024x372)
   const sizeClasses = {
-    xs: 'h-5 sm:h-6 max-w-[80px]',
-    sm: 'h-7 sm:h-8 max-w-[125px]',
-    md: 'h-9 sm:h-10 max-w-[160px]',
-    lg: 'h-12 sm:h-14 max-w-[220px]',
-    xl: 'h-16 sm:h-18 max-w-[280px]'
-  }[size] || 'h-9 sm:h-10 max-w-[160px]';
-
-  // Safeguard: Never let the logo background be dark so the dark emblem/text never gets mixed
-  const capsuleClasses = bare
-    ? ''
-    : 'bg-white px-2 py-0.5 rounded-xl border border-slate-200/80 shadow-2xs';
+    xs: 'h-6 sm:h-7',
+    sm: 'h-7 sm:h-8',
+    md: 'h-8 sm:h-9',
+    lg: 'h-10 sm:h-11',
+    xl: 'h-12 sm:h-14'
+  }[size] || 'h-8 sm:h-9';
 
   return (
-    <div className={`inline-flex items-center select-none ${capsuleClasses} ${className}`}>
+    <div className={`inline-flex items-center select-none bg-transparent ${className}`}>
       {!hasError ? (
         <img
           src="/logo.png"
-          alt="ManorMap Logo"
+          alt="MapEstate Logo"
           onError={() => setHasError(true)}
-          className={`w-auto object-contain transition-transform duration-200 group-hover:scale-102 filter drop-shadow-2xs ${sizeClasses}`}
+          className={`w-auto object-contain transition-transform duration-200 group-hover:scale-102 ${sizeClasses}`}
         />
       ) : (
-        <div className="h-7 px-2.5 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs tracking-tight">
-          ManorMap
+        <div className="h-7 px-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center text-white font-black text-xs tracking-tight">
+          MapEstate
         </div>
       )}
     </div>

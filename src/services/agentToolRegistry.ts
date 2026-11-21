@@ -362,7 +362,7 @@ export const AGENT_TOOLS_DEFINITIONS = [
     type: 'function',
     function: {
       name: 'apply_map_filters',
-      description: 'Applies real property filters (BHK, category, price, purpose, verified) to the live ManorMap UI and markers.',
+      description: 'Applies real property filters (BHK, category, price, purpose, verified) to the live MapEstate UI and markers.',
       parameters: {
         type: 'object',
         properties: {

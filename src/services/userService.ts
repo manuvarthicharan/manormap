@@ -22,12 +22,12 @@ const DEFAULT_AVATARS = [
   'https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=256&h=256&q=80'
 ];
 
-const USER_STORAGE_KEY = 'manormap_user_profile';
+const USER_STORAGE_KEY = 'mapestate_user_profile';
 
 const DEFAULT_PROFILE: UserProfile = {
   id: 'usr_guest',
   name: 'Guest User',
-  email: 'user@manormap.com',
+  email: 'user@mapestate.com',
   phone: '',
   role: 'Buyer / Investor',
   avatarUrl: DEFAULT_AVATARS[0],
@@ -40,7 +40,7 @@ const DEFAULT_PROFILE: UserProfile = {
 
 export function getUserProfile(): UserProfile {
   try {
-    const raw = localStorage.getItem(USER_STORAGE_KEY) || localStorage.getItem('manormap_user_profile');
+    const raw = localStorage.getItem(USER_STORAGE_KEY) || localStorage.getItem('mapestate_user_profile');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (!parsed.avatarUrl || parsed.avatarUrl.trim() === '') {

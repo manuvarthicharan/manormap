@@ -224,7 +224,7 @@ export const AIAssistantDrawer: React.FC<AIAssistantDrawerProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-extrabold text-xs sm:text-sm tracking-tight text-slate-900">
-                  ManorMap AI Advisor
+                  MapEstate AI Advisor
                 </h3>
                 <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-2xs">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />

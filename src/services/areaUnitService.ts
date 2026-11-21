@@ -1,6 +1,6 @@
 import { AreaUnit } from '../types';
 
-export const AREA_UNIT_KEY = 'manormap_preferred_area_unit';
+export const AREA_UNIT_KEY = 'mapestate_preferred_area_unit';
 
 export const AREA_UNITS: { id: AreaUnit; label: string; short: string; desc: string }[] = [
   { id: 'sqft', label: 'Sq. Ft.', short: 'sq.ft', desc: 'Carpet & Built-Up' },

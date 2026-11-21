@@ -44,8 +44,8 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
     const handleUpdate = () => {
       setUnreadNotifs(notificationService.getUnreadCount());
     };
-    window.addEventListener('manormap_notifications_updated', handleUpdate);
-    return () => window.removeEventListener('manormap_notifications_updated', handleUpdate);
+    window.addEventListener('mapestate_notifications_updated', handleUpdate);
+    return () => window.removeEventListener('mapestate_notifications_updated', handleUpdate);
   }, []);
 
   // Close on Escape key
@@ -334,8 +334,8 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
         {/* Sticky Bottom Attribution Footer */}
         <div className="p-3.5 border-t border-slate-100 bg-slate-50 flex-shrink-0 text-center">
           <div className="text-[11px] text-slate-500 space-y-0.5">
-            <div className="font-bold text-slate-700">ManorMap Real Estate</div>
-            <div className="text-[10px] text-slate-400">&copy; 2026 ManorMap. All rights reserved.</div>
+            <div className="font-bold text-slate-700">MapEstate Real Estate</div>
+            <div className="text-[10px] text-slate-400">&copy; 2026 MapEstate. All rights reserved.</div>
           </div>
         </div>
       </div>

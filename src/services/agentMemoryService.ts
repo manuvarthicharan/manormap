@@ -16,7 +16,7 @@ export interface AgentSessionState {
   lastSelectedProperty?: Property;
 }
 
-const STORAGE_KEY = 'manormap_agent_session_v1';
+const STORAGE_KEY = 'mapestate_agent_session_v1';
 
 class AgentMemoryService {
   private session: AgentSessionState;

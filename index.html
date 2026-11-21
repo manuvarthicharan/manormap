@@ -4,15 +4,18 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>ManorMap — Real Estate Discovery & Land Cadastral Engine</title>
+    <title>MapEstate — Real Estate Discovery & Land Cadastral Engine</title>
     <!-- Canonical Host Safeguard: automatically redirect preview hashes to permanent workers.dev origin while preserving auth hash -->
     <script>
       (function() {
         try {
           var h = window.location.hostname;
-          if (h.indexOf('-manormap.mkcharan77.workers.dev') !== -1) {
-            var target = 'https://manormap.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash;
-            window.location.replace(target);
+          if (h.indexOf('-mapestate.mkcharan77.workers.dev') !== -1) {
+            window.location.replace('https://mapestate.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
+          } else if (h.indexOf('-manormap.mkcharan77.workers.dev') !== -1) {
+            window.location.replace('https://mapestate.mkcharan77.workers.dev' + window.location.pathname + window.location.search + window.location.hash);
+          } else if (h.indexOf('manormap.pages.dev') !== -1) {
+            window.location.replace('https://mapestate.pages.dev' + window.location.pathname + window.location.search + window.location.hash);
           }
         } catch (_) {}
       })();

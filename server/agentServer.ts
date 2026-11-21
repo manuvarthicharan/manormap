@@ -6,7 +6,7 @@ const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash';
 
 /**
- * ManorMap Autonomous Agent Standalone Backend Server
+ * MapEstate Autonomous Agent Standalone Backend Server
  * Securely encapsulates OpenRouter API keys and provides agent orchestration endpoints.
  */
 const server = http.createServer(async (req, res) => {
@@ -28,7 +28,7 @@ const server = http.createServer(async (req, res) => {
     res.end(
       JSON.stringify({
         status: 'online',
-        service: 'ManorMap Autonomous Agent Server',
+        service: 'MapEstate Autonomous Agent Server',
         model: OPENROUTER_MODEL,
         timestamp: new Date().toISOString()
       })
@@ -65,8 +65,8 @@ const server = http.createServer(async (req, res) => {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://manormap.internal',
-            'X-Title': 'ManorMap Autonomous Agent'
+            'HTTP-Referer': 'https://mapestate.internal',
+            'X-Title': 'MapEstate Autonomous Agent'
           },
           body: JSON.stringify(requestBody)
         });
@@ -92,7 +92,7 @@ const server = http.createServer(async (req, res) => {
         const locality = payload.localityName || 'Local Area';
         const city = payload.city || 'India';
 
-        const prompt = `You are ManorMap's Principal Geospatial & Real Estate Intelligence AI.
+        const prompt = `You are MapEstate's Principal Geospatial & Real Estate Intelligence AI.
 Perform an in-depth, rigorous neighborhood intelligence audit of: "${locality}, ${city}".
 You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, no commentary) matching this schema:
 {
@@ -134,8 +134,8 @@ You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, n
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://manormap.internal',
-            'X-Title': 'ManorMap Real Estate Intelligence'
+            'HTTP-Referer': 'https://mapestate.internal',
+            'X-Title': 'MapEstate Real Estate Intelligence'
           },
           body: JSON.stringify({
             model: OPENROUTER_MODEL,
@@ -169,7 +169,7 @@ You MUST respond with ONLY valid, raw JSON (no backticks, no markdown fencing, n
         const payload = JSON.parse(body || '{}');
         const p = payload.property;
 
-        const prompt = `You are ManorMap's Senior Real Estate Investment Analyst & Geospatial Auditor.
+        const prompt = `You are MapEstate's Senior Real Estate Investment Analyst & Geospatial Auditor.
 Conduct a deep institutional audit of this property:
 - Title: "${p.title}"
 - Price: ₹${p.price} (${p.priceDisplay})
@@ -207,8 +207,8 @@ Respond ONLY with valid, raw JSON (no backticks, no markdown fencing, no comment
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${OPENROUTER_API_KEY}`,
-            'HTTP-Referer': 'https://manormap.internal',
-            'X-Title': 'ManorMap Real Estate Intelligence'
+            'HTTP-Referer': 'https://mapestate.internal',
+            'X-Title': 'MapEstate Real Estate Intelligence'
           },
           body: JSON.stringify({
             model: OPENROUTER_MODEL,
@@ -239,7 +239,7 @@ Respond ONLY with valid, raw JSON (no backticks, no markdown fencing, no comment
 
 if (process.env.NODE_ENV !== 'test') {
   server.listen(PORT, () => {
-    console.log(`[ManorMap Agent Server] Listening on http://localhost:${PORT}`);
+    console.log(`[MapEstate Agent Server] Listening on http://localhost:${PORT}`);
   });
 }
 

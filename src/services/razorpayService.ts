@@ -13,7 +13,7 @@ export const RAZORPAY_CONFIG = {
   keyId: 'rzp_test_U1eiUsZq4Rv15v',
   keySecret: '88OtcJbbaIPIU1sLX2GDybV2',
   currency: 'INR',
-  companyName: 'ManorMap Real Estate Radar',
+  companyName: 'MapEstate Real Estate Radar',
   themeColor: '#2563EB'
 };
 
@@ -149,11 +149,11 @@ export const MONETIZATION_PLANS: MonetizationPlan[] = [
   }
 ];
 
-const LOCAL_STORAGE_TRANSACTIONS_KEY = 'manormap_razorpay_transactions_v1';
-const LOCAL_STORAGE_UNLOCKED_CONTACTS_KEY = 'manormap_unlocked_contacts_v1';
-const LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY = 'manormap_boosted_properties_v1';
-const LOCAL_STORAGE_ACTIVE_PASS_KEY = 'manormap_active_buyer_pass_v1';
-const LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY = 'manormap_spotlight_credits_v1';
+const LOCAL_STORAGE_TRANSACTIONS_KEY = 'mapestate_razorpay_transactions_v1';
+const LOCAL_STORAGE_UNLOCKED_CONTACTS_KEY = 'mapestate_unlocked_contacts_v1';
+const LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY = 'mapestate_boosted_properties_v1';
+const LOCAL_STORAGE_ACTIVE_PASS_KEY = 'mapestate_active_buyer_pass_v1';
+const LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY = 'mapestate_spotlight_credits_v1';
 
 export const razorpayService = {
   /**
@@ -178,7 +178,7 @@ export const razorpayService = {
       localStorage.setItem(LOCAL_STORAGE_TRANSACTIONS_KEY, JSON.stringify(updated));
 
       // Trigger update event
-      window.dispatchEvent(new CustomEvent('manormap_payment_success', { detail: tx }));
+      window.dispatchEvent(new CustomEvent('mapestate_payment_success', { detail: tx }));
     } catch {
       // ignore
     }
@@ -238,7 +238,7 @@ export const razorpayService = {
         localStorage.setItem(LOCAL_STORAGE_ACTIVE_PASS_KEY, JSON.stringify(pass));
       }
 
-      window.dispatchEvent(new CustomEvent('manormap_contacts_updated', { detail: { propertyId } }));
+      window.dispatchEvent(new CustomEvent('mapestate_contacts_updated', { detail: { propertyId } }));
       return true;
     } catch {
       return false;
@@ -266,7 +266,7 @@ export const razorpayService = {
       const current = this.getSpotlightCredits();
       const updated = current + amount;
       localStorage.setItem(LOCAL_STORAGE_SPOTLIGHT_CREDITS_KEY, updated.toString());
-      window.dispatchEvent(new CustomEvent('manormap_spotlight_credits_updated', { detail: { credits: updated } }));
+      window.dispatchEvent(new CustomEvent('mapestate_spotlight_credits_updated', { detail: { credits: updated } }));
       return updated;
     } catch {
       return 0;
@@ -291,8 +291,8 @@ export const razorpayService = {
       dict[propertyId] = expires;
       localStorage.setItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY, JSON.stringify(dict));
 
-      window.dispatchEvent(new CustomEvent('manormap_property_boosted', { detail: { propertyId, expires } }));
-      window.dispatchEvent(new CustomEvent('manormap_spotlight_credits_updated', { detail: { credits: updatedCredits } }));
+      window.dispatchEvent(new CustomEvent('mapestate_property_boosted', { detail: { propertyId, expires } }));
+      window.dispatchEvent(new CustomEvent('mapestate_spotlight_credits_updated', { detail: { credits: updatedCredits } }));
 
       notificationService.addNotification({
         title: '⭐ Property Boosted with Spotlight',
@@ -317,7 +317,7 @@ export const razorpayService = {
       const dict: Record<string, string> = raw ? JSON.parse(raw) : {};
       dict[propertyId] = expires;
       localStorage.setItem(LOCAL_STORAGE_BOOSTED_PROPERTIES_KEY, JSON.stringify(dict));
-      window.dispatchEvent(new CustomEvent('manormap_property_boosted', { detail: { propertyId, expires } }));
+      window.dispatchEvent(new CustomEvent('mapestate_property_boosted', { detail: { propertyId, expires } }));
     } catch {
       // ignore
     }
@@ -373,7 +373,7 @@ export const razorpayService = {
       propertyId,
       propertyTitle,
       userName = 'Keerthi Charan',
-      userEmail = 'charan@manormap.in',
+      userEmail = 'charan@mapestate.in',
       userPhone = '+91 98490 12345',
       onSuccess,
       onDismiss,

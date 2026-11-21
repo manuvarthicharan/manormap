@@ -89,11 +89,11 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     const handleUpdate = () => {
       setSpotlightCredits(razorpayService.getSpotlightCredits());
     };
-    window.addEventListener('manormap_spotlight_credits_updated', handleUpdate);
-    window.addEventListener('manormap_property_boosted', handleUpdate);
+    window.addEventListener('mapestate_spotlight_credits_updated', handleUpdate);
+    window.addEventListener('mapestate_property_boosted', handleUpdate);
     return () => {
-      window.removeEventListener('manormap_spotlight_credits_updated', handleUpdate);
-      window.removeEventListener('manormap_property_boosted', handleUpdate);
+      window.removeEventListener('mapestate_spotlight_credits_updated', handleUpdate);
+      window.removeEventListener('mapestate_property_boosted', handleUpdate);
     };
   }, []);
 
@@ -101,8 +101,8 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     const handleUpdate = () => {
       setNotifications(notificationService.getNotifications());
     };
-    window.addEventListener('manormap_notifications_updated', handleUpdate);
-    return () => window.removeEventListener('manormap_notifications_updated', handleUpdate);
+    window.addEventListener('mapestate_notifications_updated', handleUpdate);
+    return () => window.removeEventListener('mapestate_notifications_updated', handleUpdate);
   }, []);
 
   const formatTimeAgo = (timestamp: number) => {
@@ -125,7 +125,7 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
   // Saved Searches & Alerts state with localStorage persistence
   const [savedSearches, setSavedSearches] = useState<SavedSearchItem[]>(() => {
     try {
-      const stored = localStorage.getItem('manormap_saved_searches');
+      const stored = localStorage.getItem('mapestate_saved_searches');
       if (stored) return JSON.parse(stored);
     } catch { }
     return DEFAULT_SAVED_SEARCHES;
@@ -135,7 +135,7 @@ export const ActivityModals: React.FC<ActivityModalProps> = ({
     setSavedSearches((prev) => {
       const updated = prev.filter((s) => s.id !== id);
       try {
-        localStorage.setItem('manormap_saved_searches', JSON.stringify(updated));
+        localStorage.setItem('mapestate_saved_searches', JSON.stringify(updated));
       } catch { }
       return updated;
     });

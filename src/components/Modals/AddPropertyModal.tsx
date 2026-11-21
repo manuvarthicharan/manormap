@@ -54,7 +54,7 @@ interface AddPropertyModalProps {
   } | null;
 }
 
-const LOCAL_STORAGE_DRAFT_KEY = 'manormap_listing_draft_v4';
+const LOCAL_STORAGE_DRAFT_KEY = 'mapestate_listing_draft_v4';
 
 const RESIDENTIAL_AMENITIES = [
   '24x7 Security & CCTV',
@@ -167,7 +167,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
   const [userRole, setUserRole] = useState<'Owner' | 'Agent' | 'Builder' | 'Company'>('Owner');
   const [fullName, setFullName] = useState('Keerthi Charan');
   const [userPhone, setUserPhone] = useState('+91 98490 12345');
-  const [userEmail, setUserEmail] = useState('charan@manormap.in');
+  const [userEmail, setUserEmail] = useState('charan@mapestate.in');
 
   // 2. Listing Purpose
   const [purpose, setPurpose] = useState<ListingType>('sale');
@@ -2842,7 +2842,7 @@ export const AddPropertyModal: React.FC<AddPropertyModalProps> = ({
                   12. Review & Publish Listing
                 </h4>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Confirm all details before broadcasting your property live on ManorMap.
+                  Confirm all details before broadcasting your property live on MapEstate.
                 </p>
               </div>
 

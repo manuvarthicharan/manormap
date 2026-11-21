@@ -643,7 +643,7 @@ export function computeInfrastructureCommuteRings(property: Property): CommuteRi
 }
 
 /**
- * Interactive ManorMap AI Q&A answering assistant for any property
+ * Interactive MapEstate AI Q&A answering assistant for any property
  */
 export function answerPropertyAIQuestion(
   property: Property,
@@ -708,7 +708,7 @@ export function answerPropertyAIQuestion(
 
   // General summary
   return {
-    answer: `ManorMap AI Executive Summary: ${property.title} in ${property.area}, ${property.city} offers an overall Livability Score of ${analysis.livabilityScore}/100. Top advantages include: ${analysis.pros.slice(0, 2).join(' ')}. Key watch item: ${analysis.cons[0] || 'Standard peak hour arterial commute traffic'}.`,
+    answer: `MapEstate AI Executive Summary: ${property.title} in ${property.area}, ${property.city} offers an overall Livability Score of ${analysis.livabilityScore}/100. Top advantages include: ${analysis.pros.slice(0, 2).join(' ')}. Key watch item: ${analysis.cons[0] || 'Standard peak hour arterial commute traffic'}.`,
     highlights: [
       `Livability: ${analysis.livabilityScore}/100`,
       `Flood Risk: ${analysis.floodRisk}`,

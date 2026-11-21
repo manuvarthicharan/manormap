@@ -110,11 +110,11 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
         setIsContactUnlocked(razorpayService.isContactUnlocked(property.id));
       }
     };
-    window.addEventListener('manormap_contacts_updated', handleUpdate);
-    window.addEventListener('manormap_payment_success', handleUpdate);
+    window.addEventListener('mapestate_contacts_updated', handleUpdate);
+    window.addEventListener('mapestate_payment_success', handleUpdate);
     return () => {
-      window.removeEventListener('manormap_contacts_updated', handleUpdate);
-      window.removeEventListener('manormap_payment_success', handleUpdate);
+      window.removeEventListener('mapestate_contacts_updated', handleUpdate);
+      window.removeEventListener('mapestate_payment_success', handleUpdate);
     };
   }, [property?.id]);
 
@@ -208,7 +208,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const whatsAppPhone = cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone;
   const propertyShareUrl = `${window.location.origin}${window.location.pathname}?property=${encodeURIComponent(property.id)}`;
   const whatsAppUrl = `https://wa.me/${whatsAppPhone}?text=${encodeURIComponent(
-    `Hello ${property.contact.name}, I am inquiring regarding "${property.title}" (${property.priceDisplay}) on ManorMap: ${propertyShareUrl}\n\nIs it available? Please share site visit slot details.`
+    `Hello ${property.contact.name}, I am inquiring regarding "${property.title}" (${property.priceDisplay}) on MapEstate: ${propertyShareUrl}\n\nIs it available? Please share site visit slot details.`
   )}`;
 
   const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${property.coordinates[1]},${property.coordinates[0]}`;
@@ -216,7 +216,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const handleShare = async () => {
     const shareUrl = `${window.location.origin}${window.location.pathname}?property=${encodeURIComponent(property.id)}`;
     const shareData = {
-      title: `${property.title} | ManorMap`,
+      title: `${property.title} | MapEstate`,
       text: `Verified property: ${property.title} in ${property.area}, ${property.city} for ${property.priceDisplay}`,
       url: shareUrl
     };
@@ -383,7 +383,7 @@ export const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
                 </button>
               )}
 
-              {/* Ask ManorMap AI Button */}
+              {/* Ask MapEstate AI Button */}
               {onOpenAIAdvisor && (
                 <button
                   onClick={() => {

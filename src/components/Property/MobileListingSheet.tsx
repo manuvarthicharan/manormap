@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import {
   ChevronUp,
   MapPin,
-  MessageCircle,
   Compass,
-  X
+  X,
+  ArrowRight
 } from 'lucide-react';
 import { Property, AreaUnit } from '../../types';
 import { formatIndianCurrency } from '../../services/propertyService';
@@ -161,15 +161,6 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
             filteredProperties.map((prop) => {
               const isHovered = hoveredPropertyId === prop.id;
               const formattedArea = formatAreaByUnit(prop.areaSqFt, areaUnit);
-              const whatsAppPhone = prop.contact?.phone
-                ? prop.contact.phone.replace(/[^0-9]/g, '')
-                : '919849087654';
-              const shareUrl = typeof window !== 'undefined'
-                ? `${window.location.origin}${window.location.pathname}?property=${prop.id}`
-                : '';
-              const whatsAppText = encodeURIComponent(
-                `Hi, I'm interested in "${prop.title}" (${formatIndianCurrency(prop.price, prop.type)}, ${prop.area || prop.address}, ${prop.city}). Link: ${shareUrl}. Please share floor plan and schedule site visit.`
-              );
 
               return (
                 <div
@@ -230,25 +221,26 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
                       </div>
                     </div>
 
-                    {/* Price & Action Buttons */}
+                    {/* Price & Action Buttons (Direct Contact gated behind paid plans) */}
                     <div className="flex items-center justify-between gap-2 mt-2 pt-1 border-t border-slate-100">
                       <span className="text-sm font-black text-emerald-700">
                         {formatIndianCurrency(prop.price, prop.type)}
                       </span>
 
                       <div className="flex items-center gap-1.5">
-                        {/* WhatsApp CTA */}
-                        <a
-                          href={`https://wa.me/${whatsAppPhone}?text=${whatsAppText}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-xs transition-colors"
-                          title="Chat with Owner on WhatsApp"
+                        {/* View Details CTA */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelectProperty(prop);
+                          }}
+                          className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-[10px] font-bold flex items-center gap-1 shadow-xs transition-colors"
+                          title="View Verified Property Details"
                         >
-                          <MessageCircle className="w-3 h-3" />
-                          <span>WhatsApp</span>
-                        </a>
+                          <span>Details</span>
+                          <ArrowRight className="w-2.5 h-2.5" />
+                        </button>
 
                         {/* Directions / Navigate CTA */}
                         <a
@@ -259,7 +251,7 @@ export const MobileListingSheet: React.FC<MobileListingSheetProps> = ({
                           className="p-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-[10px] font-bold transition-colors"
                           title="Get Directions on Google Maps"
                         >
-                          <Compass className="w-3.5 h-3.5" />
+                          <Compass className="w-3.5 h-3.5 text-blue-600" />
                         </a>
                       </div>
                     </div>

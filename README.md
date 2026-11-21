@@ -1,4 +1,4 @@
-# ManorMap — Map-First Real Estate Discovery Engine
+# MapEstate — Map-First Real Estate Discovery Engine
 
 A high-performance, map-first real estate discovery platform powered by **Google Maps JavaScript API**, custom HTML **OverlayView price markers**, interactive pin dropping, and architected for **PostgreSQL + PostGIS**.
 

@@ -409,8 +409,8 @@ export const GoogleMap: React.FC<GoogleMapProps> = ({
         marker.forceRedraw();
       });
     };
-    window.addEventListener('manormap_property_boosted', handleBoost);
-    return () => window.removeEventListener('manormap_property_boosted', handleBoost);
+    window.addEventListener('mapestate_property_boosted', handleBoost);
+    return () => window.removeEventListener('mapestate_property_boosted', handleBoost);
   }, []);
 
   // Toggle Transit Layer (Google Maps TransitLayer)

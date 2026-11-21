@@ -10,7 +10,7 @@ export interface AppNotification {
   read: boolean;
 }
 
-const STORAGE_KEY = 'manormap_real_notifications';
+const STORAGE_KEY = 'mapestate_real_notifications';
 
 const DEFAULT_NOTIFICATIONS: AppNotification[] = [
   {
@@ -80,7 +80,7 @@ export const notificationService = {
     }
 
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('manormap_notifications_updated'));
+      window.dispatchEvent(new CustomEvent('mapestate_notifications_updated'));
     }
 
     return newNotif;
@@ -95,7 +95,7 @@ export const notificationService = {
       console.warn('Failed to update notification', e);
     }
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('manormap_notifications_updated'));
+      window.dispatchEvent(new CustomEvent('mapestate_notifications_updated'));
     }
   },
 
@@ -108,7 +108,7 @@ export const notificationService = {
       console.warn('Failed to mark all as read', e);
     }
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('manormap_notifications_updated'));
+      window.dispatchEvent(new CustomEvent('mapestate_notifications_updated'));
     }
   },
 
@@ -121,7 +121,7 @@ export const notificationService = {
       console.warn('Failed to delete notification', e);
     }
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('manormap_notifications_updated'));
+      window.dispatchEvent(new CustomEvent('mapestate_notifications_updated'));
     }
   },
 
@@ -132,7 +132,7 @@ export const notificationService = {
       console.warn('Failed to clear notifications', e);
     }
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('manormap_notifications_updated'));
+      window.dispatchEvent(new CustomEvent('mapestate_notifications_updated'));
     }
   },
 

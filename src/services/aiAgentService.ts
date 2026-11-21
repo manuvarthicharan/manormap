@@ -17,7 +17,7 @@ import { getAllProperties } from './propertyService';
 import { calculateInvestmentIntelligence } from './investmentAnalysisService';
 import { getApiEndpoint } from './apiConfig';
 
-const SYSTEM_PROMPT = `You are a friendly, experienced, and trustworthy Indian real estate agent & property advisor operating inside ManorMap.
+const SYSTEM_PROMPT = `You are a friendly, experienced, and trustworthy Indian real estate agent & property advisor operating inside MapEstate.
 
 CRITICAL RULES:
 1. CHAT LIKE A REAL HUMAN IN INDIAN ENGLISH:

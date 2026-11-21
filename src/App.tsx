@@ -99,7 +99,7 @@ export const App: React.FC = () => {
   useEffect(() => {
     try {
       localStorage.removeItem('app_theme');
-      localStorage.removeItem('manormap_theme');
+      localStorage.removeItem('mapestate_theme');
     } catch (_) { }
     document.documentElement.classList.remove('dark');
   }, []);
@@ -474,8 +474,8 @@ export const App: React.FC = () => {
   const [boostVersion, setBoostVersion] = useState(0);
   useEffect(() => {
     const handleBoost = () => setBoostVersion((v) => v + 1);
-    window.addEventListener('manormap_property_boosted', handleBoost);
-    return () => window.removeEventListener('manormap_property_boosted', handleBoost);
+    window.addEventListener('mapestate_property_boosted', handleBoost);
+    return () => window.removeEventListener('mapestate_property_boosted', handleBoost);
   }, []);
 
   // Filter properties in visible area + radius + polygon + advanced filters
@@ -681,7 +681,7 @@ export const App: React.FC = () => {
     setIsAddPropertyOpen(true);
   };
 
-  // Open ManorMap AI Advisor
+  // Open MapEstate AI Advisor
   const handleOpenAIAdvisor = (prop?: Property) => {
     if (prop) {
       setSelectedProperty(prop);
@@ -996,7 +996,7 @@ export const App: React.FC = () => {
       />
 
       {/* 
-        9. MANORMAP AUTONOMOUS AI AGENT DRAWER
+        9. MAPESTATE AUTONOMOUS AI AGENT DRAWER
       */}
       <AIAssistantDrawer
         isOpen={isAIAdvisorOpen}

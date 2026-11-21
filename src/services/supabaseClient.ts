@@ -37,11 +37,8 @@ export async function signInWithGoogle(): Promise<{ error: Error | null }> {
   }
 
   try {
-    // Canonical redirect target: always point to the permanent production URL on Cloudflare
+    // Canonical redirect target: always point to the active production URL on Cloudflare or custom domain
     let redirectUrl = window.location.origin;
-    if (window.location.hostname.endsWith('.workers.dev')) {
-      redirectUrl = 'https://manormap.mkcharan77.workers.dev';
-    }
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',

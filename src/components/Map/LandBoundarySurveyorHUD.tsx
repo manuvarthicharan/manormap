@@ -50,7 +50,7 @@ export const LandBoundarySurveyorHUD: React.FC<LandBoundarySurveyorHUDProps> = (
 
   // Generate survey text report for clipboard copy
   const handleCopyReport = () => {
-    const report = `LAND BOUNDARY SURVEY REPORT (ManorMap Cadastral Survey)
+    const report = `LAND BOUNDARY SURVEY REPORT (MapEstate Cadastral Survey)
 ===================================================
 • Surveyed Parcel Area: ${areaAcres.toFixed(3)} Acres
 • Gunthas: ${areaGunthas} Gunthas
