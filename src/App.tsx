@@ -45,8 +45,20 @@ import { AIAssistantDrawer } from './components/AI/AIAssistantDrawer';
 import { PricingPlansModal } from './components/Modals/PricingPlansModal';
 import { MonetizationCategory, razorpayService } from './services/razorpayService';
 import { Map as MapIcon, Sparkles, Plus, Scale } from 'lucide-react';
+import { LandingPage } from './components/Landing/LandingPage';
 
 export const App: React.FC = () => {
+  // Welcome / Landing page entry (auto-bypassed when sharing property links or app=true)
+  const [showLanding, setShowLanding] = useState<boolean>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('property') || params.get('app') === 'true' || params.get('view') === 'map') {
+        return false;
+      }
+    } catch (_) {}
+    return true;
+  });
+
   // All properties & custom additions
   const [allProps, setAllProps] = useState<Property[]>(() => getAllProperties());
 
@@ -908,7 +920,10 @@ export const App: React.FC = () => {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onSelectOption={(key) => {
-          if (key === 'map') {
+          if (key === 'welcome') {
+            setIsMenuOpen(false);
+            setShowLanding(true);
+          } else if (key === 'map') {
             setIsMenuOpen(false);
           } else if (key === 'ai-advisor') {
             setIsMenuOpen(false);
@@ -1097,6 +1112,23 @@ export const App: React.FC = () => {
         initialCategory={pricingInitialCategory}
         targetProperty={pricingTargetProperty}
       />
+
+      {/* 
+        16. WELCOME / LANDING PAGE OVERVIEW
+      */}
+      {showLanding && (
+        <LandingPage
+          onEnterApp={() => setShowLanding(false)}
+          onOpenListing={() => {
+            setShowLanding(false);
+            setIsAddPropertyOpen(true);
+          }}
+          onOpenLogin={() => {
+            setShowLanding(false);
+            setActiveModal('profile');
+          }}
+        />
+      )}
     </main>
   );
 };

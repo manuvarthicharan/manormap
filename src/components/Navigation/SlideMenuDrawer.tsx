@@ -15,7 +15,8 @@ import {
   LogOut,
   CreditCard,
   Sparkles,
-  Plus
+  Plus,
+  Home
 } from 'lucide-react';
 import { Logo } from '../Common/Logo';
 import { GoogleIcon } from '../Common/GoogleIcon';
@@ -184,6 +185,14 @@ export const SlideMenuDrawer: React.FC<SlideMenuDrawerProps> = ({
               <div className="px-2 text-[11px] font-extrabold text-slate-500 uppercase tracking-wider mb-1">
                 Discover
               </div>
+              <button
+                onClick={() => handleAction('welcome')}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+              >
+                <Home className="w-4 h-4 text-emerald-600" />
+                <span>Welcome Page / Overview</span>
+              </button>
+
               <button
                 onClick={() => handleAction('map')}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-colors ${activeOption === 'map'
