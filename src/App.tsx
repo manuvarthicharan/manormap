@@ -48,16 +48,42 @@ import { Map as MapIcon, Sparkles, Plus, Scale } from 'lucide-react';
 import { LandingPage } from './components/Landing/LandingPage';
 
 export const App: React.FC = () => {
-  // Welcome / Landing page entry (auto-bypassed when sharing property links or app=true)
+  // Welcome / Landing page entry:
+  // Automatically bypass if user is an existing / returning user, or if deep-linked to property/app
   const [showLanding, setShowLanding] = useState<boolean>(() => {
     try {
       const params = new URLSearchParams(window.location.search);
+      // Explicit manual override to view welcome page
+      if (params.get('welcome') === 'true' || params.get('landing') === 'true') {
+        return true;
+      }
+      // Direct deep links always skip welcome page
       if (params.get('property') || params.get('app') === 'true' || params.get('view') === 'map') {
+        return false;
+      }
+      // Check if user is an existing / returning user
+      const isExistingUser =
+        localStorage.getItem('mapestate_existing_user') === 'true' ||
+        localStorage.getItem('mapestate_has_visited') === 'true' ||
+        localStorage.getItem('mapestate_user_profile') !== null ||
+        localStorage.getItem('india_prop_favorites') !== null ||
+        localStorage.getItem('custom_properties') !== null;
+
+      if (isExistingUser) {
         return false;
       }
     } catch (_) {}
     return true;
   });
+
+  // Handler to enter application and mark user as existing for future visits
+  const handleEnterAppFromLanding = useCallback(() => {
+    try {
+      localStorage.setItem('mapestate_existing_user', 'true');
+      localStorage.setItem('mapestate_has_visited', 'true');
+    } catch (_) {}
+    setShowLanding(false);
+  }, []);
 
   // All properties & custom additions
   const [allProps, setAllProps] = useState<Property[]>(() => getAllProperties());
@@ -1118,14 +1144,10 @@ export const App: React.FC = () => {
       */}
       {showLanding && (
         <LandingPage
-          onEnterApp={() => setShowLanding(false)}
+          onEnterApp={handleEnterAppFromLanding}
           onOpenListing={() => {
-            setShowLanding(false);
+            handleEnterAppFromLanding();
             setIsAddPropertyOpen(true);
-          }}
-          onOpenLogin={() => {
-            setShowLanding(false);
-            setActiveModal('profile');
           }}
         />
       )}

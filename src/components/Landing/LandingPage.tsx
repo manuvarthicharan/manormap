@@ -33,7 +33,7 @@ import logoImg from '../../assets/logo.png';
 export interface LandingPageProps {
   onEnterApp: () => void;
   onOpenListing: () => void;
-  onOpenLogin: () => void;
+  onOpenLogin?: () => void;
 }
 
 export const LandingPage: React.FC<LandingPageProps> = ({
@@ -150,7 +150,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       title: 'Log In to MapEstate',
       body: 'Sign in inside the main MapEstate application to access your saved plots, AI scan reports, and active land listings.',
       action: 'Continue to Sign In',
-      onAction: onOpenLogin,
+      onAction: onOpenLogin || onEnterApp,
     },
     privacy: {
       title: 'Privacy Overview',
@@ -205,15 +205,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
       <div className="hidden md:flex items-center gap-3">
         <button
           type="button"
-          onClick={() => setModalType("login")}
-          className="text-sm font-medium text-slate-600 hover:text-slate-900 px-3.5 py-2 rounded-lg transition-colors"
-        >
-          Log In
-        </button>
-        <button
-          type="button"
-          onClick={() => setModalType("open-map")}
-          className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          onClick={() => onEnterApp()}
+          className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors shadow-soft"
         >
           <span>Open MapEstate</span>
           <ArrowRight className="w-4 h-4 text-slate-300" aria-hidden="true" />
@@ -247,15 +240,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({
           <div className="pt-3 mt-3 border-t border-slate-200 flex flex-col gap-2.5">
             <button
               type="button"
-              onClick={() => setModalType("login")}
-              className="w-full text-center px-4 py-2.5 rounded-lg border border-slate-200 text-sm font-medium text-slate-700 hover:bg-slate-50"
-            >
-              Log In
-            </button>
-            <button
-              type="button"
-              onClick={() => setModalType("open-map")}
-              className="w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg"
+              onClick={() => onEnterApp()}
+              className="w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium px-4 py-2.5 rounded-lg shadow-soft"
             >
               <span>Open MapEstate</span>
               <ArrowRight className="w-4 h-4 text-slate-300" aria-hidden="true" />
